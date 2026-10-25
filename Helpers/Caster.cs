@@ -15,6 +15,7 @@ public sealed partial class Caster
     readonly CastServer _server = new();
     ScreenRecorder _rec;
     CastPlayer _castPlayer;
+    RokuApp _rokuApp; // the player a Roku cast went through
     HashSet<string> _answering = new(); // devices that answered the last check (Connect, Detect or a cast start)
     Timer _tick;
     DateTime _castStartUtc;
@@ -39,7 +40,6 @@ public sealed partial class Caster
     public int DroppedFrames { get; private set; } // frames the screen clock missed this cast (the TV repeats the last one)
     public double? CpuLoad { get; private set; }   // this app's share of the processor
     public double? EncoderLoad { get; private set; } // the graphics card's video encoder, every program on it
-    public double? BehindLive { get; private set; }  // seconds; only our Roku app reports it
     public string PcLink { get; private set; }       // how this PC reaches the device: "WIRED" or "WI-FI"
     readonly Dictionary<string, string> _links = new(); // each device's own connection by id; null = asked, it doesn't say
 
@@ -61,7 +61,6 @@ public sealed partial class Caster
         Picked = Devices.FirstOrDefault(d => d.Id == Default?.Id);
         NetworkChange.NetworkAddressChanged += (_, _) => _ui.Post(_ => RefreshNetwork(), null);
         _server.RemoteButton = name => _ui.Post(_ => OnRemoteButton(name), null);
-        _server.RokuBehind = seconds => _ui.Post(_ => OnRokuBehind(seconds), null);
     }
 
     // The row: every device Detect has found (the bookmark is always one of them), minus the hidden ones.
@@ -106,6 +105,7 @@ public sealed partial class Caster
             if (!IsOnline) return;
             _links[d.Id] = link;
             Raise();
+            if (d.IsRoku && link != null) NotePlayer(d, await RokuPlayer.PlayerOnAsync(d)); // asked quietly, no popup
         }));
     }
 
@@ -241,6 +241,7 @@ public sealed partial class Caster
         Status = IsOnline ? Ready : "OFFLINE · PRESS CONNECT";
         SetNetwork(IsOnline);
         Raise();
+        if (!letGo && d.IsRoku && IsOnline) _ = CheckRokuAppAsync(d);
     }
 
     // ---- Hide / Forget (right-click a device) and bring back (right-click Detect) ----

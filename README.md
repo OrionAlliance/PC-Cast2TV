@@ -28,15 +28,14 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **Casts your main screen and your PC's sound** at up to 1080p and 60 frames a second. Bigger screens are scaled down to fit.
 - **Uses your graphics card's video encoder** (NVIDIA, AMD or Intel), so casting barely touches your processor. If the card's encoder won't start, the processor takes over at 30 frames a second.
 - **Casts to:**
-  - **Rokus:** Roku streaming sticks and boxes, and Roku TVs (through the free PC Cast2TV Roku app below).
+  - **Rokus:** Roku streaming sticks and boxes, and Roku TVs (through the free DisplayHUB channel, which the app helps you add).
   - **TVs with Chromecast built in:** many VIZIO, Sony, TCL and Hisense TVs, plus Chromecast dongles and Google TV boxes. No extra app needed.
   - **Other smart TVs** that can play video from your home network (DLNA).
 
   Not sure about yours? Just press Detect. If your TV shows up in the list, the app can cast to it.
 - **One portable exe.** No installer, no extra programs, nothing running in the background. Its settings live in a `Settings` folder next to the app.
 - **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
-- **Your Roku remote works the PC:** Play/Pause, Next and Previous control whatever is playing on the PC, Fast Forward and Rewind send the arrow keys, and Back ends the cast.
-- **A health readout** while you cast: dropped frames, CPU load, GPU load, and how far behind live the TV is. The numbers stay up after the cast so you can see how it went.
+- **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
 - **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also shows your version and links back to this page.
 
 ## Requirements
@@ -52,27 +51,29 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 3. Press **Connect**. The first time, Windows asks once to let your TVs and Roku reach the app. That's a firewall rule for this app only, on private networks only.
 4. Press **Detect** to find your TVs and Roku, click the one you want, and press **Cast**.
 
-## Roku: install the PC Cast2TV Roku app
+## Roku: one free channel, and the app adds it for you
+
+A Roku plays your PC through **DisplayHUB**, a free channel in the Roku Channel Store. You don't have to go looking for it:
+
+1. Click your Roku in PC Cast2TV's list.
+2. If DisplayHUB isn't on it yet, PC Cast2TV pops up and shows you. Press **ADD DISPLAYHUB** and its page opens on your TV.
+3. Press **OK** on your Roku remote. PC Cast2TV sees it arrive, the popup closes by itself, and you're ready to press **Cast**.
+
+**Good to know:** with DisplayHUB, the Roku remote can't pause, play or skip on your PC.
 
 <p align="center">
   <img src="Roku%20App/images/icon_fhd.png" width="270" alt="The PC Cast2TV Roku app icon" /><br>
-  <i>This is the icon you'll see on your Roku's home screen once it's installed.</i>
+  <i>PC Cast2TV's own Roku app, coming soon to the Roku Channel Store.</i>
 </p>
 
-A Roku plays your PC through its own PC Cast2TV app. Until that app is in the Roku Channel Store, it installs through Roku's developer mode, which is free and built into every Roku:
-
-1. Download **`PC-Cast2TV-Roku-v0.1.11.zip`** from the [Releases](../../releases) page.
-2. Turn on developer mode. On the Roku remote, press **Home 3 times, Up 2 times, then Right, Left, Right, Left, Right**. Accept the agreement, set a password, and let the Roku restart.
-3. Open the Roku's IP address in a browser, upload the zip, and the PC Cast2TV app appears on the Roku. The browser asks you to sign in first: the user name is `rokudev` and the password is the one you just set. (The Roku shows its IP address on the developer mode screen, and anytime under **Settings > Network > About**.)
-
-**Good to know:** a Roku holds one developer app at a time, so installing this one replaces any other developer app on it.
+PC Cast2TV's own Roku app is on its way to the Roku Channel Store. With it, the Roku remote controls your PC too. Once it's in the store, PC Cast2TV will add it for you the same way, with one OK on the remote.
 
 ## What it's been tested on
 
 So far it has run on:
 
 - Two desktop PCs on Windows 11, both wired to the network: one with an AMD Radeon card, one with an NVIDIA RTX 5060 Ti.
-- A Roku Ultra (Roku OS 15.3), on Wi-Fi.
+- A Roku Ultra (Roku OS 15.3), on Wi-Fi, through DisplayHUB.
 - A VIZIO TV with Chromecast built in, wired.
 
 Not tested yet:
@@ -89,13 +90,16 @@ If it works, or doesn't, on your setup, please open an [Issue](../../issues) wit
 ## FAQ
 
 **Why is the TV a few seconds behind my PC?**
-Roku and Chromecast play the cast in one-second pieces and keep a few of them in hand, about 5 to 6 seconds on a Roku, so a Wi-Fi hiccup never freezes the picture. The health readout shows exactly how far behind it is.
+Roku and Chromecast play the cast in one-second pieces and keep a few of them in hand, so a Wi-Fi hiccup never freezes the picture. That's a few seconds behind, and it's the trade for a smooth picture.
 
 **Why did my screen switch to 60 Hz?**
 A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, which shows as a stutter. So while you cast, the app runs your screen at 60 Hz, and it puts your screen back the way it was when the cast ends.
 
 **It says the TV isn't answering.**
 Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, press Detect to find it again.
+
+**My Roku won't start the cast, or ADD DISPLAYHUB didn't open anything.**
+PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and make sure it isn't turned off.
 
 **Can I hide a device I don't use?**
 Right-click it in the list to hide it from the list or forget it from Detect. Right-click Detect to bring hidden devices back.

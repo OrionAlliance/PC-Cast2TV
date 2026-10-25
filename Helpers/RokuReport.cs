@@ -6,8 +6,7 @@ namespace PCCast2TV.Helpers;
 public static class RokuReport
 {
     // newestOnPc: the newest piece the PC has finished, to see how far behind live the piece on the TV is.
-    // BehindSec is that number for the window; null when the report doesn't have what it takes.
-    public static (string Line, double? BehindSec) Describe(string query, int? newestOnPc)
+    public static string Describe(string query, int? newestOnPc)
     {
         var v = new Dictionary<string, double>();
         foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
@@ -32,10 +31,10 @@ public static class RokuReport
         string behind = behindSec is double b ? N(b, "0.0") : "?";
         double ms = Get("downloadms");
         string mbps = ms > 0 ? N(Get("bytes") * 8 / ms / 1000, "0.0") : "?";
-        return ($"about {behind} s behind live (piece {F("playing", "0")} on screen, PC finished {(newestOnPc?.ToString() ?? "?")}, " +
+        return $"about {behind} s behind live (piece {F("playing", "0")} on screen, PC finished {(newestOnPc?.ToString() ?? "?")}, " +
                 $"Roku holds {held} more), speed {F("speed", "0.000")}x (whole cast {F("castspeed", "0.0000")}x), " +
                 $"{F("pieces", "0")} pieces in (slowest {F("slowest", "0")} ms, each plays {F("piecems", "0")} ms), " +
                 $"{F("late", "0")} slower than they play, {F("failed", "0")} failed, arriving at {mbps} Mbps, " +
-                $"{F("stalls", "0")} stalls" + (Get("stallms") > 0 ? $" ({F("stallms", "0")} ms)" : ""), behindSec);
+                $"{F("stalls", "0")} stalls" + (Get("stallms") > 0 ? $" ({F("stallms", "0")} ms)" : "");
     }
 }

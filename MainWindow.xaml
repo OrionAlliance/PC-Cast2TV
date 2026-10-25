@@ -148,7 +148,6 @@
                 <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="DROPPED FRAMES" /><TextBlock x:Name="DroppedText" Style="{StaticResource HealthValue}" /></Grid>
                 <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="CPU LOAD" /><TextBlock x:Name="CpuText" Style="{StaticResource HealthValue}" /></Grid>
                 <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="GPU LOAD" /><TextBlock x:Name="GpuText" Style="{StaticResource HealthValue}" /></Grid>
-                <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="BEHIND LIVE" /><TextBlock x:Name="BehindText" Style="{StaticResource HealthValue}" /></Grid>
             </StackPanel>
         </Canvas>
     </Viewbox>

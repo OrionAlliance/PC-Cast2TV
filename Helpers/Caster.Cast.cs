@@ -41,12 +41,22 @@ public sealed partial class Caster
         }
         _ = TvInfo.LogAsync(d); // maker, model and software for the log, asked alongside the start
 
-        // A Roku plays it through our Roku app, so that has to be on it.
+        // A Roku plays it through our Roku app, or the free DisplayHUB channel when ours isn't on it. With neither, the
+        // window shows how to add one.
+        var rokuApp = RokuApp.None;
         if (d.IsRoku)
         {
-            bool ours = await RokuPlayer.HasOurAppAsync(d);
+            var on = await RokuPlayer.PlayerOnAsync(d);
+            NotePlayer(d, on);
             if (Phase != Phase.Starting) return;
-            if (!ours) { FailCast("NEEDS THE PC CAST2TV ROKU APP", d); return; }
+            if (on == null) { FailCast("STOPPED ANSWERING", d); return; }
+            if (on == RokuApp.None)
+            {
+                FailCast("NEEDS DISPLAYHUB", d);
+                NeedsRokuApp?.Invoke(d);
+                return;
+            }
+            rokuApp = on.Value;
         }
 
         var localIp = NetUtil.LocalIpToward(d.Ip);
@@ -114,17 +124,18 @@ public sealed partial class Caster
         // Each kind of TV opens its own player; only a Chromecast's stays with the app for the cast.
         string error;
         CastPlayer player = null;
-        if (d.IsRoku) error = await RokuPlayer.PlayAsync(d, hlsUrl, () => _server.PiecesServed);
+        if (d.IsRoku) error = await RokuPlayer.PlayAsync(d, rokuApp, hlsUrl, () => _server.PiecesServed);
         else if (d.Kind == DeviceKind.Cast) (player, error) = await CastPlayer.PlayAsync(d, hlsUrl, () => _server.PiecesServed);
         else error = await DlnaPlayer.PlayAsync(d, $"http://{localIp}:{_server.Port}/stream.ts");
         if (Phase != Phase.Starting) { if (player != null) await player.StopAsync(); return; } // closed mid-start: don't leave the TV's player open
         if (error != null) { PlayerFailed(error, d); return; }
         _castPlayer = player;
+        _rokuApp = rokuApp;
 
         // The last cast's health numbers stay up until this one is really playing, so a start that fails keeps them.
         HealthFrom = d;
         DroppedFrames = 0;
-        CpuLoad = EncoderLoad = BehindLive = null;
+        CpuLoad = EncoderLoad = null;
         CastingTo = d;
         _castStartUtc = DateTime.UtcNow;
         Log.Write("cast: playing" + (_rec.HasSound ? "" : ", no sound device"));
@@ -136,7 +147,7 @@ public sealed partial class Caster
     {
         var d = CastingTo;
         Set(Phase.Stopping, "ENDING CAST...");
-        if (d.IsRoku) await RokuPlayer.StopAsync(d);
+        if (d.IsRoku) await RokuPlayer.StopAsync(d, _rokuApp);
         else if (d.Kind == DeviceKind.Cast) await _castPlayer.StopAsync();
         else await DlnaPlayer.StopAsync(d);
         CleanupCast();
@@ -216,14 +227,6 @@ public sealed partial class Caster
     {
         if (Phase != Phase.Casting || _castStartUtc != cast) return;
         EncoderLoad = load;
-        Raise();
-    }
-
-    // Our Roku app's own count of how far behind live it plays, every 10 seconds.
-    void OnRokuBehind(double? seconds)
-    {
-        if (Phase != Phase.Casting) return;
-        BehindLive = seconds;
         Raise();
     }
 

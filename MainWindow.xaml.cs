@@ -32,6 +32,7 @@ public partial class MainWindow : Window
         _caster.Changed += Draw;
         _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over
         _caster.Notice += (title, body) => NoticeWindow.Tell(this, title, body);
+        _caster.NeedsRokuApp += roku => RokuAppWindow.Tell(this, roku, stop => _caster.WaitForRokuAppAsync(roku, stop));
         ContentRendered += async (_, _) => await CheckForUpdateAsync();
         ThemeColors.Changed += OnThemeChanged;
         Glow(ThemeColors.Current.Main);
@@ -129,7 +130,7 @@ public partial class MainWindow : Window
     }
 
     // The health lines: the cast's numbers while it plays, and after it ends they stay up until the next cast plays.
-    // Dimmed while waiting on a first reading ("..."), for a TV that doesn't report, or before any cast (IDLE).
+    // Dimmed while waiting on a first reading ("...") or before any cast (IDLE).
     void DrawHealth()
     {
         var c = _caster;
@@ -139,8 +140,6 @@ public partial class MainWindow : Window
         HealthLine(DroppedText, from == null ? null : c.DroppedFrames.ToString("N0", CultureInfo.InvariantCulture), missing);
         HealthLine(CpuText, Pct(c.CpuLoad), missing);
         HealthLine(GpuText, Pct(c.EncoderLoad), missing);
-        if (from?.IsRoku == false) HealthLine(BehindText, null, "NOT REPORTED");
-        else HealthLine(BehindText, c.BehindLive?.ToString("0.0 SEC", CultureInfo.InvariantCulture), missing);
     }
 
     void HealthLine(TextBlock t, string value, string missing)
@@ -157,6 +156,14 @@ public partial class MainWindow : Window
         if (c.LinkAsked(d)) return d.Kind == DeviceKind.Dlna ? "DOESN'T SAY" : "DIDN'T ANSWER";
         return c.IsOnline ? "CHECKING..." : "CONNECT TO CHECK";
     }
+
+    // A Roku's player after its address once it has answered (" · PC2TV" or " · DISPLAYHUB"); nothing with neither.
+    string PlayerText(Device d) => _caster.LinkOf(d) == null ? "" : _caster.PlayerOf(d) switch
+    {
+        RokuApp.Ours => " · PC2TV",
+        RokuApp.DisplayHub => " · DISPLAYHUB",
+        _ => "",
+    };
 
     // The big button names the next step (Connect, Detect, Select, Cast); only Cast and Casting can be pressed.
     void DrawCastButton()
@@ -191,14 +198,14 @@ public partial class MainWindow : Window
     {
         var c = _caster;
         var lit = c.PickClicked ? c.Picked?.Id : null; // only a device you clicked is lit
-        var key = string.Join("|", c.Devices.Select(d => d.Id + d.Name + d.Ip + LinkText(d))) + "#" + lit + "#" + c.Default?.Id;
+        var key = string.Join("|", c.Devices.Select(d => d.Id + d.Name + d.Ip + LinkText(d) + PlayerText(d))) + "#" + lit + "#" + c.Default?.Id;
         if (key == _rowKey) return;
         _rowKey = key;
         DeviceList.Children.Clear();
         foreach (var d in c.Devices) DeviceList.Children.Add(Row(d, d.Id == lit, d.Id == c.Default?.Id));
     }
 
-    // Plain text rows, all alike: name and kind, and under it how it's connected and the IP. Hover or a click lays
+    // Plain text rows, all alike: name and kind, and under it how it's connected, the IP and a Roku's player. Hover or a click lays
     // a faint tint behind the row; the default's bookmark is filled.
     FrameworkElement Row(Device d, bool picked, bool isDefault)
     {
@@ -210,7 +217,7 @@ public partial class MainWindow : Window
         text.Children.Add(Label($"{d.Name.ToUpperInvariant()} · {d.KindLabel}", 20, Soft));
         var link = Label("", 15, Second);
         link.Inlines.Add(new Run(LinkText(d)) { Foreground = _caster.LinkOf(d) != null ? Second : DimText });
-        link.Inlines.Add(new Run(" · " + d.Ip));
+        link.Inlines.Add(new Run(" · " + d.Ip + PlayerText(d)));
         text.Children.Add(link);
         g.Children.Add(text);
 

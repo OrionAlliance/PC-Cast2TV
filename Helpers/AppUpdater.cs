@@ -42,7 +42,7 @@ public static class AppUpdater
                 return null;
             }
             var latest = Short(parsed);
-            // The release also carries the Roku zip; the exe is the one this app replaces itself with.
+            // The release's exe is the one this app replaces itself with; anything else attached is left alone.
             var exe = doc.RootElement.GetProperty("assets").EnumerateArray()
                 .FirstOrDefault(a => a.GetProperty("name").GetString()?.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) == true);
             if (exe.ValueKind == JsonValueKind.Undefined)
