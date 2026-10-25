@@ -49,8 +49,8 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 
 1. Download **`PC-Cast2TV.exe`** from the [Releases](../../releases) page. That's the only official download. Copies posted anywhere else aren't from me, so don't run them.
 2. Put it in its own folder (it keeps its `Settings` folder next to it) and run it. **Windows will show a blue "Windows protected your PC" warning.** That's SmartScreen reacting to an unsigned open-source app with no download reputation yet, not a threat detection. Click **More info → Run anyway**. (Don't take my word for what the app does. The entire source code is this repository.)
-3. Press **Connect**. The first time, Windows asks once to let your TVs reach the app. That's a firewall rule for this app only, on private networks only.
-4. Press **Detect** to find your TVs, click the one you want, and press **Cast**.
+3. Press **Connect**. The first time, Windows asks once to let your TVs and Roku reach the app. That's a firewall rule for this app only, on private networks only.
+4. Press **Detect** to find your TVs and Roku, click the one you want, and press **Cast**.
 
 ## Roku: install the PC Cast2TV Roku app
 
