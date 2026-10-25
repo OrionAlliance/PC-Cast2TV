@@ -27,7 +27,12 @@ I wanted my PC on my TV. The whole screen, with sound, smooth, without running a
 
 - **Casts your main screen and your PC's sound** at up to 1080p and 60 frames a second. Bigger screens are scaled down to fit.
 - **Uses your graphics card's video encoder** (NVIDIA, AMD or Intel), so casting barely touches your processor. If the card's encoder won't start, the processor takes over at 30 frames a second.
-- **Works with Roku** (through the free PC Cast2TV Roku app below), **Chromecast and Google TV**, and **DLNA smart TVs**.
+- **Casts to:**
+  - **Rokus:** Roku streaming sticks and boxes, and Roku TVs (through the free PC Cast2TV Roku app below).
+  - **TVs with Chromecast built in:** many VIZIO, Sony, TCL and Hisense TVs, plus Chromecast dongles and Google TV boxes. No extra app needed.
+  - **Other smart TVs** that can play video from your home network (DLNA).
+
+  Not sure about yours? Just press Detect. If your TV shows up in the list, the app can cast to it.
 - **One portable exe.** No installer, no extra programs, nothing running in the background. Its settings live in a `Settings` folder next to the app.
 - **Your Roku remote works the PC:** Play/Pause, Next and Previous control whatever is playing on the PC, Fast Forward and Rewind send the arrow keys, and Back ends the cast.
 - **A health readout** while you cast: dropped frames, CPU load, GPU load, and how far behind live the TV is. The numbers stay up after the cast so you can see how it went.
