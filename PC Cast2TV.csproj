@@ -9,7 +9,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>PCCast2TV</RootNamespace>
     <AssemblyName>PC Cast2TV</AssemblyName>
-    <Version>0.3.83</Version>
+    <Version>0.3.84</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>

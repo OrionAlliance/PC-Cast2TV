@@ -10,7 +10,14 @@ namespace PCCast2TV.Helpers;
 // in place; the Settings folder next to it is never touched. All GitHub sees is a plain request for the newest release.
 public static class AppUpdater
 {
-    public const string Repo = "OrionAlliance/PC-Cast2TV";
+    public const string Repo = "OrionAlliance/PC-Cast2TV", Page = "https://github.com/" + Repo;
+
+    // The app's GitHub page in the default browser (Settings > ABOUT).
+    public static void OpenPage()
+    {
+        try { Process.Start(new ProcessStartInfo(Page) { UseShellExecute = true }); }
+        catch (System.ComponentModel.Win32Exception ex) { Log.Write("update: couldn't open the GitHub page: " + ex.Message); }
+    }
 
     public sealed record Update(Version Installed, Version Latest, string DownloadUrl, long Size);
 

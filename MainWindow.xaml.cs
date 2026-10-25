@@ -27,6 +27,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Title = $"PC Cast2TV  v{AppUpdater.Installed}"; // title bar and taskbar, like Fan Control
         BuildSignalRing();
         _caster.Changed += Draw;
         _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over

@@ -12,6 +12,13 @@
             <UniformGrid x:Name="Swatches" Columns="4" Rows="2" />
             <!-- On the same 4 columns: RANDOM rolls a new color, SAVE keeps it as MY COLOR (just one; a new save replaces it), CLOSE -->
             <UniformGrid x:Name="Own" Columns="4" Margin="0,4,0,0" />
+            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="ABOUT" />
+            <Grid>
+                <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" />
+                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
+                    <TextBlock FontSize="14" Text="GITHUB PAGE" />
+                </Button>
+            </Grid>
         </StackPanel>
     </Border>
 </Window>

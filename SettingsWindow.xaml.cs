@@ -17,9 +17,12 @@ public partial class SettingsWindow : Window
         ThemeColors.Changed += OnThemeChanged;
         Closed += (_, _) => ThemeColors.Changed -= OnThemeChanged;
         BuildSwatches();
+        VersionText.Text = $"VERSION {AppUpdater.Installed}";
     }
 
     public static void Open(Window owner) => new SettingsWindow { Owner = owner }.ShowDialog();
+
+    void GitHub_Click(object sender, RoutedEventArgs e) => AppUpdater.OpenPage();
 
     void OnThemeChanged()
     {

@@ -37,7 +37,7 @@ I wanted my PC on my TV. The whole screen, with sound, smooth, without running a
 - **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
 - **Your Roku remote works the PC:** Play/Pause, Next and Previous control whatever is playing on the PC, Fast Forward and Rewind send the arrow keys, and Back ends the cast.
 - **A health readout** while you cast: dropped frames, CPU load, GPU load, and how far behind live the TV is. The numbers stay up after the cast so you can see how it went.
-- **8 color themes,** plus Random and your own color, from the ⚙ cog.
+- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also shows your version and links back to this page.
 
 ## Requirements
 
