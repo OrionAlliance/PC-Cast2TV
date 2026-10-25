@@ -35,7 +35,7 @@ I wanted my PC on my TV. The whole screen, with sound, smooth, without running a
 
 ## Requirements
 
-- **Windows 10 or 11, 64-bit.**
+- **Works on Windows 10 and Windows 11** (64-bit). Every feature works the same on both. It looks best on Windows 11, where the title bar picks up your theme color and the window gets rounded corners.
 - **The PC and the TV on the same home network.** Windows has to call that network Private, not Public. The app tells you if it doesn't.
 - **Running a VPN?** Turn on its "Allow LAN" setting (some VPNs call it "Local network sharing") so the PC can reach the TV.
 
@@ -55,6 +55,25 @@ A Roku plays your PC through its own PC Cast2TV app. Until that app is in the Ro
 3. Open the Roku's IP address in a browser, upload the zip, and the PC Cast2TV app appears on the Roku. The browser asks you to sign in first: the user name is `rokudev` and the password is the one you just set. (The Roku shows its IP address on the developer mode screen, and anytime under **Settings > Network > About**.)
 
 **Good to know:** a Roku holds one developer app at a time, so installing this one replaces any other developer app on it.
+
+## What it's been tested on
+
+So far it has run on:
+
+- Two desktop PCs on Windows 11, both wired to the network: one with an AMD Radeon card, one with an NVIDIA RTX 5060 Ti.
+- A Roku Ultra (Roku OS 15.3), on Wi-Fi.
+- A VIZIO TV with Chromecast built in, wired.
+
+Not tested yet:
+
+- **Laptops,** especially ones with two graphics chips.
+- **Intel graphics** (the app supports Intel's video encoder, but no Intel card has been tested).
+- **A Windows 10 PC.**
+- **A PC on Wi-Fi.** (The Roku on Wi-Fi works fine.)
+- **DLNA smart TVs.** The app supports them, but none have been tested.
+- **Other Rokus** (Roku TVs, Express, Streaming Stick) and **Chromecast dongles or Google TV boxes.**
+
+If it works, or doesn't, on your setup, please open an [Issue](../../issues) with your `debug.log`. That's how this list gets shorter.
 
 ## FAQ
 
