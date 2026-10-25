@@ -55,18 +55,18 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 
 A Roku plays your PC through **DisplayHUB**, a free channel in the Roku Channel Store. You don't have to go looking for it:
 
+<p align="center">
+  <img src="Images/displayhub.png" width="290" alt="The DisplayHUB channel icon" /><br>
+  <i>DisplayHUB on your Roku's home screen.</i>
+</p>
+
 1. Click your Roku in PC Cast2TV's list.
 2. If DisplayHUB isn't on it yet, PC Cast2TV pops up and shows you. Press **ADD DISPLAYHUB** and its page opens on your TV.
 3. Press **OK** on your Roku remote. PC Cast2TV sees it arrive, the popup closes by itself, and you're ready to press **Cast**.
 
 **Good to know:** with DisplayHUB, the Roku remote can't pause, play or skip on your PC.
 
-<p align="center">
-  <img src="Roku%20App/images/icon_fhd.png" width="270" alt="The PC Cast2TV Roku app icon" /><br>
-  <i>PC Cast2TV's own Roku app, coming soon to the Roku Channel Store.</i>
-</p>
-
-PC Cast2TV's own Roku app is on its way to the Roku Channel Store. With it, the Roku remote controls your PC too. Once it's in the store, PC Cast2TV will add it for you the same way, with one OK on the remote.
+PC Cast2TV's own Roku app is coming soon to the Roku Channel Store. With it, the Roku remote controls your PC too. Once it's in the store, PC Cast2TV will add it for you the same way, with one OK on the remote.
 
 ## What it's been tested on
 
