@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Sends each remote button, and the player's 10-second report, to the PC (network calls can't run on the screen's own thread). -->
+<component name="KeyTask" extends="Task">
+    <interface>
+        <field id="pc" type="string" />
+        <field id="key" type="string" alwaysNotify="true" />
+        <field id="report" type="string" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="KeyTask.brs" />
+</component>

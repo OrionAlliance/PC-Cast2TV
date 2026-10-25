@@ -1,0 +1,27 @@
+<Window x:Class="PCCast2TV.DeviceActionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PC Cast2TV" Background="#03070B" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" UseLayoutRounding="True">
+
+    <Border Padding="28,24,28,24">
+        <StackPanel Width="440">
+            <TextBlock x:Name="Heading" Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextTrimming="CharacterEllipsis" />
+            <Button Height="76" Margin="0,18,0,0" Style="{StaticResource Pill}" Background="{DynamicResource Main}" Click="Hide_Click">
+                <StackPanel>
+                    <TextBlock HorizontalAlignment="Center" Text="HIDE FROM THE LIST" />
+                    <TextBlock HorizontalAlignment="Center" FontSize="13" Text="STAYS SAVED · RIGHT-CLICK DETECT TO BRING IT BACK" />
+                </StackPanel>
+            </Button>
+            <Button Height="76" Margin="0,12,0,0" Style="{StaticResource Pill}" Background="{DynamicResource Main}" Click="Forget_Click">
+                <StackPanel>
+                    <TextBlock HorizontalAlignment="Center" Text="FORGET FROM DETECTION" />
+                    <TextBlock HorizontalAlignment="Center" FontSize="13" Text="DETECT SKIPS IT AND ITS BOOKMARK IS CLEARED" />
+                </StackPanel>
+            </Button>
+            <Button Width="150" Margin="0,18,0,0" HorizontalAlignment="Right" Style="{StaticResource Pill}" IsCancel="True">
+                <TextBlock Text="CANCEL" />
+            </Button>
+        </StackPanel>
+    </Border>
+</Window>

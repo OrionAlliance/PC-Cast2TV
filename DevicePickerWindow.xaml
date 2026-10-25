@@ -1,0 +1,49 @@
+<Window x:Class="PCCast2TV.DevicePickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PC Cast2TV" Background="#03070B" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" UseLayoutRounding="True">
+
+    <Border Padding="28,24,28,24">
+        <StackPanel Width="440">
+            <TextBlock x:Name="Heading" Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextWrapping="Wrap" />
+            <TextBlock x:Name="Empty" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource DimText}" Margin="0,16,0,0"
+                       Text="NO DEVICES YET · PRESS DETECT FIRST" Visibility="Collapsed" />
+            <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto" Margin="0,18,0,0">
+                <ScrollViewer.Resources>
+                    <!-- A slim bar in the theme's color instead of Windows' bright white one; drag it or use the mouse wheel. -->
+                    <Style TargetType="ScrollBar">
+                        <Setter Property="Width" Value="10" />
+                        <Setter Property="MinWidth" Value="10" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ScrollBar">
+                                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                        <Track.Thumb>
+                                            <Thumb>
+                                                <Thumb.Template>
+                                                    <ControlTemplate TargetType="Thumb">
+                                                        <Border Margin="4,2,0,2" CornerRadius="3" Background="{DynamicResource Second}" />
+                                                    </ControlTemplate>
+                                                </Thumb.Template>
+                                            </Thumb>
+                                        </Track.Thumb>
+                                    </Track>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ScrollViewer.Resources>
+                <StackPanel x:Name="Rows" />
+            </ScrollViewer>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                <Button Width="150" Style="{StaticResource Pill}" Click="Cancel_Click">
+                    <TextBlock Text="CANCEL" />
+                </Button>
+                <Button Width="150" Margin="14,0,0,0" Style="{StaticResource Pill}" Background="{DynamicResource Main}" Click="Ok_Click">
+                    <TextBlock x:Name="OkLabel" />
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

@@ -1,0 +1,11 @@
+title=PC Cast2TV
+major_version=0
+minor_version=1
+build_version=11
+mm_icon_focus_hd=pkg:/images/icon_hd.png
+mm_icon_focus_fhd=pkg:/images/icon_fhd.png
+splash_screen_fhd=pkg:/images/splash_fhd.png
+splash_color=#03070B
+splash_min_time=500
+ui_resolutions=fhd
+supports_input_launch=1

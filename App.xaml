@@ -1,0 +1,9 @@
+<Application x:Class="PCCast2TV.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <!-- One shared set of colors and styles for every window, so a theme change reaches all of them at once. -->
+    <Application.Resources>
+        <ResourceDictionary Source="Theme.xaml" />
+    </Application.Resources>
+</Application>

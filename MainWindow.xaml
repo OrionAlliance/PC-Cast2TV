@@ -1,0 +1,155 @@
+<Window x:Class="PCCast2TV.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PC Cast2TV" Background="#03070B"
+        SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
+        PreviewMouseRightButtonUp="Window_RightClick">
+
+    <Viewbox x:Name="Root" Stretch="Uniform">
+        <Canvas x:Name="Design" Width="910" Height="428" Background="#03070B">
+
+            <!-- Top bar: settings in the left cap, the facts, the status line -->
+            <Border Canvas.Left="20" Canvas.Top="20" Width="60" Height="30" CornerRadius="15,0,0,15" Background="{DynamicResource Main}">
+                <Button Width="30" Height="30" HorizontalAlignment="Left" Margin="4,0,0,0" Style="{StaticResource Bare}" ToolTip="Settings" Click="Cog_Click">
+                    <Viewbox Width="18" Height="18">
+                        <Path Fill="{DynamicResource Ink}" Data="{StaticResource IcoCog}" />
+                    </Viewbox>
+                </Button>
+            </Border>
+            <Border Canvas.Left="84" Canvas.Top="20" Width="96" Height="30" Background="{DynamicResource Soft}">
+                <TextBlock x:Name="Block1" Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Ink}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,3" />
+            </Border>
+            <Border Canvas.Left="184" Canvas.Top="20" Width="96" Height="30" Background="{DynamicResource Second}">
+                <TextBlock x:Name="Block2" Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Ink}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,3" />
+            </Border>
+            <Border Canvas.Left="284" Canvas.Top="20" Width="96" Height="30" Background="{DynamicResource Enc}">
+                <TextBlock x:Name="Block3" Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Ink}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,3" />
+            </Border>
+            <Border Canvas.Left="384" Canvas.Top="20" Width="96" Height="30" Background="{DynamicResource Soft}">
+                <TextBlock x:Name="Block4" Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Ink}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,3" />
+            </Border>
+            <!-- The status line, against the right cap; a long message shrinks to fit instead of being cut off.
+                 Unrounded so its letters sit on the same line as the info bars' text. -->
+            <Grid Canvas.Left="490" Canvas.Top="18.75" Width="368" Height="34" UseLayoutRounding="False">
+                <Viewbox x:Name="StatusBox" MaxWidth="368" Height="26.4" StretchDirection="DownOnly" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusText" Style="{StaticResource Label}" FontSize="22" Foreground="{DynamicResource Second}" />
+                </Viewbox>
+            </Grid>
+            <Border Canvas.Left="866" Canvas.Top="20" Width="24" Height="30" CornerRadius="0,15,15,0" Background="{DynamicResource Main}" />
+
+            <!-- Left, in the order you use it: Connect, Detect, then the devices to pick from -->
+            <TextBlock Canvas.Left="24" Canvas.Top="146" Style="{StaticResource Label}" FontSize="15" Foreground="{DynamicResource Second}" Text="CAST TO" />
+            <TextBlock x:Name="ListNote" Canvas.Left="130" Canvas.Top="148" Width="136" TextAlignment="Right" Style="{StaticResource Label}" FontWeight="Normal" FontSize="13" Foreground="{DynamicResource DimText}" />
+            <ScrollViewer Canvas.Left="20" Canvas.Top="170" Width="246" Height="228" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="DeviceList" />
+            </ScrollViewer>
+            <!-- First run: nothing saved yet -->
+            <StackPanel x:Name="EmptyHint" Canvas.Left="24" Canvas.Top="182" Width="242">
+                <TextBlock Style="{StaticResource Label}" FontSize="20" Foreground="{DynamicResource Second}" Text="NO DEVICES YET" />
+                <TextBlock Style="{StaticResource Label}" FontWeight="Normal" FontSize="15" Foreground="{DynamicResource DimText}" TextWrapping="Wrap" Margin="0,4,0,0"
+                           Text="PRESS CONNECT, THEN DETECT TO FIND YOUR TVS AND ROKUS." />
+            </StackPanel>
+            <Button x:Name="ConnectBtn" Canvas.Left="20" Canvas.Top="88" Width="118" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Connect_Click">
+                <!-- Full height so icon and text each center on the pill; -1.5 cancels the icon's own blank edge.
+                     Both buttons skip whole-pixel rounding so the centering stays exact at any scale. -->
+                <StackPanel Orientation="Horizontal" Height="40">
+                    <Viewbox Width="18" Height="18" Margin="-1.5,0,6,0" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoWifi}" /></Canvas>
+                    </Viewbox>
+                    <TextBlock x:Name="ConnectLabel" Style="{StaticResource PillLabel}" Text="CONNECT" />
+                </StackPanel>
+            </Button>
+            <!-- Right-click (even while it's greyed out) is caught by the window: see Window_RightClick -->
+            <Button x:Name="DetectBtn" Canvas.Left="148" Canvas.Top="88" Width="118" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Detect_Click"
+                    ToolTip="Right-click to show hidden or forgotten devices" ToolTipService.ShowOnDisabled="True">
+                <StackPanel Orientation="Horizontal" Height="40">
+                    <Viewbox Width="18" Height="18" Margin="-1.5,0,6,0" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoPc}" /></Canvas>
+                    </Viewbox>
+                    <TextBlock x:Name="DetectLabel" Style="{StaticResource PillLabel}" Text="DETECT" />
+                </StackPanel>
+            </Button>
+
+            <!-- Center: the rate ring (its scale follows the peak), the signal ring inside it, CAST in the middle -->
+            <Path Stroke="{DynamicResource DimText}" StrokeThickness="2"
+                  Data="M339.03,377.97 L331.96,385.04 M291,262 L281,262 M339.03,146.03 L331.96,138.96 M455,98 L455,88 M570.97,146.03 L578.04,138.96 M619,262 L629,262 M570.97,377.97 L578.04,385.04" />
+            <TextBlock Canvas.Left="296" Canvas.Top="388" Width="40" TextAlignment="Center" Style="{StaticResource Label}" FontWeight="Normal" FontSize="13" Foreground="{DynamicResource DimText}" Text="0" />
+            <TextBlock x:Name="ScaleMid" Canvas.Left="425" Canvas.Top="66" Width="60" TextAlignment="Center" Style="{StaticResource Label}" FontWeight="Normal" FontSize="13" Foreground="{DynamicResource DimText}" />
+            <TextBlock x:Name="ScaleTop" Canvas.Left="574" Canvas.Top="388" Width="40" TextAlignment="Center" Style="{StaticResource Label}" FontWeight="Normal" FontSize="13" Foreground="{DynamicResource DimText}" />
+            <Path Stroke="{DynamicResource Dim}" StrokeThickness="18" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M348.93,368.07 A150,150 0 1 1 561.07,368.07" />
+            <Path x:Name="RingFill" Stroke="{DynamicResource Main}" StrokeThickness="18" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                <Path.Effect>
+                    <DropShadowEffect x:Name="RingGlow" Color="#3CCBF4" BlurRadius="16" ShadowDepth="0" Opacity="0.6" />
+                </Path.Effect>
+            </Path>
+            <Path x:Name="PeakTick" Stroke="{DynamicResource Peak}" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+            <Canvas x:Name="SignalRing" />
+
+            <Button x:Name="CastBtn" Canvas.Left="370" Canvas.Top="177" Width="170" Height="170" Focusable="False" Click="Cast_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter x:Name="Face" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Face" Property="Opacity" Value="0.88" /></Trigger>
+                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Face" Property="Opacity" Value="0.72" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <Grid>
+                    <Ellipse x:Name="CastFill" Fill="{DynamicResource Main}">
+                        <Ellipse.Effect>
+                            <DropShadowEffect x:Name="CastGlow" Color="#3CCBF4" BlurRadius="24" ShadowDepth="0" Opacity="0" />
+                        </Ellipse.Effect>
+                    </Ellipse>
+                    <Ellipse x:Name="CastRing" StrokeThickness="3" />
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock x:Name="CastTitle" Style="{StaticResource Label}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="CastSub" Style="{StaticResource Label}" FontSize="13" HorizontalAlignment="Center" MaxWidth="140" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+            <StackPanel Canvas.Left="355" Canvas.Top="372" Width="200" Orientation="Horizontal">
+                <TextBlock x:Name="NowText" Width="120" TextAlignment="Right" Style="{StaticResource Label}" FontSize="40" />
+                <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Bottom" Margin="6,0,0,9" Text="MBPS" />
+            </StackPanel>
+
+            <!-- Right: the last 90 seconds and the details -->
+            <TextBlock Canvas.Left="652" Canvas.Top="92" Style="{StaticResource Label}" FontSize="15" Foreground="{DynamicResource Second}" Text="LAST 90 SEC · MBPS" />
+            <Border Canvas.Left="652" Canvas.Top="116" Width="238" Height="84" CornerRadius="10" BorderThickness="1.5" BorderBrush="{DynamicResource Dim}" />
+            <Canvas x:Name="Wave" Canvas.Left="660" Canvas.Top="124" Width="222" Height="68">
+                <Path x:Name="EncLine" Stroke="{DynamicResource Enc}" StrokeThickness="1.2" />
+                <Path x:Name="SentLine" Stroke="{DynamicResource Main}" StrokeThickness="2.4" StrokeLineJoin="Round">
+                    <Path.Effect>
+                        <DropShadowEffect x:Name="SentGlow" Color="#3CCBF4" BlurRadius="8" ShadowDepth="0" Opacity="0.7" />
+                    </Path.Effect>
+                </Path>
+            </Canvas>
+            <!-- One line: this PC's network, the peak, the signal -->
+            <TextBlock Canvas.Left="652" Canvas.Top="214" Style="{StaticResource Label}" FontSize="15" Foreground="{DynamicResource Second}" Text="NETWORK" />
+            <TextBlock x:Name="NetworkText" Canvas.Left="652" Canvas.Top="236" Width="90" Style="{StaticResource Label}" FontSize="22" Foreground="{DynamicResource Soft}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Canvas.Left="746" Canvas.Top="214" Style="{StaticResource Label}" FontSize="15" Foreground="{DynamicResource Second}" Text="PEAK MBPS" />
+            <TextBlock x:Name="PeakText" Canvas.Left="746" Canvas.Top="236" Style="{StaticResource Label}" FontSize="22" Foreground="{DynamicResource Peak}" />
+            <TextBlock Canvas.Left="814" Canvas.Top="214" Style="{StaticResource Label}" FontSize="15" Foreground="{DynamicResource Second}" Text="SIGNAL" />
+            <TextBlock x:Name="SignalText" Canvas.Left="814" Canvas.Top="236" Style="{StaticResource Label}" FontSize="22" />
+            <!-- The cast's health: the same 10-second readings the log takes. Names and numbers share one size, so one line. -->
+            <StackPanel Canvas.Left="652" Canvas.Top="278" Width="238">
+                <StackPanel.Resources>
+                    <Style x:Key="HealthName" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+                        <Setter Property="FontSize" Value="22" />
+                        <Setter Property="Foreground" Value="{DynamicResource Second}" />
+                        <Setter Property="VerticalAlignment" Value="Bottom" />
+                    </Style>
+                    <Style x:Key="HealthValue" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+                        <Setter Property="FontSize" Value="22" />
+                        <Setter Property="HorizontalAlignment" Value="Right" />
+                        <Setter Property="VerticalAlignment" Value="Bottom" />
+                    </Style>
+                </StackPanel.Resources>
+                <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="DROPPED FRAMES" /><TextBlock x:Name="DroppedText" Style="{StaticResource HealthValue}" /></Grid>
+                <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="CPU LOAD" /><TextBlock x:Name="CpuText" Style="{StaticResource HealthValue}" /></Grid>
+                <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="GPU LOAD" /><TextBlock x:Name="GpuText" Style="{StaticResource HealthValue}" /></Grid>
+                <Grid Height="32"><TextBlock Style="{StaticResource HealthName}" Text="BEHIND LIVE" /><TextBlock x:Name="BehindText" Style="{StaticResource HealthValue}" /></Grid>
+            </StackPanel>
+        </Canvas>
+    </Viewbox>
+</Window>

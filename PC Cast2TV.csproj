@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>PCCast2TV</RootNamespace>
+    <AssemblyName>PC Cast2TV</AssemblyName>
+    <Version>0.3.82</Version>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- Packs .NET inside the exe compressed: 136 MB down to 63, and it still opens about as fast -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- The PC's folder path stays out of the exe: build paths read as a neutral name -->
+    <PathMap>$(MSBuildProjectDirectory)=PCCast2TV</PathMap>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Design Options\**" />
+    <Page Remove="Design Options\**" />
+    <None Remove="Roku App\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio.Wasapi" Version="3.3.0" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+    <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
+    <PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />
+  </ItemGroup>
+
+</Project>
