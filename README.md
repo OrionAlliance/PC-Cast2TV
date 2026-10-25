@@ -21,7 +21,7 @@
 
 ## Why this exists
 
-I wanted my PC on my TV. The whole screen, with sound, smooth, without running an HDMI cable across the room or buying another gadget. The ways I tried either lagged, stuttered, or needed extra hardware. So with the help of Claude AI, I built exactly what I wanted: one small app, one button, and the TV shows what my PC shows. Hopefully it's what you've wanted, too.
+I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, without running an HDMI cable across the room or buying another gadget. The ways I tried either lagged, stuttered, or needed extra hardware. So with the help of Claude AI, I built exactly what I wanted: one small app, one button, and the TV shows what my PC shows. Hopefully it's what you've wanted, too.
 
 ## What it does
 
