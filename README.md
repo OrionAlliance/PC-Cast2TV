@@ -1,5 +1,4 @@
 <h1 align="center">PC Cast2TV</h1>
-<h3 align="center">An app to cast your PC screen to your TV or Roku</h3>
 
 <p align="center">
   <b>Cast your Windows PC's screen and sound to your TV or Roku, over your home network.</b><br>
