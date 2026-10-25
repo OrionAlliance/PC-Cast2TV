@@ -56,16 +56,17 @@ public static class CastFinder
         if (txt == null) return null;
         var kv = txt.Texts.Select(t => t.Split('=', 2)).Where(p => p.Length == 2)
                           .GroupBy(p => p[0]).ToDictionary(g => g.Key, g => g.First()[1]);
-        var name = kv.GetValueOrDefault("fn") is { Length: > 0 } fn ? fn : kv.GetValueOrDefault("md") ?? "Chromecast";
+        var model = kv.GetValueOrDefault("md") is { Length: > 0 } md ? md : null;
         if (!int.TryParse(kv.GetValueOrDefault("ca"), out var caps) || (caps & 1) == 0)
         {
-            Log.Write($"detect: {name} at {fromIp} has no screen, left off the list");
+            Log.Write($"detect: {model ?? "a Cast device"} at {fromIp} has no screen, left off the list"); // its model, never its given name
             return null;
         }
+        var name = kv.GetValueOrDefault("fn") is { Length: > 0 } fn ? fn : model ?? "Chromecast";
         var srv = recs.FirstOrDefault(r => r.Type == 33 && r.Name == txt.Name);
         var ip = recs.FirstOrDefault(r => r.Type == 1 && srv != null && r.Name == srv.Target)?.Address ?? fromIp;
         var id = kv.GetValueOrDefault("id") is { Length: > 0 } i ? i : ip;
-        return new Device("cast:" + id, name, DeviceKind.Cast, ip, Port: srv?.Port ?? 8009, Model: kv.GetValueOrDefault("md") is { Length: > 0 } md ? md : null);
+        return new Device("cast:" + id, name, DeviceKind.Cast, ip, Port: srv?.Port ?? 8009, Model: model);
     }
 
     static List<Rec> Parse(byte[] p)

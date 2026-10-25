@@ -79,20 +79,20 @@ public static class AppSettings
             else continue;
             changed = true;
         }
-        if (changed && Save()) Log.Write("settings: saved devices now " + string.Join(", ", Data.Devices.Select(d => d.Name)));
+        if (changed && Save()) Log.Write("settings: saved devices now " + string.Join(", ", Data.Devices.Select(d => d.LogName)));
     }
 
     public static void SetDefault(Device d)
     {
         Data.Default = d;
-        if (Save()) Log.Write(d == null ? "settings: default cleared" : $"settings: default is {d.Name} at {d.Ip}");
+        if (Save()) Log.Write(d == null ? "settings: default cleared" : "settings: default is " + d.LogName);
     }
 
     // The checked devices become the hidden set; anything unchecked comes back.
     public static void SetHidden(IEnumerable<Device> devices)
     {
         Data.Hidden = devices.ToList();
-        if (Save()) Log.Write("settings: hidden now " + (Data.Hidden.Count == 0 ? "none" : string.Join(", ", Data.Hidden.Select(d => d.Name))));
+        if (Save()) Log.Write("settings: hidden now " + (Data.Hidden.Count == 0 ? "none" : string.Join(", ", Data.Hidden.Select(d => d.LogName))));
     }
 
     // Forget = hide it for good and wipe its bookmark, so Detect never lists it again (right-click Detect brings it back).
@@ -102,7 +102,7 @@ public static class AppSettings
         var ids = list.Select(d => d.Id).ToHashSet();
         Data.Hidden.AddRange(list.Where(d => !IsHidden(d.Id)));
         if (Data.Default != null && ids.Contains(Data.Default.Id)) Data.Default = null;
-        if (Save()) Log.Write("settings: forgot (hidden for good) " + string.Join(", ", list.Select(d => d.Name)));
+        if (Save()) Log.Write("settings: forgot (hidden for good) " + string.Join(", ", list.Select(d => d.LogName)));
     }
 
     public static void SetTheme(string name)

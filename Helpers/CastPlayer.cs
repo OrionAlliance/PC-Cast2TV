@@ -50,10 +50,9 @@ public sealed partial class CastPlayer : IDisposable
         }
     }
 
-    // Returns the player (kept so End Cast can close it) or the status line message when it didn't play.
+    // Returns the player (kept so End Cast can close it), or what went wrong when it didn't play (the caller puts the TV's name in front).
     public static async Task<(CastPlayer Player, string Error)> PlayAsync(Device d, string url, Func<int> piecesServed)
     {
-        var name = d.Name.ToUpperInvariant();
         var c = new CastPlayer(d);
         try
         {
@@ -63,7 +62,7 @@ public sealed partial class CastPlayer : IDisposable
             if (status == null)
             {
                 c.Dispose();
-                return (null, $"{name} DID NOT OPEN ITS PLAYER");
+                return (null, "DID NOT OPEN ITS PLAYER");
             }
             var (sessionId, transportId) = PlayerApp(status.Value).Value;
             c._sessionId = sessionId;
@@ -93,7 +92,7 @@ public sealed partial class CastPlayer : IDisposable
                 {
                     Log.Write("cast: the TV refused the stream: " + t);
                     await c.StopAsync();
-                    return (null, $"{name} REFUSED THE STREAM");
+                    return (null, "REFUSED THE STREAM");
                 }
                 if ((t == "MEDIA_STATUS" && State(m.Value) == "PLAYING") || piecesServed() - start >= 3)
                 {
@@ -104,13 +103,13 @@ public sealed partial class CastPlayer : IDisposable
             }
             Log.Write($"cast: never started (pieces {piecesServed() - start})");
             await c.StopAsync();
-            return (null, $"{name} DID NOT START PLAYING");
+            return (null, "DID NOT START PLAYING");
         }
         catch (Exception ex) when (IsNetError(ex))
         {
             Log.Write("cast: connection failed: " + ex.GetType().Name + " " + ex.Message);
             c.Dispose();
-            return (null, $"{name} STOPPED ANSWERING");
+            return (null, "STOPPED ANSWERING");
         }
     }
 

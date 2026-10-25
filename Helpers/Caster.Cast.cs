@@ -24,7 +24,7 @@ public sealed partial class Caster
     async Task StartCastAsync(Device d)
     {
         var name = d.Name.ToUpperInvariant();
-        Log.Write($"cast: start to {d.Name} ({d.KindLabel}) at {d.Ip}");
+        Log.Write("cast: start to " + d.LogName);
 
         Set(Phase.Starting, $"CHECKING {name}...");
         bool answering = await AnsweringAsync(d);
@@ -32,7 +32,7 @@ public sealed partial class Caster
         if (answering) _answering.Add(d.Id); else _answering.Remove(d.Id);
         if (!answering)
         {
-            FailCast($"{name} NOT ANSWERING");
+            FailCast("NOT ANSWERING", d);
             // A Roku box answers even with the TV off, so for one of those the box itself is the thing to check.
             var check = d.Kind == DeviceKind.Roku ? "Make sure the Roku is plugged in and turned on." : "Make sure the TV is turned on.";
             Notice?.Invoke($"{name} ISN'T ANSWERING", check + "\n\n" +
@@ -46,11 +46,11 @@ public sealed partial class Caster
         {
             bool ours = await RokuPlayer.HasOurAppAsync(d);
             if (Phase != Phase.Starting) return;
-            if (!ours) { FailCast($"{name} NEEDS THE PC CAST2TV ROKU APP"); return; }
+            if (!ours) { FailCast("NEEDS THE PC CAST2TV ROKU APP", d); return; }
         }
 
         var localIp = NetUtil.LocalIpToward(d.Ip);
-        if (localIp == null) { FailCast($"NO NETWORK ROUTE TO {name}"); return; }
+        if (localIp == null) { FailCast("NO NETWORK ROUTE TO THE TV"); return; }
         // A cast never goes through a VPN: the TV has to be on the home network the PC reaches it by.
         if (NetUtil.IsOnVpn(localIp) || !NetUtil.SameNetwork(localIp, d.Ip))
         {
@@ -132,7 +132,7 @@ public sealed partial class Caster
     }
 
     // An ended cast says so for 5 seconds, then the line goes back to ready; an error stays up.
-    async Task StopCastAsync(string message, bool error = false)
+    async Task StopCastAsync(string message, bool error = false, Device about = null)
     {
         var d = CastingTo;
         Set(Phase.Stopping, "ENDING CAST...");
@@ -140,10 +140,15 @@ public sealed partial class Caster
         else if (d.Kind == DeviceKind.Cast) await _castPlayer.StopAsync();
         else await DlnaPlayer.StopAsync(d);
         CleanupCast();
-        Log.Write("cast: ended" + (message == null ? "" : " (" + message + ")"));
-        Set(Phase.Online, message ?? "CAST ENDED");
+        Log.Write("cast: ended" + (message == null ? "" : " (" + ForLog(about, message) + ")"));
+        Set(Phase.Online, message == null ? "CAST ENDED" : Shown(about, message));
         if (!error) _ = BackToReadyAsync();
     }
+
+    // A message about a device: the status line puts its name in front, the log its kind and address (logs get posted
+    // in public Issues).
+    static string Shown(Device about, string message) => about == null ? message : $"{about.Name.ToUpperInvariant()} {message}";
+    static string ForLog(Device about, string message) => about == null ? message : $"{about.LogName} {message}";
 
     // Left alone if anything else is on the line by then, or another cast has started and ended since.
     async Task BackToReadyAsync()
@@ -160,18 +165,18 @@ public sealed partial class Caster
     void PlayerFailed(string message, Device d)
     {
         bool nothingReached = _server.SentBytes == 0;
-        FailCast(message);
-        if (!nothingReached || !NetworkName.IsPublic(d.Ip)) return;
+        FailCast(message, d);
+        if (!nothingReached || !HomeNetwork.IsPublic(d.Ip)) return;
         Log.Write("cast: nothing reached the TV and Windows calls this network Public");
         Notice?.Invoke("WINDOWS CALLS THIS NETWORK PUBLIC", "Windows keeps TVs out on a network it calls Public. Open Windows Settings > " +
             "Network & internet, open your network's properties and set \"Network profile type\" to Private, then cast again.");
     }
 
-    void FailCast(string message)
+    void FailCast(string message, Device about = null)
     {
-        Log.Write("cast: failed: " + message);
+        Log.Write("cast: failed: " + ForLog(about, message));
         CleanupCast();
-        Set(Phase.Online, message);
+        Set(Phase.Online, Shown(about, message));
     }
 
     void CleanupCast()
@@ -261,7 +266,7 @@ public sealed partial class Caster
         var last = _server.LastAskUtc > _castStartUtc ? _server.LastAskUtc : _castStartUtc;
         if (now - last > TimeSpan.FromSeconds(20))
         {
-            _ = StopCastAsync($"{CastingTo.Name.ToUpperInvariant()} STOPPED PLAYING · CAST ENDED");
+            _ = StopCastAsync("STOPPED PLAYING · CAST ENDED", about: CastingTo);
             return;
         }
         Raise();

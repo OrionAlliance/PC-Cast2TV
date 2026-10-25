@@ -43,10 +43,11 @@ public static class RokuPlayer
         }
     }
 
-    // Our app takes the link in url and sends the remote's buttons back. Null once it plays, else what went wrong.
+    // Our app takes the link in url and sends the remote's buttons back. Null once it plays, else what went wrong
+    // (the caller puts the Roku's name in front).
     public static async Task<string> PlayAsync(Device d, string url, Func<int> piecesServed)
     {
-        string failed = $"{d.Name.ToUpperInvariant()} DID NOT START PLAYING";
+        const string failed = "DID NOT START PLAYING";
         try
         {
             using var r = await Http.PostAsync($"http://{d.Ip}:8060/launch/{OurApp}?url={Uri.EscapeDataString(url)}", null);

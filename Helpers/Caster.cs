@@ -40,7 +40,6 @@ public sealed partial class Caster
     public double? CpuLoad { get; private set; }   // this app's share of the processor
     public double? EncoderLoad { get; private set; } // the graphics card's video encoder, every program on it
     public double? BehindLive { get; private set; }  // seconds; only our Roku app reports it
-    public string NetworkLabel { get; private set; } // this PC's side for the log: "WIRED · NETWORK 4"
     public string PcLink { get; private set; }       // how this PC reaches the device: "WIRED" or "WI-FI"
     readonly Dictionary<string, string> _links = new(); // each device's own connection by id; null = asked, it doesn't say
 
@@ -84,16 +83,15 @@ public sealed partial class Caster
     // Shown only while connected. It follows the device in use and updates by itself when Windows changes networks.
     void RefreshNetwork()
     {
-        var before = NetworkLabel;
+        var before = PcLink;
         SetNetwork(IsOnline);
-        if (NetworkLabel == before) return;
-        Log.Write("network: now " + NetworkLabel);
+        if (PcLink == before) return;
+        Log.Write("network: now " + (PcLink ?? "NO NETWORK"));
         Raise();
     }
 
     // This PC's side of the link to the device in use; nothing while offline.
-    void SetNetwork(bool online) =>
-        (PcLink, NetworkLabel) = online ? NetworkName.Describe((CastingTo ?? Picked)?.Ip) : (null, null);
+    void SetNetwork(bool online) => PcLink = online ? HomeNetwork.Link((CastingTo ?? Picked)?.Ip) : null;
 
     // How a device on the list is connected, in its own words ("WI-FI" or "WIRED"). Asked returns false until it has
     // been asked (on Connect, Detect, or when it comes back); a device asked that doesn't say has a null link.
@@ -149,7 +147,7 @@ public sealed partial class Caster
         }
         _tick = new Timer(_ => _ui.Post(_ => Tick(), null), null, 1000, 1000);
         SetNetwork(true);
-        Log.Write("connect: online on " + NetworkLabel);
+        Log.Write("connect: online on " + (PcLink ?? "NO NETWORK"));
         Set(Phase.Online, !firewallOk ? "FIREWALL BLOCKS TVS · CASTS WILL FAIL"
                         : Devices.Count > 0 ? Ready : "CONNECTED · PRESS DETECT");
         _ = LoadLinksAsync();

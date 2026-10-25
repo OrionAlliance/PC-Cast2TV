@@ -19,6 +19,8 @@ public sealed record Device(string Id, string Name, DeviceKind Kind, string Ip, 
     // Worked out from Kind, so they stay out of settings.json.
     [JsonIgnore] public bool IsRoku => Kind is DeviceKind.Roku or DeviceKind.RokuTv;
     [JsonIgnore] public string KindLabel => Kind switch { DeviceKind.Roku => "ROKU", DeviceKind.RokuTv => "ROKU TV", DeviceKind.Cast => "CHROMECAST", _ => "DLNA" };
+    // The log calls it by kind and address, never the name people gave it: logs get posted in public Issues.
+    [JsonIgnore] public string LogName => $"{KindLabel} at {Ip}";
 
     // Rokus and Chromecast-style TVs take the 1-second HLS pieces; DLNA TVs take one endless live stream.
     [JsonIgnore] public bool TakesHls => Kind != DeviceKind.Dlna;
@@ -45,7 +47,7 @@ public static class DeviceFinder
                         .Select(g => g.OrderBy(d => d.IsRoku ? 0 : d.Kind == DeviceKind.Cast ? 1 : 2).First())
                         .OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
         Log.Write($"detect: searched {adapters.Count} adapter(s), {answers.Count + cast.Result.Count} answered, {list.Count} can play: " +
-                  string.Join(", ", list.Select(d => $"{d.Name} ({d.KindLabel}) at {d.Ip}")));
+                  string.Join(", ", list.Select(d => d.LogName)));
         return list;
     }
 

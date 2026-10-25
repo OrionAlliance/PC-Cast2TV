@@ -4,21 +4,20 @@ using System.Runtime.InteropServices;
 
 namespace PCCast2TV.Helpers;
 
-// The home network's name as Windows shows it: the Wi-Fi name on Wi-Fi, "Network 4" style on a cable.
-// A VPN never counts. Reading it is local only; nothing goes out on the network.
-public static class NetworkName
+// The home network this PC casts over: how it's connected, and whether Windows calls it Public. Its name (the Wi-Fi
+// name) is never read, so it can't end up in the log. A VPN never counts. Nothing here goes out on the network.
+public static class HomeNetwork
 {
     static readonly Guid ListManager = new("DCB00C01-570F-4A9B-8D69-199FDBA5723B");
 
-    // This PC's side: how it reaches the device ("WI-FI" or "WIRED", null with no network) and the label for the log.
+    // This PC's side: how it reaches the device, "WI-FI" or "WIRED", null with no network.
     // towardIp is the device being cast to, when known, so a PC on both Wi-Fi and a cable names the one actually used.
-    public static (string Kind, string Label) Describe(string towardIp)
+    public static string Link(string towardIp) => PickAdapter(towardIp) switch
     {
-        var nic = PickAdapter(towardIp);
-        if (nic == null) return (null, "NO NETWORK");
-        var kind = nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ? "WI-FI" : "WIRED";
-        return (kind, $"{kind} · {(NameOf(nic) ?? nic.Name).ToUpperInvariant()}");
-    }
+        null => null,
+        { NetworkInterfaceType: NetworkInterfaceType.Wireless80211 } => "WI-FI",
+        _ => "WIRED",
+    };
 
     static NetworkInterface PickAdapter(string towardIp)
     {
@@ -47,13 +46,6 @@ public static class NetworkName
         try { return nic != null && NetworkOf(nic)?.GetCategory() == 0; }
         catch (COMException ex) { Log.Write("network type: Windows' network list failed: " + ex.Message); }
         return false;
-    }
-
-    static string NameOf(NetworkInterface nic)
-    {
-        try { return NetworkOf(nic)?.GetName(); }
-        catch (COMException ex) { Log.Write("network name: Windows' network list failed: " + ex.Message); }
-        return null;
     }
 
     // Windows' own network list (Network List Manager), matched to the adapter by its ID.

@@ -41,7 +41,7 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 
 ## Requirements
 
-- **Works on Windows 10 and Windows 11** (64-bit). Every feature works the same on both. It looks best on Windows 11, where the title bar picks up your theme color and the window gets rounded corners.
+- **Works on Windows 10 and Windows 11** (64-bit). It looks best on Windows 11, where the title bar picks up your theme color and the window gets rounded corners.
 - **The PC and the TV on the same home network.** Windows has to call that network Private, not Public. The app tells you if it doesn't.
 - **Running a VPN?** If you're having connection issues, you may need to turn on its "Allow LAN" setting (some VPNs call it "Local network sharing") so the PC can reach the TV.
 
