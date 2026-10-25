@@ -29,7 +29,9 @@ public partial class MainWindow : Window
         InitializeComponent();
         BuildSignalRing();
         _caster.Changed += Draw;
+        _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over
         _caster.Notice += (title, body) => NoticeWindow.Tell(this, title, body);
+        ContentRendered += async (_, _) => await CheckForUpdateAsync();
         ThemeColors.Changed += OnThemeChanged;
         Glow(ThemeColors.Current.Main);
         SourceInitialized += (_, _) => DarkTitleBar.Apply(this);

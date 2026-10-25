@@ -34,6 +34,7 @@ I wanted my PC on my TV. The whole screen, with sound, smooth, without running a
 
   Not sure about yours? Just press Detect. If your TV shows up in the list, the app can cast to it.
 - **One portable exe.** No installer, no extra programs, nothing running in the background. Its settings live in a `Settings` folder next to the app.
+- **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
 - **Your Roku remote works the PC:** Play/Pause, Next and Previous control whatever is playing on the PC, Fast Forward and Rewind send the arrow keys, and Back ends the cast.
 - **A health readout** while you cast: dropped frames, CPU load, GPU load, and how far behind live the TV is. The numbers stay up after the cast so you can see how it went.
 - **8 color themes,** plus Random and your own color, from the ⚙ cog.
@@ -46,7 +47,7 @@ I wanted my PC on my TV. The whole screen, with sound, smooth, without running a
 
 ## Installing
 
-1. Download **`PC Cast2TV.exe`** from the [Releases](../../releases) page. That's the only official download. Copies posted anywhere else aren't from me, so don't run them.
+1. Download **`PC-Cast2TV.exe`** from the [Releases](../../releases) page. That's the only official download. Copies posted anywhere else aren't from me, so don't run them.
 2. Put it in its own folder (it keeps its `Settings` folder next to it) and run it. **Windows will show a blue "Windows protected your PC" warning.** That's SmartScreen reacting to an unsigned open-source app with no download reputation yet, not a threat detection. Click **More info → Run anyway**. (Don't take my word for what the app does. The entire source code is this repository.)
 3. Press **Connect**. The first time, Windows asks once to let your TVs reach the app. That's a firewall rule for this app only, on private networks only.
 4. Press **Detect** to find your TVs, click the one you want, and press **Cast**.
@@ -96,7 +97,7 @@ Right-click it in the list to hide it from the list or forget it from Detect. Ri
 
 ## Your data stays yours
 
-This app collects **nothing** and sends **nothing** anywhere: no telemetry, no analytics, no accounts. It never uses the internet at all. It only talks to your TVs on your home network.
+This app collects **nothing** and sends **nothing** about you: no telemetry, no analytics, no accounts. It talks to your TVs on your home network, and its only internet use is asking this repository whether a newer version is out (and downloading it if you say so). That request sends nothing about you or your PC.
 
 ## Found a bug?
 

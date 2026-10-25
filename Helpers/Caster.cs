@@ -309,6 +309,14 @@ public sealed partial class Caster
     // The status before a cast; the center button shows what to press.
     const string Ready = "READY";
 
+    // A line from outside the casting (like "UPDATED TO V0.3.83"), shown only while nothing is going on.
+    public void Note(string status)
+    {
+        if (Phase is not (Phase.Offline or Phase.Online)) return;
+        Status = status;
+        Raise();
+    }
+
     void Set(Phase phase, string status)
     {
         Phase = phase;
