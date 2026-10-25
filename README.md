@@ -54,6 +54,11 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 
 ## Roku: install the PC Cast2TV Roku app
 
+<p align="center">
+  <img src="Roku%20App/images/icon_fhd.png" width="270" alt="The PC Cast2TV Roku app icon" /><br>
+  <i>This is the icon you'll see on your Roku's home screen once it's installed.</i>
+</p>
+
 A Roku plays your PC through its own PC Cast2TV app. Until that app is in the Roku Channel Store, it installs through Roku's developer mode, which is free and built into every Roku:
 
 1. Download **`PC-Cast2TV-Roku-v0.1.11.zip`** from the [Releases](../../releases) page.
