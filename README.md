@@ -3,7 +3,7 @@
 
 <p align="center">
   <b>Cast your Windows PC's screen and sound to your TV or Roku, over your home network.</b><br>
-  <b>Roku, Chromecast and smart TVs. Press Connect, pick your TV, press Cast. That's the app.</b>
+  <b>Roku, Chromecast and smart TVs. Press Connect, pick your device, press Cast. That's the app.</b>
 </p>
 
 <p align="center">
