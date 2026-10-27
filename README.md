@@ -61,7 +61,7 @@ A Roku plays your PC through **DisplayHUB**, a free channel in the Roku Channel 
 </p>
 
 1. Click your Roku in PC Cast2TV's list.
-2. If DisplayHUB isn't on it yet, PC Cast2TV pops up and shows you. Press **ADD DISPLAYHUB** and its page opens on your TV.
+2. If DisplayHUB isn't on your Roku yet, PC Cast2TV pops up and shows you. Click **ADD DISPLAYHUB** and its page opens on your TV.
 3. Press **OK** on your Roku remote. PC Cast2TV sees it arrive, the popup closes by itself, and you're ready to press **Cast**.
 
 **Good to know:** with DisplayHUB, the Roku remote can't pause, play or skip on your PC.
