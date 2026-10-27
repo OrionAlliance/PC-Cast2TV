@@ -178,7 +178,7 @@ public partial class MainWindow : Window
         CastRing.Stroke = casting || ready ? Main : Dim;
         var (title, sub, size) = step switch
         {
-            CastStep.Casting => ("CASTING", "PRESS TO END", 34.0),
+            CastStep.Casting => ("CASTING", "CLICK TO END", 34.0),
             CastStep.Cast => ("CAST", "TO " + c.Picked.Name.ToUpperInvariant(), 46.0),
             CastStep.ConnectFirst => ("CONNECT", "FIRST", 30.0),
             CastStep.DetectFirst => ("DETECT", "FIRST", 30.0),

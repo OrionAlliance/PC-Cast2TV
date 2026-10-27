@@ -31,7 +31,7 @@ public sealed partial class Caster
     public Device Default => AppSettings.Default;
     public Device CastingTo { get; private set; }
     public bool Detected { get; private set; }
-    public string Status { get; private set; } = "OFFLINE · PRESS CONNECT";
+    public string Status { get; private set; } = "OFFLINE · CLICK CONNECT";
     public EncoderChoice Encoder { get; private set; }
     public RateMeter Meter { get; } = new();
     // The health readout: the same 10-second readings the log takes, null until this cast's first one. After a cast
@@ -149,7 +149,7 @@ public sealed partial class Caster
         SetNetwork(true);
         Log.Write("connect: online on " + (PcLink ?? "NO NETWORK"));
         Set(Phase.Online, !firewallOk ? "FIREWALL BLOCKS TVS · CASTS WILL FAIL"
-                        : Devices.Count > 0 ? Ready : "CONNECTED · PRESS DETECT");
+                        : Devices.Count > 0 ? Ready : "CONNECTED · CLICK DETECT");
         _ = LoadLinksAsync();
         await CheckDevicesAsync();
     }
@@ -187,7 +187,7 @@ public sealed partial class Caster
         _answering.Clear();
         Detected = false; // offline the row is just what's saved
         Log.Write("connect: offline");
-        Set(Phase.Offline, "OFFLINE · PRESS CONNECT");
+        Set(Phase.Offline, "OFFLINE · CLICK CONNECT");
     }
 
     // Closing the app is the same as Disconnect.
@@ -238,7 +238,7 @@ public sealed partial class Caster
         bool letGo = Picked?.Id == d.Id && PickClicked;
         Picked = letGo ? null : d;
         PickClicked = !letGo;
-        Status = IsOnline ? Ready : "OFFLINE · PRESS CONNECT";
+        Status = IsOnline ? Ready : "OFFLINE · CLICK CONNECT";
         SetNetwork(IsOnline);
         Raise();
         if (!letGo && d.IsRoku && IsOnline) _ = CheckRokuAppAsync(d);

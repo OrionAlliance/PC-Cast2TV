@@ -8,7 +8,7 @@
         <StackPanel Width="440">
             <TextBlock x:Name="Heading" Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextWrapping="Wrap" />
             <TextBlock x:Name="Empty" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource DimText}" Margin="0,16,0,0"
-                       Text="NO DEVICES YET · PRESS DETECT FIRST" Visibility="Collapsed" />
+                       Text="NO DEVICES YET · CLICK DETECT FIRST" Visibility="Collapsed" />
             <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto" Margin="0,18,0,0">
                 <ScrollViewer.Resources>
                     <!-- A slim bar in the theme's color instead of Windows' bright white one; drag it or use the mouse wheel. -->

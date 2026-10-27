@@ -47,7 +47,7 @@
             <StackPanel x:Name="EmptyHint" Canvas.Left="24" Canvas.Top="182" Width="242">
                 <TextBlock Style="{StaticResource Label}" FontSize="20" Foreground="{DynamicResource Second}" Text="NO DEVICES YET" />
                 <TextBlock Style="{StaticResource Label}" FontWeight="Normal" FontSize="15" Foreground="{DynamicResource DimText}" TextWrapping="Wrap" Margin="0,4,0,0"
-                           Text="PRESS CONNECT, THEN DETECT TO FIND YOUR TVS AND ROKUS." />
+                           Text="CLICK CONNECT, THEN DETECT TO FIND YOUR TVS AND ROKUS." />
             </StackPanel>
             <Button x:Name="ConnectBtn" Canvas.Left="20" Canvas.Top="88" Width="118" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Connect_Click">
                 <!-- Full height so icon and text each center on the pill; -1.5 cancels the icon's own blank edge.
