@@ -3,8 +3,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// The update offer: UPDATE downloads the new exe and swaps it in; NOT NOW (or Esc, or the X) leaves this copy as it is.
-// Display only: AppUpdater does the work.
+// The update offer, display only: UPDATE hands the work to AppUpdater; NOT NOW, Esc or the X leave this copy as it is.
 public partial class UpdateWindow : Window
 {
     readonly AppUpdater.Update _update;
@@ -33,28 +32,21 @@ public partial class UpdateWindow : Window
 
     async void Update_Click(object sender, RoutedEventArgs e)
     {
-        Log.Write($"update: UPDATE pressed (v{_update.Installed} to v{_update.Latest})");
         _busy = true;
         ButtonRow.Visibility = Visibility.Collapsed;
         StatusText.Visibility = Progress.Visibility = Visibility.Visible;
         StatusText.Text = "DOWNLOADING...";
-        try
+        string why = await AppUpdater.InstallAsync(_update, new Progress<string>(s => StatusText.Text = s));
+        _busy = false;
+        if (why == null)
         {
-            string downloaded = await AppUpdater.DownloadAsync(_update, new Progress<string>(s => StatusText.Text = s));
-            StatusText.Text = "INSTALLING...";
-            AppUpdater.Swap(downloaded);
             SwappedIn = true;
-            _busy = false;
             Close();
+            return;
         }
-        catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException or System.IO.IOException or UnauthorizedAccessException)
-        {
-            _busy = false;
-            Log.Write($"update: didn't finish: {ex.GetType().Name}: {ex.Message}");
-            Progress.Visibility = Visibility.Collapsed;
-            StatusText.Text = "COULDN'T UPDATE: " + ex.Message + "\nNothing changed. This copy still works.";
-            UpdateLabel.Text = "TRY AGAIN";
-            ButtonRow.Visibility = Visibility.Visible;
-        }
+        Progress.Visibility = Visibility.Collapsed;
+        StatusText.Text = "COULDN'T UPDATE: " + why + "\nNothing changed. This copy still works.";
+        UpdateLabel.Text = "TRY AGAIN";
+        ButtonRow.Visibility = Visibility.Visible;
     }
 }

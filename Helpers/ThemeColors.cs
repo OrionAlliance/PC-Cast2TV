@@ -4,9 +4,7 @@ using System.Windows.Media;
 
 namespace PCCast2TV.Helpers;
 
-// The 8 color themes, lightest to darkest (shown 4 over 4 in settings). Each takes CYAN's steps from its own main color,
-// so every part changes together; Peak is a deep accent, Ink the same black in all. RANDOM builds a set the same way
-// from any hue, or now and then a grey; Roll (its saved key) is set only on those.
+// The 8 themes, lightest to darkest, each CYAN's steps from its own main color; RANDOM builds one from any hue (Roll saves it).
 public static class ThemeColors
 {
     public sealed record Palette(string Name, Color Main, Color Soft, Color Second, Color Enc, Color Peak, Color Dim, Color DimText, string Roll = null);
@@ -34,8 +32,7 @@ public static class ThemeColors
     // What the settings file keeps for a theme.
     public static string KeyOf(Palette p) => p.Roll ?? p.Name;
 
-    // RANDOM: about 1 in 6 rolls is a grey (half plain, half lightly tinted), the rest a full color.
-    // Each roll is far enough from the one on now that every click shows a real change.
+    // RANDOM: about 1 in 6 rolls is a grey (plain or lightly tinted), and each roll differs enough from the current one to show.
     public static string Roll()
     {
         var r = Random.Shared;
@@ -53,8 +50,7 @@ public static class ThemeColors
         return FromHue(h).Roll;
     }
 
-    // CYAN's steps from any hue. Only the hue is random: the brightness stays in the 8 themes' range (no darker than
-    // COBALT, no brighter than AMBER), so yellows are toned down, deep blues lifted, and every roll reads well on the black.
+    // CYAN's steps from any hue, kept within the 8 themes' brightness (COBALT to AMBER) so every roll reads well on black.
     static Palette FromHue(double hue)
     {
         double l = 0.60;
@@ -65,8 +61,7 @@ public static class ThemeColors
                            HueKey + hue.ToString("0", CultureInfo.InvariantCulture));
     }
 
-    // A grey from silver (lightness 0.55) down to gunmetal (0.17), plain (tint 0) or with a hint of a hue (up to 0.18,
-    // like steel or stone). The other parts step down from it the way CYAN's do; the peak keeps a deep color so it stands out.
+    // A grey from silver (0.55) to gunmetal (0.17), plain or lightly tinted (up to 0.18); its peak keeps a deep color.
     static Palette FromGrey(double hue, double tint, double lum)
     {
         double l = 0.30;
@@ -104,7 +99,6 @@ public static class ThemeColors
         r["Peak"] = Brush(p.Peak);
         r["Dim"] = Brush(p.Dim);
         r["DimText"] = Brush(p.DimText);
-        r["Grid"] = Brush(Color.FromArgb(0x38, p.Second.R, p.Second.G, p.Second.B));
         Changed?.Invoke();
     }
 
@@ -128,12 +122,7 @@ public static class ThemeColors
         if (UnsavedRoll is string roll) AppSettings.SetMyTheme(roll);
     }
 
-    static SolidColorBrush Brush(Color c)
-    {
-        var b = new SolidColorBrush(c);
-        b.Freeze();
-        return b;
-    }
+    static SolidColorBrush Brush(Color c) => (SolidColorBrush)new SolidColorBrush(c).GetAsFrozen();
 
     static Color Hsl(double hue, double s, double l)
     {

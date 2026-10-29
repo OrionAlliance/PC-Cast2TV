@@ -2,15 +2,13 @@ using System.Diagnostics;
 
 namespace PCCast2TV.Helpers;
 
-// How busy each engine on the graphics card is, across every program (Task Manager's "GPU Engine" counters), logged
-// every 10 seconds during a cast. Engine names differ by brand, so every busy one is listed by name.
+// How busy each graphics card engine is across every program (Task Manager's GPU Engine counters), logged each 10 seconds.
 public static class GpuLoad
 {
     static readonly object Gate = new();
     static Dictionary<string, CounterSample> _before = new();
 
-    // Line: "gpu 3D 12%, VideoDecode 30%, ..." (busiest engine of each kind since the last call, idle kinds left out).
-    // Encoder: the video encoder's load for the window, null when there's no reading. The first call only takes a starting reading.
+    // Line: each kind's busiest engine since the last call; Encoder: the video encoder's load (null without one); the first call just starts.
     public static (string Line, double? Encoder) Sample()
     {
         lock (Gate)

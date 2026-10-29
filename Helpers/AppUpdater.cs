@@ -6,11 +6,11 @@ using System.Text.Json;
 
 namespace PCCast2TV.Helpers;
 
-// Self-update from the app's GitHub releases (the same way the Time Sheet apps do it). The portable exe swaps itself
-// in place; the Settings folder next to it is never touched. All GitHub sees is a plain request for the newest release.
+// Self-update from the app's GitHub releases (one plain request for the newest); the exe swaps itself, Settings untouched.
 public static class AppUpdater
 {
     public const string Repo = "OrionAlliance/PC-Cast2TV", Page = "https://github.com/" + Repo;
+    public const string AfterUpdate = "--after-update"; // the new version's start, so it waits for the old one to close
 
     // The app's GitHub page in the default browser (Settings > ABOUT).
     public static void OpenPage()
@@ -27,14 +27,22 @@ public static class AppUpdater
 
     static Version Short(Version v) => new(v.Major, v.Minor, Math.Max(v.Build, 0));
 
-    // Null when up to date, offline, or there's nothing usable on GitHub; it never nags.
-    public static async Task<Update> CheckAsync(string repo = Repo, Version installed = null)
+    // Once the window is up: tidies up after a past update, then asks GitHub (null when there's nothing newer).
+    public static async Task<Update> StartUpAsync()
     {
-        installed ??= Installed;
+        if (JustUpdated()) Log.Write($"update: now running v{Installed}");
+        CleanUp();
+        return await CheckAsync();
+    }
+
+    // Null when up to date, offline, or there's nothing usable on GitHub; it never nags.
+    static async Task<Update> CheckAsync()
+    {
+        var installed = Installed;
         try
         {
             using var http = Client(TimeSpan.FromSeconds(15));
-            using var doc = JsonDocument.Parse(await http.GetStringAsync($"https://api.github.com/repos/{repo}/releases/latest"));
+            using var doc = JsonDocument.Parse(await http.GetStringAsync($"https://api.github.com/repos/{Repo}/releases/latest"));
             string tag = doc.RootElement.GetProperty("tag_name").GetString() ?? "";
             if (!Version.TryParse(tag.TrimStart('v', 'V'), out var parsed))
             {
@@ -62,10 +70,28 @@ public static class AppUpdater
         }
     }
 
-    // Downloads next to the exe as "<name>.exe.new", so the swap is a rename in the same folder.
-    public static async Task<string> DownloadAsync(Update u, IProgress<string> progress, string exePath = null)
+    // UPDATE: downloads the new exe and swaps it in; null once it's in place, else why not (this copy is left as it was).
+    public static async Task<string> InstallAsync(Update u, IProgress<string> progress)
     {
-        string target = (exePath ?? ExePath) + ".new";
+        Log.Write($"update: UPDATE pressed (v{u.Installed} to v{u.Latest})");
+        try
+        {
+            string downloaded = await DownloadAsync(u, progress);
+            progress.Report("INSTALLING...");
+            Swap(downloaded);
+            return null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UnauthorizedAccessException)
+        {
+            Log.Write($"update: didn't finish: {ex.GetType().Name}: {ex.Message}");
+            return ex.Message;
+        }
+    }
+
+    // Downloads next to the exe as "<name>.exe.new", so the swap is a rename in the same folder.
+    static async Task<string> DownloadAsync(Update u, IProgress<string> progress)
+    {
+        string target = ExePath + ".new";
         long totalMb = Math.Max(1, u.Size / 1_048_576);
         try
         {
@@ -101,11 +127,10 @@ public static class AppUpdater
         }
     }
 
-    // A running exe can be renamed but not overwritten: this one becomes .old, the download takes its name. The next
-    // start deletes .old.
-    public static void Swap(string downloaded, string exePath = null)
+    // A running exe can be renamed but not overwritten: it becomes .old (deleted on the next start) and the download takes its name.
+    static void Swap(string downloaded)
     {
-        string exe = exePath ?? ExePath, old = exe + ".old";
+        string exe = ExePath, old = exe + ".old";
         if (File.Exists(old)) File.Delete(old);
         File.Move(exe, old);
         try { File.Move(downloaded, exe); }
@@ -117,33 +142,40 @@ public static class AppUpdater
         Log.Write("update: the new exe is in place");
     }
 
-    public static void StartNewCopy()
+    // After UPDATE: starts the new version (it waits for this one to close); false when Windows wouldn't start it.
+    public static bool StartNewCopy()
     {
         Log.Write("update: starting the new version and closing this one");
-        Process.Start(new ProcessStartInfo(ExePath) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(ExePath) });
+        try
+        {
+            Process.Start(new ProcessStartInfo(ExePath, AfterUpdate) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(ExePath) });
+            return true;
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            Log.Write($"update: couldn't start the new version: {ex.Message}");
+            return false;
+        }
     }
 
     // True right after an update, while the previous version is still left behind.
-    public static bool JustUpdated(string exePath = null) => File.Exists((exePath ?? ExePath) + ".old");
+    public static bool JustUpdated() => File.Exists(ExePath + ".old");
 
-    // Deletes the previous version and any half download; the old copy may still be closing, so it retries for 10 seconds.
-    public static async Task CleanUpAsync(string exePath = null)
+    // Deletes the previous version and any half download (OneCopy waited for the old copy to close, so it's free).
+    static void CleanUp()
     {
-        string exe = exePath ?? ExePath;
+        string exe = ExePath;
         foreach (var leftover in new[] { exe + ".old", exe + ".new" })
         {
-            for (int i = 0; i < 20 && File.Exists(leftover); i++)
+            if (!File.Exists(leftover)) continue;
+            try
             {
-                try
-                {
-                    File.Delete(leftover);
-                    Log.Write($"update: removed the {Path.GetExtension(leftover)} copy");
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    if (i == 19) Log.Write($"update: couldn't remove the {Path.GetExtension(leftover)} copy yet ({ex.GetType().Name}), the next start tries again");
-                    else await Task.Delay(500);
-                }
+                File.Delete(leftover);
+                Log.Write($"update: removed the {Path.GetExtension(leftover)} copy");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Log.Write($"update: couldn't remove the {Path.GetExtension(leftover)} copy ({ex.GetType().Name}), the next start tries again");
             }
         }
     }

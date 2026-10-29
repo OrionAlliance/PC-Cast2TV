@@ -1,7 +1,6 @@
 namespace PCCast2TV.Helpers;
 
-// Which player each Roku has (our app, DisplayHUB or neither): asked quietly for the rows, on a click (a Roku with
-// neither gets the popup), and once a second while the popup is open.
+// Which player each Roku has (ours, DisplayHUB or neither): asked for the rows, on a click, and each second the popup is open.
 public sealed partial class Caster
 {
     public event Action<Device> NeedsRokuApp;   // a Roku with neither player: the window shows how to add one
@@ -19,8 +18,7 @@ public sealed partial class Caster
         Raise();
     }
 
-    // A Roku you click is asked right away which player it has; with neither, the window shows how to add one. A cast
-    // asks again, so a player removed later is still caught.
+    // A clicked Roku is asked which player it has (neither: the window shows how to add one), and a cast asks again.
     async Task CheckRokuAppAsync(Device d)
     {
         var on = await RokuPlayer.PlayerOnAsync(d);
@@ -28,8 +26,7 @@ public sealed partial class Caster
         if (on == RokuApp.None && Phase == Phase.Online && Picked?.Id == d.Id) NeedsRokuApp?.Invoke(d);
     }
 
-    // While the popup is open: asks the Roku once a second until our app or DisplayHUB shows up, then says so on the
-    // status line and returns, which closes the popup. Closing the popup first cancels it.
+    // While the popup is open, asks the Roku each second until a player shows up, then says so and closes it; closing it first stops this.
     public async Task WaitForRokuAppAsync(Device d, CancellationToken stop)
     {
         while (true)

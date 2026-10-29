@@ -28,10 +28,9 @@
             <Border Canvas.Left="384" Canvas.Top="20" Width="96" Height="30" Background="{DynamicResource Soft}">
                 <TextBlock x:Name="Block4" Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Ink}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,3" />
             </Border>
-            <!-- The status line, against the right cap; a long message shrinks to fit instead of being cut off.
-                 Unrounded so its letters sit on the same line as the info bars' text. -->
+            <!-- The status line by the right cap: a long message shrinks to fit, unrounded to share the info bars' line. -->
             <Grid Canvas.Left="490" Canvas.Top="18.75" Width="368" Height="34" UseLayoutRounding="False">
-                <Viewbox x:Name="StatusBox" MaxWidth="368" Height="26.4" StretchDirection="DownOnly" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Viewbox MaxWidth="368" Height="26.4" StretchDirection="DownOnly" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBlock x:Name="StatusText" Style="{StaticResource Label}" FontSize="22" Foreground="{DynamicResource Second}" />
                 </Viewbox>
             </Grid>
@@ -43,15 +42,13 @@
             <ScrollViewer Canvas.Left="20" Canvas.Top="170" Width="246" Height="228" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel x:Name="DeviceList" />
             </ScrollViewer>
-            <!-- First run: nothing saved yet -->
+            <!-- Nothing on the list: the first run, or every saved device hidden (the words are set in code) -->
             <StackPanel x:Name="EmptyHint" Canvas.Left="24" Canvas.Top="182" Width="242">
-                <TextBlock Style="{StaticResource Label}" FontSize="20" Foreground="{DynamicResource Second}" Text="NO DEVICES YET" />
-                <TextBlock Style="{StaticResource Label}" FontWeight="Normal" FontSize="15" Foreground="{DynamicResource DimText}" TextWrapping="Wrap" Margin="0,4,0,0"
-                           Text="CLICK CONNECT, THEN DETECT TO FIND YOUR TVS AND ROKUS." />
+                <TextBlock x:Name="EmptyTitle" Style="{StaticResource Label}" FontSize="20" Foreground="{DynamicResource Second}" />
+                <TextBlock x:Name="EmptyText" Style="{StaticResource Label}" FontWeight="Normal" FontSize="15" Foreground="{DynamicResource DimText}" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
             <Button x:Name="ConnectBtn" Canvas.Left="20" Canvas.Top="88" Width="118" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Connect_Click">
-                <!-- Full height so icon and text each center on the pill; -1.5 cancels the icon's own blank edge.
-                     Both buttons skip whole-pixel rounding so the centering stays exact at any scale. -->
+                <!-- Full height so icon and text center (-1.5 cancels the icon's blank edge), unrounded to stay exact at any scale. -->
                 <StackPanel Orientation="Horizontal" Height="40">
                     <Viewbox Width="18" Height="18" Margin="-1.5,0,6,0" VerticalAlignment="Center">
                         <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoWifi}" /></Canvas>
@@ -61,7 +58,7 @@
             </Button>
             <!-- Right-click (even while it's greyed out) is caught by the window: see Window_RightClick -->
             <Button x:Name="DetectBtn" Canvas.Left="148" Canvas.Top="88" Width="118" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Detect_Click"
-                    ToolTip="Right-click to show hidden or forgotten devices" ToolTipService.ShowOnDisabled="True">
+                    ToolTip="Right-click to show hidden devices" ToolTipService.ShowOnDisabled="True">
                 <StackPanel Orientation="Horizontal" Height="40">
                     <Viewbox Width="18" Height="18" Margin="-1.5,0,6,0" VerticalAlignment="Center">
                         <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoPc}" /></Canvas>

@@ -2,8 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace PCCast2TV.Helpers;
 
-// Keeps the PC and its screen awake for the length of a cast, as OBS does while it streams. Called on the window's
-// thread: Windows ties the request to the thread that made it.
+// Keeps the PC and screen awake during a cast, like OBS; called on the window's thread, since Windows ties it to that thread.
 public static class KeepAwake
 {
     const uint Continuous = 0x80000000, SystemOn = 0x1, DisplayOn = 0x2;

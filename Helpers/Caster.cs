@@ -7,8 +7,7 @@ public enum Phase { Offline, Connecting, Online, Detecting, Starting, Casting, S
 // The center button's next step: a first run walks Connect, Detect, Select, Cast.
 public enum CastStep { ConnectFirst, DetectFirst, SelectDevice, Cast, Casting, Busy }
 
-// The one owner of the app's state. Every button lands here, the checks run in order, and the window
-// only listens to Changed and draws what it reads.
+// The one owner of the app's state: every button lands here, the checks run in order, and the window just draws what it reads.
 public sealed partial class Caster
 {
     readonly SynchronizationContext _ui = SynchronizationContext.Current ?? throw new InvalidOperationException("Caster must be made on the window thread");
@@ -20,6 +19,7 @@ public sealed partial class Caster
     Timer _tick;
     DateTime _castStartUtc;
     int _ticks;
+    Task _castWork = Task.CompletedTask; // the cast start or end under way, so closing the app can let it tell the TV
 
     public event Action Changed;
     public event Action<string, string> Notice; // a popup for the window to show: title, then what to do
@@ -34,8 +34,7 @@ public sealed partial class Caster
     public string Status { get; private set; } = "OFFLINE · CLICK CONNECT";
     public EncoderChoice Encoder { get; private set; }
     public RateMeter Meter { get; } = new();
-    // The health readout: the same 10-second readings the log takes, null until this cast's first one. After a cast
-    // ends they stay as they were until the next cast plays.
+    // The health readout: the log's 10-second readings, null until this cast's first, kept after a cast until the next one plays.
     public Device HealthFrom { get; private set; } // the cast they belong to (the one playing, or the last one); null before any
     public int DroppedFrames { get; private set; } // frames the screen clock missed this cast (the TV repeats the last one)
     public double? CpuLoad { get; private set; }   // this app's share of the processor
@@ -44,6 +43,7 @@ public sealed partial class Caster
     readonly Dictionary<string, string> _links = new(); // each device's own connection by id; null = asked, it doesn't say
 
     public bool IsOnline => Phase is not (Phase.Offline or Phase.Connecting);
+    public bool Idle => Phase is Phase.Offline or Phase.Online; // nothing connecting, detecting or casting
     int SentHeight
     {
         get
@@ -92,8 +92,7 @@ public sealed partial class Caster
     // This PC's side of the link to the device in use; nothing while offline.
     void SetNetwork(bool online) => PcLink = online ? HomeNetwork.Link((CastingTo ?? Picked)?.Ip) : null;
 
-    // How a device on the list is connected, in its own words ("WI-FI" or "WIRED"). Asked returns false until it has
-    // been asked (on Connect, Detect, or when it comes back); a device asked that doesn't say has a null link.
+    // A device's connection in its own words (WI-FI or WIRED); LinkAsked is false until it's asked, and one that doesn't say is null.
     public string LinkOf(Device d) => d != null && _links.TryGetValue(d.Id, out var l) ? l : null;
     public bool LinkAsked(Device d) => d != null && _links.ContainsKey(d.Id);
 
@@ -154,8 +153,7 @@ public sealed partial class Caster
         await CheckDevicesAsync();
     }
 
-    // Once per Connect: asks each device on the row if it's there. Each button lights up as its device answers;
-    // nothing is asked again until the next Connect, Detect or cast.
+    // Once per Connect: asks each device on the row if it's there, for the log (the rows' CHECKING... is LoadLinksAsync's).
     async Task CheckDevicesAsync()
     {
         _answering.Clear();
@@ -190,9 +188,16 @@ public sealed partial class Caster
         Set(Phase.Offline, "OFFLINE · CLICK CONNECT");
     }
 
-    // Closing the app is the same as Disconnect.
-    public async Task ShutdownAsync()
+    // Closing is Disconnect with 8 seconds at most; a cast starting or ending gets up to 6 of them to tell the TV to stop.
+    public Task ShutdownAsync() => Task.WhenAny(CloseDownAsync(), Task.Delay(TimeSpan.FromSeconds(8)));
+
+    async Task CloseDownAsync()
     {
+        if (Phase is Phase.Starting or Phase.Stopping)
+        {
+            if (Phase == Phase.Starting) Phase = Phase.Offline;
+            await Task.WhenAny(_castWork, Task.Delay(TimeSpan.FromSeconds(6))); // a TV slower than that is left as it is
+        }
         if (Phase is Phase.Casting or Phase.Online) await DisconnectAsync();
         else
         {
@@ -210,7 +215,7 @@ public sealed partial class Caster
     {
         if (Phase != Phase.Online) return;
         Set(Phase.Detecting, "DETECTING DEVICES...");
-        var found = await DeviceFinder.DetectAsync();
+        var found = await DeviceFinder.DetectAsync(AppSettings.Devices);
         if (Phase != Phase.Detecting) return;
         var moved = found.FirstOrDefault(d => d.Id == Default?.Id && d != Default);
         if (moved != null) AppSettings.SetDefault(moved); // same device, new address or name
@@ -230,11 +235,10 @@ public sealed partial class Caster
         _ = LoadLinksAsync();
     }
 
-    // A click on a device picks it (lit); a click on the one you picked lets it go. The bookmarked device the app picked
-    // on its own isn't lit, so a first click on it lights it rather than letting it go.
+    // A click picks a device (lit) and a click on your pick lets it go; the bookmark's own pick isn't lit, so a first click lights it.
     public void Pick(Device d)
     {
-        if (Phase is not (Phase.Offline or Phase.Online)) return;
+        if (!Idle) return;
         bool letGo = Picked?.Id == d.Id && PickClicked;
         Picked = letGo ? null : d;
         PickClicked = !letGo;
@@ -244,74 +248,13 @@ public sealed partial class Caster
         if (!letGo && d.IsRoku && IsOnline) _ = CheckRokuAppAsync(d);
     }
 
-    // ---- Hide / Forget (right-click a device) and bring back (right-click Detect) ----
-
-    public bool CanManageDevices => Phase is Phase.Offline or Phase.Online;
-
-    // Hidden and forgotten devices: off the list, still saved, so they can come back.
-    public List<Device> SetAside => AppSettings.Hidden.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
-
-    public void Hide(Device d)
-    {
-        if (!CanManageDevices) return;
-        AppSettings.SetHidden(AppSettings.Hidden.Append(d));
-        Refresh($"{d.Name.ToUpperInvariant()} HIDDEN");
-    }
-
-    public void Forget(Device d)
-    {
-        if (!CanManageDevices) return;
-        AppSettings.Forget(new[] { d }); // off the list and its bookmark wiped
-        Refresh($"{d.Name.ToUpperInvariant()} FORGOTTEN");
-    }
-
-    // Everything unticked in the set-aside list goes straight back on the list.
-    public void BringBack(List<Device> stillAside)
-    {
-        if (!CanManageDevices) return;
-        int back = AppSettings.Hidden.Count - stillAside.Count;
-        if (back == 0) return;
-        AppSettings.SetHidden(stillAside);
-        Refresh(back == 1 ? "1 DEVICE BACK ON THE LIST" : $"{back} DEVICES BACK ON THE LIST");
-        if (IsOnline) _ = LoadLinksAsync(); // a device back on the list says how it's connected
-    }
-
-    void Refresh(string status)
-    {
-        Devices = Row();
-        if (Picked != null && AppSettings.IsHidden(Picked.Id))
-        {
-            Picked = null;
-            PickClicked = false;
-            SetNetwork(IsOnline);
-        }
-        Status = status;
-        Raise();
-    }
-
-    // The bookmark stands in for a click: clearing it lets go of a device only it picked, and setting it picks the
-    // device when nothing is picked. A device you clicked stays picked either way.
-    public void ToggleDefault(Device d)
-    {
-        if (Phase is Phase.Starting or Phase.Stopping) return;
-        bool clearing = Default?.Id == d.Id;
-        AppSettings.SetDefault(clearing ? null : d);
-        if (Phase is Phase.Offline or Phase.Online)
-        {
-            if (clearing && Picked?.Id == d.Id && !PickClicked) Picked = null;
-            else if (!clearing && Picked == null) Picked = d;
-            SetNetwork(IsOnline);
-        }
-        Raise();
-    }
-
     // The status before a cast; the center button shows what to press.
     const string Ready = "READY";
 
     // A line from outside the casting (like "UPDATED TO V0.3.83"), shown only while nothing is going on.
     public void Note(string status)
     {
-        if (Phase is not (Phase.Offline or Phase.Online)) return;
+        if (!Idle) return;
         Status = status;
         Raise();
     }

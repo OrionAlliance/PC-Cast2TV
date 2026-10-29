@@ -31,7 +31,7 @@ public sealed class CastServer
     readonly object _liveGate = new();
     readonly List<LiveTv> _live = new();
     long _sent, _lastAskTicks;
-    int _piecesServed, _drops, _saidPlaylist, _saidPiece;
+    int _piecesServed, _drops, _saidPlaylist, _saidMaster, _saidPiece;
     int _playlistAsks, _pieceAsks, _piecesGone, _lastPieceAsked; // what the TV asked for since the last TakeAsks
     readonly ConcurrentDictionary<string, bool> _turnedAway = new();
     volatile string _allowedIp;
@@ -89,6 +89,7 @@ public sealed class CastServer
         Volatile.Write(ref _piecesServed, 0);
         Volatile.Write(ref _drops, 0);
         Volatile.Write(ref _saidPlaylist, 0);
+        Volatile.Write(ref _saidMaster, 0);
         Volatile.Write(ref _saidPiece, 0);
         TakeAsks();
         Volatile.Write(ref _lastPieceAsked, -1);
@@ -215,6 +216,13 @@ public sealed class CastServer
         if (r.Method == "OPTIONS") // a web player asking first whether it may read the video
             return await SendAsync(s, "204 No Content", "text/plain", null, r.KeepAlive, ct);
         if (r.Method != "GET" && !head) return await SendAsync(s, "405 Method Not Allowed", "text/plain", null, false, ct);
+        if (r.Path == "/live/" + ScreenRecorder.MasterName)
+        {
+            var text = _source?.Master;
+            if (Interlocked.Exchange(ref _saidMaster, 1) == 0) Log.Write($"server: {ip} asked for the master list ({(text == null ? "not ready" : "sent")})");
+            return await SendAsync(s, text == null ? "404 Not Found" : "200 OK", "application/vnd.apple.mpegurl",
+                text == null ? null : Encoding.UTF8.GetBytes(text), r.KeepAlive, ct, head);
+        }
         if (r.Path == "/live/" + ScreenRecorder.PlaylistName)
         {
             var text = _source?.Playlist;
@@ -235,7 +243,7 @@ public sealed class CastServer
             }
             await SendAsync(s, body == null ? "404 Not Found" : "200 OK", "video/mp2t", body, r.KeepAlive, ct, head);
             if (body != null && !head && Interlocked.Increment(ref _piecesServed) == 1) Log.Write($"server: first video piece sent to {ip}");
-            if (body == null && Interlocked.Exchange(ref _saidPiece, 1) == 0) Log.Write($"server: {ip} asked for a piece that is gone ({r.Path[6..]})");
+            if (body == null && Interlocked.Exchange(ref _saidPiece, 1) == 0) Log.Write($"server: {ip} asked for a piece that is gone ({Log.Outside(r.Path[6..])})");
             return r.KeepAlive;
         }
         if (r.Path.StartsWith("/key/", StringComparison.Ordinal))

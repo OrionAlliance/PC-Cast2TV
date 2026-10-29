@@ -90,7 +90,7 @@ If it works, or doesn't, on your setup, please open an [Issue](../../issues) wit
 ## FAQ
 
 **Why is the TV a few seconds behind my PC?**
-Roku and Chromecast play the cast in one-second pieces and keep a few of them in hand, so a Wi-Fi hiccup never freezes the picture. That's a few seconds behind, and it's the trade for a smooth picture.
+A Roku plays the cast in one-second pieces and keeps a few of them in hand, so a Wi-Fi hiccup never freezes the picture. That's a few seconds behind, and it's the trade for a smooth picture. A TV with Chromecast built in gets your screen live instead, about half a second behind.
 
 **Why did my screen switch to 60 Hz?**
 A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, which shows as a stutter. So while you cast, the app runs your screen at 60 Hz, and it puts your screen back the way it was when the cast ends.
@@ -102,7 +102,7 @@ Make sure the TV (or the Roku) is on and on the same home network as the PC. If 
 PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and make sure it is turned on (enabled).
 
 **Can I hide a device I don't use?**
-Right-click it in the list to hide it from the list or forget it from Detect. Right-click Detect to bring hidden devices back.
+Right-click it in the list and click **HIDE FROM THE LIST**. It stays saved, Detect leaves it off too, and right-clicking Detect brings it back.
 
 ## Your data stays yours
 
@@ -110,7 +110,7 @@ This app collects **nothing** and sends **nothing** about you: no telemetry, no 
 
 ## Found a bug?
 
-Open an [Issue](../../issues). Include the `debug.log` file from the `Settings` folder next to the app. It records what the app was doing, how each cast went, and your TV's model and software version. It contains no personal information: user names and folder paths are swapped for short tags. Read it yourself first if you like.
+Open an [Issue](../../issues) and include your `debug.log`: click the cog, then OPEN LOG FOLDER, and drag the file into your post. It records what the app was doing, how each cast went, and your TV's model and software version. It contains no personal information: user names and folder paths are swapped for short tags. Read it yourself first if you like.
 
 ---
 

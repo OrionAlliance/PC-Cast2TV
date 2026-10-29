@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -8,8 +9,7 @@ using System.Threading.Channels;
 
 namespace PCCast2TV.Helpers;
 
-// Talks Google Cast to a Chromecast-style TV: opens Google's own media player that's built into every Cast
-// device and has it play the cast's HLS link. Nothing gets installed on the TV. One player lives for one cast.
+// Talks Google Cast to a Chromecast-style TV through its built-in mirroring or media player; one player per cast.
 public sealed partial class CastPlayer : IDisposable
 {
     const string MediaReceiver = "CC1AD845"; // Google's Default Media Receiver
@@ -29,7 +29,12 @@ public sealed partial class CastPlayer : IDisposable
     SslStream _ssl;
     Timer _ping;
     int _requestId;
-    string _sessionId;
+    string _sessionId, _transportId, _lastSaid;
+    string _appId = MediaReceiver;
+    Timer _ask;
+    readonly Stopwatch _clock = Stopwatch.StartNew();
+    double? _lastAt;    // the player's spot at its last report
+    double _lastAtClock; // and when that report came, on _clock
 
     CastPlayer(Device d) => _d = d;
 
@@ -58,17 +63,16 @@ public sealed partial class CastPlayer : IDisposable
         {
             await c.OpenAsync();
             await c.SendAsync(NsReceiver, "receiver-0", new { type = "LAUNCH", appId = MediaReceiver, requestId = c.NextId() });
-            var status = await c.WaitAsync(NsReceiver, m => Type(m) == "RECEIVER_STATUS" && PlayerApp(m) != null, 20);
+            var status = await c.WaitAsync(NsReceiver, m => Type(m) == "RECEIVER_STATUS" && c.App(m) != null, 20);
             if (status == null)
             {
                 c.Dispose();
                 return (null, "DID NOT OPEN ITS PLAYER");
             }
-            var (sessionId, transportId) = PlayerApp(status.Value).Value;
-            c._sessionId = sessionId;
+            (c._sessionId, c._transportId) = c.App(status.Value).Value;
             Log.Write("cast: Google's player is open on the TV");
-            await c.SendAsync(NsConnection, transportId, new { type = "CONNECT" });
-            await c.SendAsync(NsMedia, transportId, new
+            await c.SendAsync(NsConnection, c._transportId, new { type = "CONNECT" });
+            await c.SendAsync(NsMedia, c._transportId, new
             {
                 // No currentTime: on a live stream that makes the player start at the live edge (0 = the oldest piece listed).
                 type = "LOAD", requestId = c.NextId(), autoplay = true,
@@ -78,16 +82,16 @@ public sealed partial class CastPlayer : IDisposable
                     metadata = new { metadataType = 0, title = "PC Cast2TV" },
                 },
             });
+            // Asked once a second where its player is, so the log shows a stuck or jumping player between its own reports.
+            c._ask = new Timer(_ => _ = c.SendQuietlyAsync(NsMedia, c._transportId, new { type = "GET_STATUS", requestId = c.NextId() }), null, 1000, 1000);
 
             // Playing once the TV says so, or once it is pulling video pieces from us.
             int start = piecesServed();
-            string lastSaid = null;
             for (int i = 0; i < 40 && !c._inbox.Reader.Completion.IsCompleted; i++)
             {
                 var m = await c.WaitAsync(NsMedia, _ => true, 0.5);
                 var t = m == null ? null : Type(m.Value);
-                var said = m == null ? null : $"{t} {State(m.Value)} {Detail(m.Value)}".Trim();
-                if (said != null && said != lastSaid) Log.Write("cast: TV player says " + (lastSaid = said));
+                if (m != null) c.Heard(m.Value);
                 if (t is "LOAD_FAILED" or "LOAD_CANCELLED" or "INVALID_REQUEST")
                 {
                     Log.Write("cast: the TV refused the stream: " + t);
@@ -96,8 +100,8 @@ public sealed partial class CastPlayer : IDisposable
                 }
                 if ((t == "MEDIA_STATUS" && State(m.Value) == "PLAYING") || piecesServed() - start >= 3)
                 {
-                    Log.Write($"cast: playing (state {(m == null ? "none" : State(m.Value))}, pieces {piecesServed() - start})");
-                    _ = c.WatchAsync(lastSaid);
+                    Log.Write($"cast: playing (state {(m == null ? "none" : Log.Outside(State(m.Value)))}, pieces {piecesServed() - start})");
+                    _ = c.WatchAsync();
                     return (c, null);
                 }
             }
@@ -113,41 +117,57 @@ public sealed partial class CastPlayer : IDisposable
         }
     }
 
-    // While the cast plays, every change the TV's player reports goes in the log, so a stop says why.
-    async Task WatchAsync(string lastSaid)
+    // While the cast plays, the TV's reports go in the log (see Heard) so a stop or a loop says why; mirroring's first 5 kinds.
+    async Task WatchAsync()
     {
         bool saidClosed = false;
+        var mirrorSaid = new HashSet<string>();
         try
         {
             while (await _inbox.Reader.WaitToReadAsync(_watch.Token))
                 while (!_watch.IsCancellationRequested && _inbox.Reader.TryRead(out var m))
                 {
-                    if (m.Ns == NsMedia)
-                    {
-                        var said = $"{Type(m.Msg)} {State(m.Msg)} {Detail(m.Msg)}".Trim();
-                        if (said != lastSaid) Log.Write("cast: TV player says " + (lastSaid = said));
-                    }
-                    else if (m.Ns == NsReceiver && Type(m.Msg) == "RECEIVER_STATUS" && PlayerApp(m.Msg) == null && !saidClosed)
+                    if (m.Ns == NsMedia) Heard(m.Msg);
+                    else if (m.Ns == NsWebRtc && mirrorSaid.Count < 5 && mirrorSaid.Add(Type(m.Msg) ?? "")) Log.Write("cast: the TV's mirroring says " + MirrorSender.Flat(m.Msg));
+                    else if (m.Ns == NsReceiver && Type(m.Msg) == "RECEIVER_STATUS" && App(m.Msg) == null && !saidClosed)
                     {
                         saidClosed = true;
-                        Log.Write("cast: the TV closed Google's player");
+                        Log.Write(_mirror != null ? "cast: the TV closed the mirroring" : "cast: the TV closed Google's player");
                     }
                 }
         }
         catch (OperationCanceledException) { }
     }
 
-    // Closes Google's player on the TV, then the connection.
+    // Logs each change in the TV player's state, and any report where its spot didn't keep pace with the clock.
+    void Heard(JsonElement m)
+    {
+        var said = $"{Type(m)} {State(m)} {Detail(m)}".Trim();
+        double? at = At(m);
+        double now = _clock.Elapsed.TotalSeconds;
+        if (said != _lastSaid) Log.Write("cast: TV player says " + Log.Outside(_lastSaid = said) + Where(m));
+        else if (at != null && _lastAt != null)
+        {
+            double took = now - _lastAtClock, moved = at.Value - _lastAt.Value;
+            if (State(m) != "PLAYING" || took >= 0.5 && (moved < took * 0.5 || moved > took * 1.5))
+                Log.Write($"cast: TV player {(Log.Outside(State(m)) ?? "with no state")}, moved {moved:0.00} s in {took:0.00} s" + Where(m));
+        }
+        if (at != null) (_lastAt, _lastAtClock) = (at, now);
+    }
+
+    // Closes the TV app this player opened (the mirroring or Google's player), then the connection.
     public async Task StopAsync()
     {
+        _ask?.Dispose();
         _watch.Cancel();
+        _mirror?.Dispose();
         try
         {
             if (_sessionId != null && _ssl != null)
             {
                 await SendAsync(NsReceiver, "receiver-0", new { type = "STOP", sessionId = _sessionId, requestId = NextId() });
                 await WaitAsync(NsReceiver, m => Type(m) == "RECEIVER_STATUS", 2);
-                Log.Write("cast: player closed on the TV");
+                Log.Write(_appId == Mirroring ? "cast: mirroring closed on the TV" : "cast: player closed on the TV");
             }
         }
         catch (Exception ex) when (IsNetError(ex)) { Log.Write("cast: stop failed: " + ex.GetType().Name); }
@@ -160,21 +180,21 @@ public sealed partial class CastPlayer : IDisposable
         using (var t = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             await _tcp.ConnectAsync(_d.Ip, _d.Port > 0 ? _d.Port : 8009, t.Token);
         _ssl = new SslStream(_tcp.GetStream(), false);
-        // Cast devices identify with Google's own device certificates, not a website certificate, so the usual
-        // check can't pass. The link only carries the cast's local address, and the server answers only this TV.
+        // Cast devices use Google's own certificates, which the usual check can't pass; the link stays on the home network.
         await _ssl.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
         {
             TargetHost = _d.Ip, RemoteCertificateValidationCallback = (_, _, _, _) => true,
         });
         _ = ReadLoopAsync();
         await SendAsync(NsConnection, "receiver-0", new { type = "CONNECT" });
-        _ping = new Timer(_ => _ = BeatAsync("PING"), null, 5000, 5000); // the TV drops a sender that goes quiet
+        _ping = new Timer(_ => _ = SendQuietlyAsync(NsHeartbeat, "receiver-0", new { type = "PING" }), null, 5000, 5000); // the TV drops a sender that goes quiet
     }
 
-    async Task BeatAsync(string type)
+    // A send nobody waits on; the read loop notices a dead connection.
+    async Task SendQuietlyAsync(string ns, string destination, object payload)
     {
-        try { await SendAsync(NsHeartbeat, "receiver-0", new { type }); }
-        catch (Exception ex) when (IsNetError(ex)) { } // the read loop notices a dead connection
+        try { await SendAsync(ns, destination, payload); }
+        catch (Exception ex) when (IsNetError(ex)) { }
     }
 
     async Task ReadLoopAsync()
@@ -199,7 +219,7 @@ public sealed partial class CastPlayer : IDisposable
                 using (var doc = JsonDocument.Parse(payload)) msg = doc.RootElement.Clone();
                 if (ns == NsHeartbeat)
                 {
-                    if (Type(msg) == "PING") _ = BeatAsync("PONG");
+                    if (Type(msg) == "PING") _ = SendQuietlyAsync(NsHeartbeat, "receiver-0", new { type = "PONG" });
                     continue;
                 }
                 _inbox.Writer.TryWrite((ns, msg));
@@ -241,36 +261,63 @@ public sealed partial class CastPlayer : IDisposable
 
     // ---- reading the TV's answers ----
 
-    static string Type(JsonElement m) => m.ValueKind == JsonValueKind.Object && m.TryGetProperty("type", out var t) ? t.GetString() : null;
+    static string Type(JsonElement m) => Text(m, "type");
 
-    static (string SessionId, string TransportId)? PlayerApp(JsonElement m)
+    // A text field of a TV message; null when the message or the field isn't the shape it should be.
+    static string Text(JsonElement m, string name) =>
+        m.ValueKind == JsonValueKind.Object && m.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+
+    // The first entry of a message's status list, when it has one that is an object.
+    static JsonElement? FirstStatus(JsonElement m) =>
+        m.ValueKind == JsonValueKind.Object && m.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.Array && s.GetArrayLength() > 0
+        && s[0].ValueKind == JsonValueKind.Object ? s[0] : null;
+
+    // The session of the TV app this player opened, when the TV's status lists it.
+    (string SessionId, string TransportId)? App(JsonElement m)
     {
-        if (!m.TryGetProperty("status", out var s) || !s.TryGetProperty("applications", out var apps) || apps.ValueKind != JsonValueKind.Array) return null;
+        if (m.ValueKind != JsonValueKind.Object || !m.TryGetProperty("status", out var s) || s.ValueKind != JsonValueKind.Object
+            || !s.TryGetProperty("applications", out var apps) || apps.ValueKind != JsonValueKind.Array) return null;
         foreach (var a in apps.EnumerateArray())
-            if (a.TryGetProperty("appId", out var id) && id.GetString() == MediaReceiver
-                && a.TryGetProperty("sessionId", out var sid) && a.TryGetProperty("transportId", out var tid))
-                return (sid.GetString(), tid.GetString());
+            if (Text(a, "appId") == _appId && Text(a, "sessionId") is { } sid && Text(a, "transportId") is { } tid)
+                return (sid, tid);
         return null;
     }
 
-    static string State(JsonElement m) =>
-        m.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.Array && s.GetArrayLength() > 0
-        && s[0].TryGetProperty("playerState", out var p) ? p.GetString() : null;
+    static string State(JsonElement m) => FirstStatus(m) is { } st ? Text(st, "playerState") : null;
 
     // Why the TV's player stopped or refused, when it says (idle reason or error code).
     static string Detail(JsonElement m)
     {
+        if (m.ValueKind != JsonValueKind.Object) return "";
         if (m.TryGetProperty("detailedErrorCode", out var code)) return "error " + code;
         if (m.TryGetProperty("reason", out var reason)) return reason.ToString();
-        return m.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.Array && s.GetArrayLength() > 0
-               && s[0].TryGetProperty("idleReason", out var idle) ? "idle " + idle.GetString() : "";
+        return FirstStatus(m) is { } st && Text(st, "idleReason") is { } idle ? "idle " + idle : "";
     }
+
+    // The player's spot and the live stretch it says it can play, in the cast's seconds, for the log.
+    static string Where(JsonElement m)
+    {
+        if (FirstStatus(m) is not { } st) return "";
+        var parts = new List<string>();
+        if (At(m) is { } at) parts.Add($"at {at:0.00} s");
+        if (st.TryGetProperty("liveSeekableRange", out var r) && r.ValueKind == JsonValueKind.Object
+            && r.TryGetProperty("start", out var a) && a.ValueKind == JsonValueKind.Number
+            && r.TryGetProperty("end", out var b) && b.ValueKind == JsonValueKind.Number)
+            parts.Add($"can play {a.GetDouble():0.00} to {b.GetDouble():0.00} s");
+        return parts.Count == 0 ? "" : " (" + string.Join(", ", parts) + ")";
+    }
+
+    // The player's spot in the cast, in seconds; null when it doesn't say.
+    static double? At(JsonElement m) =>
+        FirstStatus(m) is { } st && st.TryGetProperty("currentTime", out var t) && t.ValueKind == JsonValueKind.Number ? t.GetDouble() : null;
 
     static bool IsNetError(Exception ex) =>
         ex is IOException or SocketException or AuthenticationException or ObjectDisposedException or OperationCanceledException;
 
     public void Dispose()
     {
+        _mirror?.Dispose();
+        _ask?.Dispose();
         _ping?.Dispose();
         _watch.Cancel();
         _cts.Cancel();

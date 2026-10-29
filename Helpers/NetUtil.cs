@@ -30,8 +30,7 @@ public static class NetUtil
         catch (SocketException ex) { Log.Write($"detect: one adapter could not {what}: " + ex.Message); }
     }
 
-    // The PC's own address on the network that reaches the device (right even with several adapters).
-    // A UDP "connect" sends nothing; it only asks Windows which route it would use.
+    // The PC's own address toward the device, asked with a UDP connect that sends nothing (right even with several adapters).
     public static string LocalIpToward(string deviceIp)
     {
         try
@@ -52,8 +51,7 @@ public static class NetUtil
         .Where(IsVpn)
         .Any(n => n.GetIPProperties().UnicastAddresses.Any(u => u.Address.ToString() == localIp));
 
-    // True when the device sits on the same home network as the PC address that reaches it. A VPN that takes over the
-    // house network sends the route through its tunnel instead, so this catches it whatever the VPN calls itself.
+    // True when the device is on the same home network as the PC address reaching it, which catches any VPN that takes the route.
     public static bool SameNetwork(string localIp, string deviceIp)
     {
         if (!IPAddress.TryParse(localIp, out var local) || !IPAddress.TryParse(deviceIp, out var device)) return false;

@@ -14,8 +14,11 @@ public sealed partial class VideoEncoder
     static readonly Guid Cabac = new(0xee6cad62, 0xd305, 0x4248, 0xa5, 0x0e, 0xe1, 0xb2, 0x55, 0xf7, 0xca, 0xf8);
     static readonly Guid ForceKeyFrame = new(0x398c1b98, 0x8353, 0x475a, 0x9e, 0xf2, 0x8f, 0x26, 0x5d, 0x26, 0x03, 0x45);
     static readonly Guid EncodeQp = new(0x2cb5696b, 0x23fb, 0x4ce1, 0xa0, 0xf9, 0xef, 0x5b, 0x90, 0xfd, 0x55, 0xca);
+    static readonly Guid MeanBitRate = new(0xf7222374, 0x2144, 0x4815, 0xb5, 0x50, 0xa3, 0x7f, 0x8e, 0x12, 0xee, 0x52);
+    static readonly Guid MaxBitRate = new(0x9651eae4, 0x39b9, 0x4ebf, 0x85, 0xef, 0xd7, 0xf4, 0x44, 0xec, 0x74, 0x65);
+    static readonly Guid MinQp = new(0x0ee22c6a, 0xa37c, 0x4568, 0xb5, 0xf1, 0x9d, 0x4c, 0x2b, 0x3a, 0xb8, 0x86);
     static readonly Guid IidCodecApi = new(0x901db4c7, 0x31ce, 0x41a2, 0x85, 0xdc, 0x8f, 0xa0, 0xbf, 0x41, 0xb8, 0xda);
-    // No bitrate cap (his call): every picture at the same quality, the bitrate follows the picture.
+    // Pieces have no bitrate cap (his call): every picture at the same quality, the bitrate follows the picture. Mirroring holds to its cap.
     const uint Qp = 19;
     const uint AvgBps = 20_000_000; // the output type must name one; quality mode ignores it
 
@@ -37,7 +40,12 @@ public sealed partial class VideoEncoder
         if (Marshal.QueryInterface(_mft.NativePointer, IidCodecApi, out _codecApi) != 0) _codecApi = IntPtr.Zero;
         // Some must be set before the output type; each card takes what it supports.
         var skipped = new List<string>();
-        if (!Set(RateControlMode, 3) || !SetQp(Qp)) skipped.Add("quality mode"); // constant quality
+        if (_maxBitRate > 0)
+        {
+            if (!Set(RateControlMode, 1) || !Set(MeanBitRate, (uint)_maxBitRate) || !Set(MaxBitRate, (uint)_maxBitRate)) skipped.Add("bitrate cap"); // peak held to the cap
+            if (!Set(MinQp, Qp)) skipped.Add("quality floor"); // never sharper than quality mode, so calm scenes stay as small as before
+        }
+        else if (!Set(RateControlMode, 3) || !SetQp(Qp)) skipped.Add("quality mode"); // constant quality
         if (!Set(GopSize, (uint)_fps)) skipped.Add("keyframe spacing"); // a keyframe each second: every piece starts with one
         if (!Set(BFrames, 0)) skipped.Add("b-frames");
         if (!SetBool(LowLatency)) skipped.Add("low latency");
@@ -48,7 +56,7 @@ public sealed partial class VideoEncoder
         {
             output.Set(MediaTypeAttributeKeys.MajorType, MediaTypeGuids.Video);
             output.Set(MediaTypeAttributeKeys.Subtype, VideoFormatGuids.H264);
-            output.Set(MediaTypeAttributeKeys.AvgBitrate, AvgBps);
+            output.Set(MediaTypeAttributeKeys.AvgBitrate, _maxBitRate > 0 ? (uint)_maxBitRate : AvgBps);
             output.Set(MediaTypeAttributeKeys.Mpeg2Profile, 100u); // High
             Picture(output);
             _mft.SetOutputType(0, output, 0);

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -28,8 +29,27 @@ public static class Log
         }
     }
 
-    // Device names and other outside text go in as sent: a line break inside one can't pass for a line of the log
-    // (follow-on lines start with "|"), other control characters become spaces, and no entry runs on for pages.
+    // OPEN LOG FOLDER: the folder in File Explorer with debug.log picked, ready to drag into a GitHub post.
+    public static void ShowInFolder()
+    {
+        try { Process.Start("explorer.exe", File.Exists(FilePath) ? $"/select,\"{FilePath}\"" : $"\"{Folder}\"").Dispose(); }
+        catch (System.ComponentModel.Win32Exception ex) { Write("app: couldn't open the log folder: " + ex.Message); }
+    }
+
+    // Text a device sent (its model, what its player says), cut to a short run of plain letters, digits and punctuation.
+    public static string Outside(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        var b = new StringBuilder();
+        foreach (char c in s)
+        {
+            if (b.Length == 80) { b.Append("..."); break; }
+            if (char.IsAsciiLetterOrDigit(c) || " .,-_:/()+#".Contains(c)) b.Append(c);
+        }
+        return b.ToString();
+    }
+
+    // Follow-on lines of an entry start with "|", other control characters become spaces, and no entry runs on for pages.
     static string Clean(string s)
     {
         if (s.Length > MaxLine) s = s[..MaxLine] + " (cut)";

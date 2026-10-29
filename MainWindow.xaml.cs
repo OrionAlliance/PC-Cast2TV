@@ -15,6 +15,7 @@ public partial class MainWindow : Window
 {
     readonly Caster _caster = new();
     string _rowKey;
+    Task _shutdown; // the cast ending as the window closes; a second X waits for it too
 
     // The theme's colors right now (Settings can change them while the app runs).
     Brush Main => (Brush)FindResource("Main");
@@ -60,44 +61,32 @@ public partial class MainWindow : Window
     async void Detect_Click(object sender, RoutedEventArgs e) => await _caster.DetectAsync();
     async void Cast_Click(object sender, RoutedEventArgs e) => await _caster.ToggleCastAsync();
 
-    // Right-click Detect: the hidden and forgotten devices, ticked; untick one to put it back on the list. Caught here
-    // because a greyed-out button gets no clicks of its own.
+    // Right-click Detect shows the hidden devices, caught here because a greyed-out button gets no clicks.
     void Window_RightClick(object sender, MouseButtonEventArgs e)
     {
-        var p = e.GetPosition(DetectBtn);
-        if (p.X < 0 || p.Y < 0 || p.X > DetectBtn.ActualWidth || p.Y > DetectBtn.ActualHeight || !_caster.CanManageDevices) return;
+        if (!new Rect(DetectBtn.RenderSize).Contains(e.GetPosition(DetectBtn)) || !_caster.Idle) return;
         e.Handled = true;
         var aside = _caster.SetAside;
         if (aside.Count == 0)
         {
-            NoticeWindow.Tell(this, "NOTHING HIDDEN", "No devices are hidden or forgotten. Right-click a device in the list to hide or forget it.");
+            NoticeWindow.Tell(this, "NOTHING HIDDEN", "No devices are hidden. Right-click a device in the list to hide it.");
             return;
         }
-        var keep = DevicePickerWindow.Ask(this, "HIDDEN AND FORGOTTEN DEVICES · UNTICK ONE TO PUT IT BACK ON THE LIST", "DONE", aside, _ => true);
+        var keep = DevicePickerWindow.Ask(this, aside);
         if (keep != null) _caster.BringBack(keep);
-    }
-
-    // Right-click a device: hide it from the list or forget it from detection.
-    void Row_RightClick(Device d)
-    {
-        if (!_caster.CanManageDevices) return;
-        switch (DeviceActionWindow.Ask(this, d))
-        {
-            case DeviceAction.Hide: _caster.Hide(d); break;
-            case DeviceAction.Forget: _caster.Forget(d); break;
-        }
     }
 
     // Closing = Disconnect: the cast ends and the TV goes back to its home screen before the window goes.
     async void OnClosing(object sender, CancelEventArgs e)
     {
-        Closing -= OnClosing; // runs once; the close queued below then goes straight through
+        if (_shutdown?.IsCompleted == true) return; // shut down: the close queued below goes straight through
         e.Cancel = true;
+        if (_shutdown != null) return; // clicked again while closing: the first close finishes the job
         SavePlace();
-        await Task.WhenAny(_caster.ShutdownAsync(), Task.Delay(TimeSpan.FromSeconds(8)));
+        _shutdown = _caster.ShutdownAsync();
+        await _shutdown;
         Log.Write("app: closed");
-        // Queued, not called here: with nothing to shut down this line runs while Windows is still
-        // inside this closing event, and closing again from in there is refused.
+        // Queued: closing again from inside this closing event is refused.
         _ = Dispatcher.InvokeAsync(Close);
     }
 
@@ -118,6 +107,8 @@ public partial class MainWindow : Window
         DetectLabel.Text = ph == Phase.Detecting ? "DETECTING" : "DETECT";
 
         EmptyHint.Visibility = c.Devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyTitle.Text = c.AllHidden ? "ALL YOUR DEVICES ARE HIDDEN" : "NO DEVICES YET";
+        EmptyText.Text = c.AllHidden ? "RIGHT-CLICK DETECT TO BRING THEM BACK." : "CLICK CONNECT, THEN DETECT TO FIND YOUR TVS AND ROKUS.";
         ListNote.Text = c.Devices.Count > 4 ? $"+{c.Devices.Count - 4} MORE · SCROLL" : ""; // the list shows 4 at a time
 
         // This PC's side; each device's own side is on its row.
@@ -129,8 +120,7 @@ public partial class MainWindow : Window
         DrawHealth();
     }
 
-    // The health lines: the cast's numbers while it plays, and after it ends they stay up until the next cast plays.
-    // Dimmed while waiting on a first reading ("...") or before any cast (IDLE).
+    // The health lines: this cast's numbers (kept until the next cast plays), dimmed while waiting (...) or before any cast (IDLE).
     void DrawHealth()
     {
         var c = _caster;
@@ -205,8 +195,7 @@ public partial class MainWindow : Window
         foreach (var d in c.Devices) DeviceList.Children.Add(Row(d, d.Id == lit, d.Id == c.Default?.Id));
     }
 
-    // Plain text rows, all alike: name and kind, and under it how it's connected, the IP and a Roku's player. Hover or a click lays
-    // a faint tint behind the row; the default's bookmark is filled.
+    // Plain text rows (name and kind, then link, IP and a Roku's player); hover or a click tints the row, the default's bookmark is filled.
     FrameworkElement Row(Device d, bool picked, bool isDefault)
     {
         var g = new Grid();
@@ -245,18 +234,13 @@ public partial class MainWindow : Window
         row.MouseEnter += (_, _) => row.Background = hover;
         row.MouseLeave += (_, _) => row.Background = rest;
         row.MouseLeftButtonUp += (_, _) => _caster.Pick(d);
-        row.MouseRightButtonUp += (_, e) => { e.Handled = true; Row_RightClick(d); };
-        row.ToolTip = "Right-click to hide or forget this device";
+        row.MouseRightButtonUp += (_, e) => { e.Handled = true; if (_caster.Idle && DeviceActionWindow.Ask(this, d)) _caster.Hide(d); }; // hide it from the list
+        row.ToolTip = "Right-click to hide this device";
         return row;
     }
 
     // The theme's main color, see-through.
-    static Brush Tint(double opacity)
-    {
-        var b = new SolidColorBrush(ThemeColors.Current.Main) { Opacity = opacity };
-        b.Freeze();
-        return b;
-    }
+    static Brush Tint(double opacity) => (Brush)new SolidColorBrush(ThemeColors.Current.Main) { Opacity = opacity }.GetAsFrozen();
 
     TextBlock Label(string text, double size, Brush fg) =>
         new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis };

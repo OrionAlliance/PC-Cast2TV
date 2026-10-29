@@ -3,7 +3,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// A message the Caster wants read, with what to do about it. Display only.
+// A message to read (from the Caster or the window) with what to do about it; display only.
 public partial class NoticeWindow : Window
 {
     NoticeWindow()

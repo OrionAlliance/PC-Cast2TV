@@ -4,8 +4,7 @@ using System.Xml.Linq;
 
 namespace PCCast2TV.Helpers;
 
-// One log line per cast saying what it went to (maker, model, software), so a problem that only one kind of TV has
-// shows in the log. Serial numbers are left out: they aren't needed and they identify the device.
+// One log line per cast naming the TV (maker, model, software) so a one-kind problem shows; no serials, they identify it.
 public static class TvInfo
 {
     const string ModelUnknown = "model unknown until the next Detect";
@@ -16,7 +15,7 @@ public static class TvInfo
         try { Log.Write("tv: " + await DescribeAsync(d)); }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException or JsonException)
         {
-            Log.Write($"tv: {d.Model ?? ModelUnknown}, software not reported ({ex.GetType().Name})");
+            Log.Write($"tv: {Log.Outside(d.Model) ?? ModelUnknown}, software not reported ({ex.GetType().Name})");
         }
     }
 
@@ -28,28 +27,30 @@ public static class TvInfo
             if (d.IsRoku) return RokuLink(await RokuInfoAsync(d));
             if (d.Kind == DeviceKind.Cast) return CastLink(await CastInfoAsync(d));
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException or JsonException) { }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException or JsonException)
+        {
+            Log.Write($"tv: {d.LogName} didn't say how it's connected ({ex.GetType().Name})");
+        }
         return null;
     }
 
-    // Rokus are asked each time (their software updates); Chromecasts report their software, their model comes from
-    // Detect; DLNA TVs report only their model, at Detect.
+    // Rokus are asked each time (their software updates); Chromecasts report their software, DLNA TVs only their model from Detect.
     static async Task<string> DescribeAsync(Device d)
     {
         if (d.IsRoku)
         {
             var x = await RokuInfoAsync(d);
-            string g(string n) => x.Root?.Element(n)?.Value?.Trim() ?? "";
+            string g(string n) => Log.Outside(x.Root?.Element(n)?.Value?.Trim() ?? "");
             return $"{ModelText(g("vendor-name"), g("model-name"), g("model-number"))}, Roku OS {g("software-version")} build {g("software-build")}" +
                    $", {RokuLink(x) ?? "connection not reported"}";
         }
         if (d.Kind == DeviceKind.Cast)
         {
             var e = await CastInfoAsync(d);
-            var rev = e.TryGetProperty("cast_build_revision", out var r) ? r.GetString() : null;
-            return $"{d.Model ?? ModelUnknown}, Cast software {rev ?? "not reported"}, {CastLink(e) ?? "connection not reported"}";
+            var rev = e.ValueKind == JsonValueKind.Object && e.TryGetProperty("cast_build_revision", out var r) && r.ValueKind == JsonValueKind.String ? r.GetString() : null;
+            return $"{Log.Outside(d.Model) ?? ModelUnknown}, Cast software {Log.Outside(rev) ?? "not reported"}, {CastLink(e) ?? "connection not reported"}";
         }
-        return $"{d.Model ?? ModelUnknown}, software and connection not reported (DLNA TVs don't say)";
+        return $"{Log.Outside(d.Model) ?? ModelUnknown}, software and connection not reported (DLNA TVs don't say)";
     }
 
     static async Task<XDocument> RokuInfoAsync(Device d) => XDocument.Parse(await Http.GetStringAsync($"http://{d.Ip}:8060/query/device-info"));
@@ -63,10 +64,9 @@ public static class TvInfo
     static string RokuLink(XDocument x) => x.Root?.Element("network-type")?.Value?.Trim() switch { "wifi" => "WI-FI", "ethernet" => "WIRED", _ => null };
 
     static string CastLink(JsonElement e) =>
-        e.TryGetProperty("ethernet_connected", out var w) && w.ValueKind is JsonValueKind.True or JsonValueKind.False ? (w.GetBoolean() ? "WIRED" : "WI-FI") : null;
+        e.ValueKind == JsonValueKind.Object && e.TryGetProperty("ethernet_connected", out var w) && w.ValueKind is JsonValueKind.True or JsonValueKind.False ? (w.GetBoolean() ? "WIRED" : "WI-FI") : null;
 
-    // Maker, model name and number in one line; the maker is left off when the model name already starts with it
-    // ("Roku" + "Roku Ultra" reads "Roku Ultra").
+    // Maker, model name and number in one line, the maker left off when the name already starts with it.
     public static string ModelText(string maker, string model, string number)
     {
         maker = maker?.Trim() ?? "";

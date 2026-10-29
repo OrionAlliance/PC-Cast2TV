@@ -33,6 +33,18 @@ static class Annex
         return o;
     }
 
+    // The format name a player sets itself up with ("avc1.64002A" = High 4.2), read from the frame's SPS; null without one.
+    public static string CodecOf(ReadOnlySpan<byte> frame)
+    {
+        foreach (var (start, end, type) in Units(frame))
+        {
+            if (type != 7) continue;
+            int header = start + (frame[start + 2] == 1 ? 3 : 4); // the unit's own first byte, after its start code
+            if (header + 3 < end) return $"avc1.{frame[header + 1]:X2}{frame[header + 2]:X2}{frame[header + 3]:X2}";
+        }
+        return null;
+    }
+
     // Each unit from its start code to the next: (start of its start code, end, unit type).
     static List<(int Start, int End, int Type)> Units(ReadOnlySpan<byte> b)
     {

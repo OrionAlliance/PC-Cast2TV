@@ -20,8 +20,7 @@ public partial class MainWindow
         return true;
     }
 
-    // Opens at the design size (smaller if the screen can't fit it); after that the window
-    // resizes freely and everything scales with it. Left to auto-size, the picture overgrew the screen.
+    // Opens at the design size (smaller on a small screen), then resizes freely with everything scaled.
     void OpenAtDesignSize()
     {
         double fit = WindowSpot.DesignScale(Design.Width, Design.Height);

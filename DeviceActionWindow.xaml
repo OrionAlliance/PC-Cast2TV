@@ -13,12 +13,6 @@
                     <TextBlock HorizontalAlignment="Center" FontSize="13" Text="STAYS SAVED · RIGHT-CLICK DETECT TO BRING IT BACK" />
                 </StackPanel>
             </Button>
-            <Button Height="76" Margin="0,12,0,0" Style="{StaticResource Pill}" Background="{DynamicResource Main}" Click="Forget_Click">
-                <StackPanel>
-                    <TextBlock HorizontalAlignment="Center" Text="FORGET FROM DETECTION" />
-                    <TextBlock HorizontalAlignment="Center" FontSize="13" Text="DETECT SKIPS IT AND ITS BOOKMARK IS CLEARED" />
-                </StackPanel>
-            </Button>
             <Button Width="150" Margin="0,18,0,0" HorizontalAlignment="Right" Style="{StaticResource Pill}" IsCancel="True">
                 <TextBlock Text="CANCEL" />
             </Button>

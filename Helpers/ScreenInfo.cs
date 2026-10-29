@@ -24,8 +24,7 @@ public static class ScreenInfo
     // TVs show 60 frames a second, so only a 60, 120 or 240 Hz screen lines up with them evenly.
     public static bool LinesUpWithTv(int hz) => hz > 1 && hz % 60 == 0;
 
-    // Switches the main screen to 60 Hz for the cast. The switch is temporary, never saved as the user's setting:
-    // PutRateBack undoes it, and Windows undoes it by itself if the app is killed.
+    // Switches the main screen to 60 Hz for the cast, never saved: PutRateBack undoes it, and Windows does if the app is killed.
     public static string SwitchTo60()
     {
         if (!Current(out var dm)) return "could not read the screen's settings, left alone";

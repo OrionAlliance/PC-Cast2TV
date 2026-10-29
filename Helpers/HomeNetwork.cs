@@ -4,14 +4,12 @@ using System.Runtime.InteropServices;
 
 namespace PCCast2TV.Helpers;
 
-// The home network this PC casts over: how it's connected, and whether Windows calls it Public. Its name (the Wi-Fi
-// name) is never read, so it can't end up in the log. A VPN never counts. Nothing here goes out on the network.
+// How this PC reaches the home network and whether Windows calls it Public; the Wi-Fi name is never read, a VPN never counts.
 public static class HomeNetwork
 {
     static readonly Guid ListManager = new("DCB00C01-570F-4A9B-8D69-199FDBA5723B");
 
-    // This PC's side: how it reaches the device, "WI-FI" or "WIRED", null with no network.
-    // towardIp is the device being cast to, when known, so a PC on both Wi-Fi and a cable names the one actually used.
+    // This PC's side toward the device (towardIp, when known): WI-FI or WIRED, null with no network.
     public static string Link(string towardIp) => PickAdapter(towardIp) switch
     {
         null => null,
@@ -38,8 +36,7 @@ public static class HomeNetwork
         .Where(u => u.Address.AddressFamily == AddressFamily.InterNetwork && !u.Address.ToString().StartsWith("169.254.", StringComparison.Ordinal))
         .Select(u => u.Address.ToString());
 
-    // True when Windows calls the network that reaches the device Public: its firewall then keeps TVs out, because the
-    // app's rule lets them in on home (Private) networks only.
+    // True when Windows calls the network toward the device Public, where the app's Private-only firewall rule keeps TVs out.
     public static bool IsPublic(string towardIp)
     {
         var nic = PickAdapter(towardIp);

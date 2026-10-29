@@ -38,8 +38,8 @@ public static class EncoderPicker
             return new EncoderChoice(label, true, vendor);
         }
         Log.Write($"encoder: {card} has no H.264 encoder, using Windows' own on the processor");
-        return Processor(vendor);
+        return Processor();
     }
 
-    public static EncoderChoice Processor(string vendor) => new("CPU H.264", false, vendor);
+    public static EncoderChoice Processor() => new("CPU H.264", false, null);
 }

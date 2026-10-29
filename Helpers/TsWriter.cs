@@ -3,9 +3,7 @@ using System.Text;
 
 namespace PCCast2TV.Helpers;
 
-// Puts the H.264 frames and AAC frames into an MPEG transport stream, the format TVs and Rokus play: for a Roku,
-// 1-second pieces that each start with a keyframe plus the live list of the newest 4; for a DLNA TV, one endless stream.
-// Pieces stay in memory; the server hands them out from here.
+// Packs the frames into MPEG-TS: 1-second pieces and a live list for a Roku or Chromecast, one endless stream for DLNA.
 public sealed class TsWriter
 {
     const int PmtPid = 0x1000, VideoPid = 0x100, AudioPid = 0x101, ListSize = 4, KeptBehind = 3;
@@ -20,11 +18,13 @@ public sealed class TsWriter
     readonly object _gate = new();
     readonly Dictionary<int, int> _cc = new();
     readonly MemoryStream _out = new(), _piece = new();
-    readonly Queue<(byte[] Frame, long Pts)> _audioAhead = new();
+    readonly Queue<(byte[] Frame, long Pts)> _audioWaiting = new();
+    readonly Queue<(byte[] Frame, long Pts, bool Key)> _videoWaiting = new();
     readonly List<(int Index, double Seconds)> _list = new();
     volatile Served _served = new(null, new(), -1, 0);
     int _index = -1;
     long _pieceStart = -1, _lastVideo = long.MinValue, _bytes;
+    volatile string _codec; // the video's format name, from the first keyframe's SPS
 
     public event Action<byte[], int> Live; // the endless stream's bytes as they're made
     public long Bytes => Interlocked.Read(ref _bytes); // live bytes sent out, or finished pieces' bytes
@@ -34,41 +34,66 @@ public sealed class TsWriter
     public int? Newest => _served.Newest < 0 ? null : _served.Newest;
     public int Listed => _served.Listed;
 
+    // The master list a Chromecast gets, naming the stream's real format so Google's player sets itself up for it.
+    public string Master => _codec == null ? null :
+        "#EXTM3U\n#EXT-X-VERSION:3\n" +
+        $"#EXT-X-STREAM-INF:BANDWIDTH=20000000,CODECS=\"{_codec}{(_sound ? ",mp4a.40.2" : "")}\"\n{ScreenRecorder.PlaylistName}\n";
+
     public TsWriter(OutputKind kind, bool sound) => (_kind, _sound) = (kind, sound);
 
     public void AddVideo(byte[] frame, long pts, bool key)
     {
         lock (_gate)
         {
-            if (key)
+            if (key && _codec == null && Annex.CodecOf(frame) is { } codec)
             {
-                if (_kind == OutputKind.Hls && (_pieceStart < 0 || pts - _pieceStart >= 81_000)) NextPiece(pts); // 0.9 s or more in
-                else if (_kind == OutputKind.LiveTs) Tables();
+                _codec = codec;
+                Log.Write($"cast: video format {codec}" + (_sound ? " with AAC sound" : ""));
             }
-            if (_kind == OutputKind.Hls && _index < 0) return; // waiting for the first keyframe
-            while (_audioAhead.Count > 0 && _audioAhead.Peek().Pts <= pts) Audio(_audioAhead.Dequeue());
-            Pes(VideoPid, 0xE0, frame, Start + pts, key, Start + pts - PcrLead);
-            _lastVideo = pts;
-            Flush();
+            _videoWaiting.Enqueue((frame, pts, key));
+            SendInOrder();
         }
     }
 
-    // Sound comes a little after the picture it goes with; sound that's ahead waits for its picture.
     public void AddAudio(byte[] frame, long pts)
     {
         lock (_gate)
         {
-            if (_lastVideo == long.MinValue) return; // nothing to go with yet
-            if (pts <= _lastVideo) { Audio((frame, pts)); Flush(); }
-            else
-            {
-                _audioAhead.Enqueue((frame, pts));
-                while (_audioAhead.Count > 200) Audio(_audioAhead.Dequeue()); // the picture stalled: don't hold sound forever
-            }
+            _audioWaiting.Enqueue((frame, pts));
+            SendInOrder();
         }
     }
 
-    void Audio((byte[] Frame, long Pts) a) => Pes(AudioPid, 0xC0, a.Frame, Start + a.Pts, false, null);
+    // Pictures and sound go out in time order so each piece starts with its keyframe; neither waits over half a second.
+    void SendInOrder()
+    {
+        while (_videoWaiting.Count > 0 && (_audioWaiting.Count > 0 || !_sound))
+        {
+            if (!_sound || _videoWaiting.Peek().Pts <= _audioWaiting.Peek().Pts) Video(_videoWaiting.Dequeue());
+            else Audio(_audioWaiting.Dequeue());
+        }
+        while (_videoWaiting.Count > 0 && _videoWaiting.Last().Pts - _videoWaiting.Peek().Pts > 45_000) Video(_videoWaiting.Dequeue());
+        while (_audioWaiting.Count > 0 && _audioWaiting.Last().Pts - _audioWaiting.Peek().Pts > 45_000) Audio(_audioWaiting.Dequeue());
+        Flush();
+    }
+
+    void Video((byte[] Frame, long Pts, bool Key) v)
+    {
+        if (v.Key)
+        {
+            if (_kind == OutputKind.Hls && (_pieceStart < 0 || v.Pts - _pieceStart >= 81_000)) NextPiece(v.Pts); // 0.9 s or more in
+            else if (_kind == OutputKind.LiveTs) Tables();
+        }
+        if (_kind == OutputKind.Hls && _index < 0) return; // waiting for the first keyframe
+        Pes(VideoPid, 0xE0, v.Frame, Start + v.Pts, v.Key, Start + v.Pts - PcrLead);
+        _lastVideo = v.Pts;
+    }
+
+    void Audio((byte[] Frame, long Pts) a)
+    {
+        if (_lastVideo == long.MinValue) return; // nothing to go with yet
+        Pes(AudioPid, 0xC0, a.Frame, Start + a.Pts, false, null);
+    }
 
     // Finishes the piece that ends here, lists it, and starts the next one.
     void NextPiece(long pts)

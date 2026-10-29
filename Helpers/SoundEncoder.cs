@@ -3,8 +3,7 @@ using Vortice.MediaFoundation;
 
 namespace PCCast2TV.Helpers;
 
-// Windows' own AAC encoder: the PC sound, 16-bit stereo at 48 or 44.1 kHz (what AAC takes), comes out as AAC
-// frames with their time, ready for the stream (ADTS headers on).
+// Windows' own AAC encoder: 16-bit stereo at 48 or 44.1 kHz in, timed AAC frames with ADTS headers out.
 public sealed class SoundEncoder : IDisposable
 {
     public delegate void FrameHandler(byte[] adts, long pts90k);
@@ -18,6 +17,7 @@ public sealed class SoundEncoder : IDisposable
     readonly int _rate;
     readonly int _outSize;
     long _fed;            // samples handed to the encoder, for its input times
+    IMFSample _out;       // the one sample it writes its frames into, used again for each
 
     // Throws InvalidOperationException when Windows' AAC encoder won't start (no sound in the cast then).
     public SoundEncoder(int rate, FrameHandler onFrame)
@@ -89,20 +89,25 @@ public sealed class SoundEncoder : IDisposable
 
     bool TakeOutput()
     {
-        using var mine = MediaFactory.MFCreateSample();
-        using (var b = MediaFactory.MFCreateMemoryBuffer(_outSize)) mine.AddBuffer(b);
-        var odb = new OutputDataBuffer { StreamID = 0, Sample = mine };
+        if (_out == null)
+        {
+            _out = MediaFactory.MFCreateSample();
+            using var made = MediaFactory.MFCreateMemoryBuffer(_outSize);
+            _out.AddBuffer(made);
+        }
+        using (var b = _out.GetBufferByIndex(0)) b.CurrentLength = 0;
+        var odb = new OutputDataBuffer { StreamID = 0, Sample = _out };
         var r = _mft.ProcessOutput(0, 1, ref odb, out _);
         odb.Events?.Dispose();
         if (r.Code == NeedMoreInput) return false;
         r.CheckError();
-        using var buf = mine.ConvertToContiguousBuffer();
+        using var buf = _out.ConvertToContiguousBuffer();
         buf.Lock(out var at, out _, out int length);
         var frame = new byte[length + 7];
         try { Marshal.Copy(at, frame, 7, length); }
         finally { buf.Unlock(); }
         WriteAdts(frame, length);
-        _onFrame(frame, (mine.SampleTime * 9 + 500) / 1000); // 100 ns to 90 kHz, rounded
+        _onFrame(frame, (_out.SampleTime * 9 + 500) / 1000); // 100 ns to 90 kHz, rounded
         return true;
     }
 
@@ -119,5 +124,9 @@ public sealed class SoundEncoder : IDisposable
         f[6] = 0xFC;
     }
 
-    public void Dispose() => _mft?.Dispose();
+    public void Dispose()
+    {
+        _out?.Dispose();
+        _mft?.Dispose();
+    }
 }

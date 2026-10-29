@@ -6,9 +6,8 @@
 
     <Border Padding="28,24,28,24">
         <StackPanel Width="440">
-            <TextBlock x:Name="Heading" Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextWrapping="Wrap" />
-            <TextBlock x:Name="Empty" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource DimText}" Margin="0,16,0,0"
-                       Text="NO DEVICES YET · CLICK DETECT FIRST" Visibility="Collapsed" />
+            <TextBlock Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextWrapping="Wrap"
+                       Text="HIDDEN DEVICES · UNTICK ONE TO PUT IT BACK ON THE LIST" />
             <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto" Margin="0,18,0,0">
                 <ScrollViewer.Resources>
                     <!-- A slim bar in the theme's color instead of Windows' bright white one; drag it or use the mouse wheel. -->
@@ -41,7 +40,7 @@
                     <TextBlock Text="CANCEL" />
                 </Button>
                 <Button Width="150" Margin="14,0,0,0" Style="{StaticResource Pill}" Background="{DynamicResource Main}" Click="Ok_Click">
-                    <TextBlock x:Name="OkLabel" />
+                    <TextBlock Text="DONE" />
                 </Button>
             </StackPanel>
         </StackPanel>

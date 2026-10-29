@@ -8,8 +8,7 @@ namespace PCCast2TV.Helpers;
 // The screen side of the grab: Windows' copy of the screen, the converter that makes it a video picture, and reading one back.
 public sealed partial class ScreenGrabber
 {
-    // The copy of the screen and the converter that turns it upright, scales it into the cast's size (black bars when the
-    // shape differs) and makes it video color. Windows hands the screen over unturned, so a turned screen is turned back.
+    // The screen copy and its converter: turned upright, scaled into the cast's size (black bars if the shape differs), video color.
     void BuildInput(uint w, uint h)
     {
         _input?.Dispose();
@@ -52,8 +51,7 @@ public sealed partial class ScreenGrabber
         Log.Write($"grab: screen picture {w}x{h}" + (_dupTurn > ModeRotation.Identity ? $" turned {_dupTurn}" : "") + $", fills {dw}x{dh} of {Width}x{Height}");
     }
 
-    // The newest picture Windows has, already in video color; null when nothing new came (or only the mouse moved).
-    // The first one is taken as is: on a still screen Windows' opening picture is all there is.
+    // The newest picture in video color, null when nothing new came (or only the mouse moved); the first one is taken as is.
     Picture TakeNewest(uint waitMs, bool first = false)
     {
         if (_dupBroken && !Reopen()) return null;
@@ -90,12 +88,15 @@ public sealed partial class ScreenGrabber
         return p;
     }
 
+    // Tried 4 times a second while Windows' screen copy is away (a lock screen can last minutes), not every tick.
     bool Reopen()
     {
+        if (Environment.TickCount64 < _nextReopen) return false;
+        _nextReopen = Environment.TickCount64 + 250;
         _dup?.Dispose();
         _dup = null;
         try { _dup = _output.DuplicateOutput(Device); }
-        catch (SharpGen.Runtime.SharpGenException) { return false; } // not back yet; try again next tick
+        catch (SharpGen.Runtime.SharpGenException) { return false; } // not back yet; tried again in a quarter second
         _dupTurn = _dup.Description.Rotation;
         _dupBroken = false;
         Log.Write("grab: screen copy reopened");

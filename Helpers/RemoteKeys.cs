@@ -2,8 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace PCCast2TV.Helpers;
 
-// Turns a Roku remote button into a key press on the PC. Play/pause, next and previous are media keys, which Windows
-// hands to whatever is playing; forward and rewind are the arrow keys, which go to the window in front (the video).
+// A Roku remote button as a PC key: play/pause, next and previous as media keys, forward and rewind as arrow keys.
 public static class RemoteKeys
 {
     const uint KeyboardInput = 1, ExtendedKey = 0x1, KeyUp = 0x2;

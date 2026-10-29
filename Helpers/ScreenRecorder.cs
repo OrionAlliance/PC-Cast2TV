@@ -5,11 +5,10 @@ namespace PCCast2TV.Helpers;
 
 public enum OutputKind { Hls, LiveTs }
 
-// The whole cast, inside the app: the screen grab on its own steady clock, the card's H.264 encoder, Windows' AAC
-// encoder for the PC sound, and the transport stream: 1-second pieces for a Roku, or one endless stream for a DLNA TV.
+// The whole cast inside the app: screen grab, H.264 and AAC encoders, then pieces, a live stream, or mirrored frames.
 public sealed class ScreenRecorder : IDisposable
 {
-    public const string PlaylistName = "index.m3u8";
+    public const string PlaylistName = "index.m3u8", MasterName = "master.m3u8"; // the live list, and the master over it
     public static readonly Regex PieceName = new(@"^seg_(\d{5,9})\.ts$"); // 6 digits from piece 100000, 27 h 46 min in
 
     ScreenGrabber _grab;
@@ -17,7 +16,9 @@ public sealed class ScreenRecorder : IDisposable
     SoundCapture _sound;
     SoundEncoder _aac;
     TsWriter _ts;
-    volatile bool _stopping, _dead;
+    volatile MirrorSender _mirror;
+    volatile bool _stopping, _dead, _piecesToo;
+    long _mirrorBytes;
     TimeSpan _cpuSeen;
     DateTime _cpuSeenAt;
 
@@ -26,10 +27,21 @@ public sealed class ScreenRecorder : IDisposable
     public event Action Died;                    // the screen grab or the encoder stopped on its own
     public event Action<byte[], int> LiveChunk;  // live stream bytes as they come out (buffer is reused)
 
-    public long EncodedBytes => _ts?.Bytes ?? 0;
+    public long EncodedBytes => (_ts?.Bytes ?? 0) + Interlocked.Read(ref _mirrorBytes);
+
+    // Sends the frames to a Chromecast's mirroring (null: none), and into pieces too while it's on trial.
+    public void MirrorTo(MirrorSender m, bool piecesToo)
+    {
+        _piecesToo = piecesToo;
+        _mirror = m;
+    }
+    public (int Width, int Height) Size => _grab == null ? default : (_grab.Width, _grab.Height);
+    public int SoundRate => _sound?.Rate ?? 0;
+    public void ForceKey() => _video?.ForceKey();
 
     // The pieces and the live list, for the server; null until there is one.
     public string Playlist => _ts?.Playlist;
+    public string Master => _ts?.Master;
     public byte[] Piece(int index) => _ts?.Piece(index);
     public int? NewestPiece => _ts?.Newest;
 
@@ -48,24 +60,23 @@ public sealed class ScreenRecorder : IDisposable
         return pct;
     }
 
-    // Called off the window's thread, so Windows' media parts are set up the way they're used later.
-    // Throws InvalidOperationException with the reason when the card or the encoder won't start.
-    public void Start(EncoderChoice enc, OutputKind kind)
+    // Run off the window's thread (Windows' media parts need it); maxBitRate 0 is no cap. Throws InvalidOperationException saying why when the encoder won't start.
+    public void Start(EncoderChoice enc, OutputKind kind, int maxBitRate)
     {
         try
         {
             VideoEncoder.EnsureStarted();
-            _grab = new ScreenGrabber(enc.Fps);
-            _video = new VideoEncoder(_grab, enc.Fps, (f, pts, key) => _ts.AddVideo(f, pts, key));
+            _grab = new ScreenGrabber(enc.Fps, TvCatchingUp);
+            _video = new VideoEncoder(_grab, enc.Fps, maxBitRate, OnVideo);
             if (enc.OnCard && !_video.Open(enc.Vendor, true))
             {
                 // The processor's encoder can't keep up at 60, so the screen grab starts over at its 30.
                 Log.Write("encoder: the card's encoder would not start, the processor takes over");
                 _video.Dispose();
                 _grab.Dispose();
-                enc = EncoderPicker.Processor(enc.Vendor);
-                _grab = new ScreenGrabber(enc.Fps);
-                _video = new VideoEncoder(_grab, enc.Fps, (f, pts, key) => _ts.AddVideo(f, pts, key));
+                enc = EncoderPicker.Processor();
+                _grab = new ScreenGrabber(enc.Fps, TvCatchingUp);
+                _video = new VideoEncoder(_grab, enc.Fps, maxBitRate, OnVideo);
             }
             if (!enc.OnCard && !_video.Open(null, false)) throw new InvalidOperationException("no H.264 encoder would start");
             Running = enc;
@@ -73,7 +84,7 @@ public sealed class ScreenRecorder : IDisposable
             HasSound = _sound.Open();
             if (HasSound)
             {
-                try { _aac = new SoundEncoder(_sound.Rate, (f, pts) => _ts.AddAudio(f, pts)); }
+                try { _aac = new SoundEncoder(_sound.Rate, OnAudio); }
                 catch (InvalidOperationException ex)
                 {
                     Log.Write("sound: " + ex.Message);
@@ -92,6 +103,27 @@ public sealed class ScreenRecorder : IDisposable
             _grab.Start();
         }
         catch (SharpGen.Runtime.SharpGenException ex) { throw new InvalidOperationException(ex.Message, ex); }
+    }
+
+    // A mirrored TV that's behind gets the same picture again until it catches up.
+    bool TvCatchingUp() => _mirror?.Behind() == true;
+
+    void OnVideo(byte[] frame, long pts, bool key)
+    {
+        var m = _mirror;
+        if (m == null || _piecesToo) _ts.AddVideo(frame, pts, key);
+        if (m == null) return;
+        Interlocked.Add(ref _mirrorBytes, frame.Length);
+        m.AddVideo(frame, pts, key);
+    }
+
+    void OnAudio(byte[] frame, long pts)
+    {
+        var m = _mirror;
+        if (m == null || _piecesToo) _ts.AddAudio(frame, pts);
+        if (m == null) return;
+        Interlocked.Add(ref _mirrorBytes, frame.Length);
+        m.AddAudio(frame, pts);
     }
 
     void OnDied()

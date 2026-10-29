@@ -2,8 +2,7 @@ using System.Windows;
 
 namespace PCCast2TV.Helpers;
 
-// Where the main window opens: back where it was last closed if that still fits, else at the design size.
-// Each spot is kept with the layout's size, so a size from an older layout isn't reused.
+// Where the main window opens: its last spot if that still fits, else the design size, each spot kept with its layout's size.
 public static class WindowSpot
 {
     // The spot it was last closed at; null when there's none, it was for another layout, or it's off the screens attached now.

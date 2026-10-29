@@ -5,8 +5,7 @@ namespace PCCast2TV.Helpers;
 
 public enum RokuApp { None, Ours, DisplayHub }
 
-// Tells a Roku to play the cast and to stop, over ECP (port 8060): through our own PC Cast2TV app in the Roku's
-// developer slot, or the free DisplayHUB channel when ours isn't on it. Rokus have no built-in player that takes a link.
+// Plays and stops the cast on a Roku over ECP (port 8060), through our app in its developer slot or DisplayHUB when ours isn't on it.
 public static class RokuPlayer
 {
     const string OurApp = "dev";
@@ -30,8 +29,7 @@ public static class RokuPlayer
         }
     }
 
-    // Opens DisplayHUB's page in the Roku Channel Store on the TV; adding it takes one OK on the Roku remote (Roku never
-    // lets an outside app add a channel by itself). False when the Roku turns the request down or doesn't answer.
+    // Opens DisplayHUB's store page on the TV (adding it takes one OK on the remote); false when the Roku refuses or doesn't answer.
     public static async Task<bool> OpenDisplayHubPageAsync(Device d)
     {
         try
@@ -67,8 +65,7 @@ public static class RokuPlayer
         }
     }
 
-    // Our app takes the link in url and sends the remote's buttons back; DisplayHUB takes it in contentID and sends
-    // nothing back. Null once it plays, else what went wrong (the caller puts the Roku's name in front).
+    // Our app takes the link in url and sends buttons back, DisplayHUB takes it in contentID; null once playing, else what went wrong.
     public static async Task<string> PlayAsync(Device d, RokuApp app, string url, Func<int> piecesServed)
     {
         const string failed = "DID NOT START PLAYING";
@@ -86,39 +83,40 @@ public static class RokuPlayer
         }
         // Playing once the Roku says so, or once it is pulling video pieces from us.
         int startPieces = piecesServed();
+        string unread = null; // why the Roku's player state last couldn't be read, for the log
         for (int i = 0; i < 24; i++)
         {
             await Task.Delay(500);
-            var (state, error) = await MediaStateAsync(d);
+            var (state, error, why) = await MediaStateAsync(d);
+            unread = why ?? unread;
             if (error) { Log.Write($"roku: {label} reported a player error"); return failed; }
             if (state == "play" || piecesServed() - startPieces >= 3)
             {
-                Log.Write($"roku: {label} playing (state {state}, pieces {piecesServed() - startPieces})");
+                Log.Write($"roku: {label} playing (state {Log.Outside(state)}, pieces {piecesServed() - startPieces})");
                 return null;
             }
         }
-        Log.Write($"roku: {label} never started (pieces {piecesServed() - startPieces})");
+        Log.Write($"roku: {label} never started (pieces {piecesServed() - startPieces}" + (unread == null ? ")" : $", its player state couldn't be read: {unread})"));
         return failed;
     }
 
-    // The app on the Roku's screen now; null on the home screen. A Roku that doesn't answer throws, so the
-    // caller logs that instead of mistaking it for the home screen.
+    // The app on the Roku's screen now (null: home screen); a Roku that doesn't answer throws, so it isn't taken for home.
     static async Task<string> ActiveAppAsync(Device d)
     {
         var x = XDocument.Parse(await Http.GetStringAsync($"http://{d.Ip}:8060/query/active-app"));
         var id = x.Root?.Element("app")?.Attribute("id")?.Value;
-        Log.Write($"roku: on screen now: {id ?? "home"}");
+        Log.Write($"roku: on screen now: {Log.Outside(id) ?? "home"}");
         return string.IsNullOrEmpty(id) ? null : id;
     }
 
-    static async Task<(string State, bool Error)> MediaStateAsync(Device d)
+    static async Task<(string State, bool Error, string Failed)> MediaStateAsync(Device d)
     {
         try
         {
             var x = XDocument.Parse(await Http.GetStringAsync($"http://{d.Ip}:8060/query/media-player"));
-            return (x.Root?.Attribute("state")?.Value ?? "", x.Root?.Attribute("error")?.Value == "true");
+            return (x.Root?.Attribute("state")?.Value ?? "", x.Root?.Attribute("error")?.Value == "true", null);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException) { return ("", false); }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException) { return ("", false, ex.GetType().Name); }
     }
 
     // Back to the Roku home screen, but only if the cast's player is still the one on screen.
@@ -129,7 +127,7 @@ public static class RokuPlayer
             var onScreen = await ActiveAppAsync(d);
             if (onScreen != IdOf(app))
             {
-                Log.Write($"roku: player no longer on screen (shows {onScreen ?? "home"}), left alone");
+                Log.Write($"roku: player no longer on screen (shows {Log.Outside(onScreen) ?? "home"}), left alone");
                 return;
             }
             using var r = await Http.PostAsync($"http://{d.Ip}:8060/keypress/Home", null);

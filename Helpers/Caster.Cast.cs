@@ -17,7 +17,7 @@ public sealed partial class Caster
             return;
         }
         if (Phase != Phase.Online || Picked is not { } d) return;
-        await StartCastAsync(d);
+        await (_castWork = StartCastAsync(d));
     }
 
     // The checks run in order; the first one that fails says why on the status line and stops.
@@ -41,8 +41,7 @@ public sealed partial class Caster
         }
         _ = TvInfo.LogAsync(d); // maker, model and software for the log, asked alongside the start
 
-        // A Roku plays it through our Roku app, or the free DisplayHUB channel when ours isn't on it. With neither, the
-        // window shows how to add one.
+        // A Roku plays through our Roku app, or DisplayHUB when ours isn't on it; with neither, the window shows how to add one.
         var rokuApp = RokuApp.None;
         if (d.IsRoku)
         {
@@ -94,13 +93,13 @@ public sealed partial class Caster
 
         Set(Phase.Starting, "STARTING SCREEN CAPTURE...");
         KeepAwake.On();
-        // Set up off the window's thread so the window keeps drawing; it becomes the cast's recorder once it's up, so a
-        // close in the meantime never tears it down halfway through.
+        // Set up off the window's thread, and made the cast's recorder only once it's up, so a close meanwhile can't tear it half down.
         var rec = new ScreenRecorder();
         _server.BeginCast(d.Ip, rec);
         rec.Died += () => _ui.Post(_ => OnRecorderDied(), null);
         if (!d.TakesHls) rec.LiveChunk += _server.PushLive;
-        try { await Task.Run(() => rec.Start(Encoder, d.TakesHls ? OutputKind.Hls : OutputKind.LiveTs)); }
+        // A Chromecast's mirroring is capped at what it tells the TV; Roku and DLNA casts aren't.
+        try { await Task.Run(() => rec.Start(Encoder, d.TakesHls ? OutputKind.Hls : OutputKind.LiveTs, d.Kind == DeviceKind.Cast ? MirrorSender.MaxBitRate : 0)); }
         catch (InvalidOperationException ex)
         {
             rec.Dispose();
@@ -114,21 +113,32 @@ public sealed partial class Caster
         bool videoReady = await _rec.WaitForVideoAsync(d.TakesHls, TimeSpan.FromSeconds(10));
         if (Phase != Phase.Starting) return;
         if (!videoReady) { FailCast("SCREEN CAPTURE DID NOT START · SEE LOG"); return; }
-        Meter.Reset(_rec.EncodedBytes, _server.SentBytes);
         _rec.TakeGrabCounts(); // the timing readout starts here
         _rec.TakeCpuPercent();
         _ = Task.Run(GpuLoad.Sample); // its first reading only sets the starting point
 
         Set(Phase.Starting, $"STARTING {name}...");
-        var hlsUrl = $"http://{localIp}:{_server.Port}/live/{ScreenRecorder.PlaylistName}?cast={DateTime.UtcNow.Ticks}";
-        // Each kind of TV opens its own player; only a Chromecast's stays with the app for the cast.
+        // A Chromecast starts from the master list, which names the video's real format; the Roku takes the live list.
+        var list = d.Kind == DeviceKind.Cast ? ScreenRecorder.MasterName : ScreenRecorder.PlaylistName;
+        var hlsUrl = $"http://{localIp}:{_server.Port}/live/{list}?cast={DateTime.UtcNow.Ticks}";
+        // Each kind of TV opens its own player; a Chromecast mirrors, or plays the pieces if it turns mirroring down.
         string error;
         CastPlayer player = null;
+        bool viaPieces = true;
         if (d.IsRoku) error = await RokuPlayer.PlayAsync(d, rokuApp, hlsUrl, () => _server.PiecesServed);
-        else if (d.Kind == DeviceKind.Cast) (player, error) = await CastPlayer.PlayAsync(d, hlsUrl, () => _server.PiecesServed);
+        else if (d.Kind == DeviceKind.Cast)
+        {
+            (player, error) = await CastPlayer.MirrorAsync(d, _rec);
+            viaPieces = error == CastPlayer.UsePieces;
+            if (viaPieces && Phase == Phase.Starting)
+            {
+                Log.Write("cast: playing the pieces through Google's player instead");
+                (player, error) = await CastPlayer.PlayAsync(d, hlsUrl, () => _server.PiecesServed);
+            }
+        }
         else error = await DlnaPlayer.PlayAsync(d, $"http://{localIp}:{_server.Port}/stream.ts");
-        if (Phase != Phase.Starting) { if (player != null) await player.StopAsync(); return; } // closed mid-start: don't leave the TV's player open
-        if (error != null) { PlayerFailed(error, d); return; }
+        if (Phase != Phase.Starting) { await StopPlayerAsync(d, rokuApp, player); return; } // closed mid-start: don't leave the TV's player open
+        if (error != null) { PlayerFailed(error, d, viaPieces); return; }
         _castPlayer = player;
         _rokuApp = rokuApp;
 
@@ -138,26 +148,38 @@ public sealed partial class Caster
         CpuLoad = EncoderLoad = null;
         CastingTo = d;
         _castStartUtc = DateTime.UtcNow;
-        Log.Write("cast: playing" + (_rec.HasSound ? "" : ", no sound device"));
-        Set(Phase.Casting, $"CASTING TO {name}" + (_rec.HasSound ? "" : " · NO SOUND"));
+        Meter.Reset(_rec.EncodedBytes, SentBytes);
+        bool sound = _rec.HasSound && player?.TvTookSound != false;
+        Log.Write("cast: playing" + (!_rec.HasSound ? ", no sound device" : sound ? "" : ", the TV took no sound"));
+        Set(Phase.Casting, $"CASTING TO {name}" + (sound ? "" : " · NO SOUND"));
     }
 
-    // An ended cast says so for 5 seconds, then the line goes back to ready; an error stays up.
-    async Task StopCastAsync(string message, bool error = false, Device about = null)
+    // What has gone to the TV: a mirrored cast counts its own, the rest go through the server.
+    long SentBytes => _castPlayer?.Mirrored == true ? _castPlayer.SentBytes : _server.SentBytes;
+
+    // An ended cast says so for 5 seconds, an error stays up; kept so closing the app can let it finish.
+    Task StopCastAsync(string message, bool error = false, Device about = null) => _castWork = EndCastAsync(message, error, about);
+
+    async Task EndCastAsync(string message, bool error, Device about)
     {
         var d = CastingTo;
         Set(Phase.Stopping, "ENDING CAST...");
-        if (d.IsRoku) await RokuPlayer.StopAsync(d, _rokuApp);
-        else if (d.Kind == DeviceKind.Cast) await _castPlayer.StopAsync();
-        else await DlnaPlayer.StopAsync(d);
+        await StopPlayerAsync(d, _rokuApp, _castPlayer);
         CleanupCast();
         Log.Write("cast: ended" + (message == null ? "" : " (" + ForLog(about, message) + ")"));
         Set(Phase.Online, message == null ? "CAST ENDED" : Shown(about, message));
         if (!error) _ = BackToReadyAsync();
     }
 
-    // A message about a device: the status line puts its name in front, the log its kind and address (logs get posted
-    // in public Issues).
+    // The TV's player goes back off: a Roku goes home (if ours is still on screen), a Chromecast closes, DLNA stops.
+    static async Task StopPlayerAsync(Device d, RokuApp rokuApp, CastPlayer player)
+    {
+        if (d.IsRoku) await RokuPlayer.StopAsync(d, rokuApp);
+        else if (d.Kind == DeviceKind.Cast) { if (player != null) await player.StopAsync(); }
+        else await DlnaPlayer.StopAsync(d);
+    }
+
+    // A message about a device: its name on the status line, its kind and address in the log (logs get posted in public Issues).
     static string Shown(Device about, string message) => about == null ? message : $"{about.Name.ToUpperInvariant()} {message}";
     static string ForLog(Device about, string message) => about == null ? message : $"{about.LogName} {message}";
 
@@ -172,10 +194,10 @@ public sealed partial class Caster
         Raise();
     }
 
-    // The TV's player didn't start. If it never got a byte and Windows calls the network Public, the firewall is why.
-    void PlayerFailed(string message, Device d)
+    // The TV's player didn't start; pieces that never got a byte out on a network Windows calls Public mean the firewall.
+    void PlayerFailed(string message, Device d, bool viaPieces)
     {
-        bool nothingReached = _server.SentBytes == 0;
+        bool nothingReached = viaPieces && _server.SentBytes == 0;
         FailCast(message, d);
         if (!nothingReached || !HomeNetwork.IsPublic(d.Ip)) return;
         Log.Write("cast: nothing reached the TV and Windows calls this network Public");
@@ -202,11 +224,15 @@ public sealed partial class Caster
         CastingTo = null;
     }
 
-    // A button on the Roku remote, sent by our Roku app: Back ends the cast, the rest become key presses on the PC
-    // (the Roku app shows the press itself).
+    // A Roku remote button from our Roku app: Back ends the cast, the rest become PC key presses (the Roku shows play/pause).
     void OnRemoteButton(string name)
     {
         if (Phase != Phase.Casting) return;
+        if (_rokuApp != RokuApp.Ours)
+        {
+            Log.Write("remote: a button from a cast that isn't through our Roku app, ignored");
+            return;
+        }
         if (name == "back")
         {
             Log.Write("remote: back, ending the cast");
@@ -235,23 +261,24 @@ public sealed partial class Caster
         if (Phase == Phase.Casting) _ = StopCastAsync("SCREEN CAPTURE STOPPED · SEE LOG", error: true);
     }
 
-    // Once a second while online: feed the readout, and end the cast if the device stopped asking for video.
+    // Once a second while online: feed the readout, and end the cast if the TV went quiet.
     void Tick()
     {
         if (Phase != Phase.Casting) return;
-        Meter.Tick(_rec.EncodedBytes, _server.SentBytes);
+        bool mirrored = _castPlayer?.Mirrored == true;
+        Meter.Tick(_rec.EncodedBytes, SentBytes);
         var now = DateTime.UtcNow;
         if (++_ticks % 10 == 0) // the readout, written down every 10 seconds so a cast can be judged from the log
         {
             Log.Write($"cast: made {Meter.EncodedLine[^1]:0.0} Mbps, sent {Meter.Now:0.0}, peak {Meter.Peak:0.0}, signal {Meter.SignalLabel}");
-            if (CastingTo.Kind == DeviceKind.Cast) // the Roku reports its own side; this is the Chromecast's
+            if (mirrored) Log.Write(_castPlayer.TakeMirrorReport());
+            else if (CastingTo.Kind == DeviceKind.Cast) // the Roku reports its own side; this is the Chromecast's
             {
                 var a = _server.TakeAsks();
                 Log.Write($"chromecast: asked for the playlist {a.Playlists} times and {a.Pieces} pieces (last {a.LastPiece}, newest made {_rec.NewestPiece})" +
                           (a.Gone > 0 ? $", {a.Gone} already gone" : ""));
             }
-            // Where a hitch starts: the screen clock's ticks, how often the screen really changed, whether the encoder kept
-            // up, and what's using the card. Late = ticks the clock slept through (they repeat the last picture).
+            // Where a hitch starts: clock ticks (late = slept through), real screen changes, whether the encoder kept up, the card's load.
             var g = _rec.TakeGrabCounts();
             double cpu = _rec.TakeCpuPercent();
             DroppedFrames += g.Late;
@@ -266,7 +293,8 @@ public sealed partial class Caster
                 _ui.Post(_ => OnEncoderLoad(gpu.Encoder, cast), null);
             });
         }
-        var last = _server.LastAskUtc > _castStartUtc ? _server.LastAskUtc : _castStartUtc;
+        var heard = mirrored ? _castPlayer.LastHeardUtc : _server.LastAskUtc;
+        var last = heard > _castStartUtc ? heard : _castStartUtc;
         if (now - last > TimeSpan.FromSeconds(20))
         {
             _ = StopCastAsync("STOPPED PLAYING · CAST ENDED", about: CastingTo);

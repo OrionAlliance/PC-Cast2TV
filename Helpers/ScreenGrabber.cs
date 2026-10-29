@@ -1,13 +1,10 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 
 namespace PCCast2TV.Helpers;
 
-// The app's own screen grab, timed like OBS: a steady clock ticks fps times a second, each tick takes the newest picture
-// Windows has (the last one again when the screen didn't change) and turns it into video color on the graphics card.
-// The encoder takes one picture per tick, so picture n is exactly n/fps seconds in.
+// The screen grab, timed like OBS: a steady clock takes the newest picture fps times a second, so picture n is n/fps seconds in.
 public sealed partial class ScreenGrabber : IDisposable
 {
     const int PoolSize = 16;
@@ -28,6 +25,7 @@ public sealed partial class ScreenGrabber : IDisposable
     }
 
     readonly int _fps;
+    readonly Func<bool> _hold;
     readonly IDXGIOutput1 _output;
     readonly ID3D11DeviceContext _ctx;
     readonly ID3D11VideoDevice _video;
@@ -50,6 +48,7 @@ public sealed partial class ScreenGrabber : IDisposable
     readonly int _screenW, _screenH;
     Thread _clock;
     bool _dupBroken, _ended;
+    long _nextReopen; // when the screen copy may next be reopened (Environment.TickCount64)
 
     // Counts for the 10-second timing line.
     readonly object _countGate = new();
@@ -81,9 +80,11 @@ public sealed partial class ScreenGrabber : IDisposable
     }
 
     // Sets everything up on the card that drives the main screen; throws InvalidOperationException with the reason.
-    public ScreenGrabber(int fps)
+    // hold: true while the last picture should repeat instead of a new one.
+    public ScreenGrabber(int fps, Func<bool> hold)
     {
         _fps = fps;
+        _hold = hold;
         try
         {
             var (adapter, output) = MainScreen();
@@ -166,8 +167,7 @@ public sealed partial class ScreenGrabber : IDisposable
 
     void ClockLoop()
     {
-        var timer = CreateWaitableTimerExW(IntPtr.Zero, null, 0x2 /* high resolution */, 0x1F0003);
-        if (timer == IntPtr.Zero) timer = CreateWaitableTimerExW(IntPtr.Zero, null, 0, 0x1F0003);
+        var timer = new PreciseTimer();
         try
         {
             Picture last = null;
@@ -184,15 +184,10 @@ public sealed partial class ScreenGrabber : IDisposable
             while (!_stop.IsCancellationRequested)
             {
                 double due = t0 + (double)next / _fps, wait = due - Stopwatch.GetTimestamp() / rate;
-                if (wait > 0)
-                {
-                    long until = -(long)(wait * 10_000_000);
-                    SetWaitableTimerEx(timer, ref until, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, 0);
-                    WaitForSingleObject(timer, 1000);
-                }
+                if (wait > 0) timer.Wait(wait, 1000);
                 double now = Stopwatch.GetTimestamp() / rate;
                 long current = Math.Max(next, (long)((now - t0) * _fps)); // the tick whose time has come
-                var fresh = TakeNewest(0);
+                var fresh = _hold() ? null : TakeNewest(0); // a mirrored TV that's behind gets the last picture again, tiny to send
                 // Fell behind: the ticks it slept through keep the last picture, so the timeline stays whole.
                 int missed = (int)(current - next);
                 if (missed > 0) Send(last, missed);
@@ -215,7 +210,7 @@ public sealed partial class ScreenGrabber : IDisposable
         }
         finally
         {
-            if (timer != IntPtr.Zero) CloseHandle(timer);
+            timer.Dispose();
             Ended();
         }
     }
@@ -277,9 +272,4 @@ public sealed partial class ScreenGrabber : IDisposable
         Device?.Dispose();
         _output?.Dispose();
     }
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern IntPtr CreateWaitableTimerExW(IntPtr attributes, string name, uint flags, uint access);
-    [DllImport("kernel32.dll")] static extern bool SetWaitableTimerEx(IntPtr timer, ref long due, int period, IntPtr completion, IntPtr arg, IntPtr wake, uint delay);
-    [DllImport("kernel32.dll")] static extern uint WaitForSingleObject(IntPtr handle, uint ms);
-    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
 }

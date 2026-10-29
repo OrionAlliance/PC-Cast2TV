@@ -6,8 +6,7 @@ namespace PCCast2TV.Helpers;
 // DesignWidth and DesignHeight are the layout the size was saved for, so a size from an older layout isn't reused.
 public sealed record WindowPlace(double Left, double Top, double Width, double Height, bool Maximized, double DesignWidth = 0, double DesignHeight = 0);
 
-// Every device Detect has found, the bookmarked default, hidden devices, where the window was left and the color theme,
-// kept in Settings\settings.json next to the app.
+// Saved devices, the bookmark, hidden devices, the window's spot and the theme, in Settings\settings.json beside the app.
 public static class AppSettings
 {
     sealed class Saved
@@ -66,8 +65,7 @@ public static class AppSettings
         }
     }
 
-    // Detect adds devices it hasn't seen and updates the address or name of ones it has. A device that was off
-    // during the search stays saved; only Forget takes one off the row.
+    // Detect adds new devices and updates moved or renamed ones; devices that were off stay saved, hidden ones stay hidden.
     public static void Remember(IEnumerable<Device> found)
     {
         bool changed = false;
@@ -95,14 +93,13 @@ public static class AppSettings
         if (Save()) Log.Write("settings: hidden now " + (Data.Hidden.Count == 0 ? "none" : string.Join(", ", Data.Hidden.Select(d => d.LogName))));
     }
 
-    // Forget = hide it for good and wipe its bookmark, so Detect never lists it again (right-click Detect brings it back).
-    public static void Forget(IEnumerable<Device> devices)
+    // Hidden: off the list and out of Detect's but still saved (right-click Detect brings it back); its bookmark is cleared.
+    public static void Hide(Device d)
     {
-        var list = devices.ToList();
-        var ids = list.Select(d => d.Id).ToHashSet();
-        Data.Hidden.AddRange(list.Where(d => !IsHidden(d.Id)));
-        if (Data.Default != null && ids.Contains(Data.Default.Id)) Data.Default = null;
-        if (Save()) Log.Write("settings: forgot (hidden for good) " + string.Join(", ", list.Select(d => d.LogName)));
+        if (!IsHidden(d.Id)) Data.Hidden.Add(d);
+        bool wasDefault = Data.Default?.Id == d.Id;
+        if (wasDefault) Data.Default = null;
+        if (Save()) Log.Write("settings: hidden now " + string.Join(", ", Data.Hidden.Select(x => x.LogName)) + (wasDefault ? ", bookmark cleared" : ""));
     }
 
     public static void SetTheme(string name)

@@ -5,9 +5,7 @@ using NAudio.Wave;
 
 namespace PCCast2TV.Helpers;
 
-// Grabs whatever the PC is playing (WASAPI loopback) and hands it on as 16-bit stereo at a steady real-time pace.
-// Windows sends nothing while the PC is silent, so the gaps get filled with silence to keep sound in step with the picture.
-// When Windows switches speakers mid-cast (headphones turned on, say), the copy follows to the new ones.
+// The PC's sound (WASAPI loopback) as 16-bit stereo at a steady pace, silences filled in, following Windows to new speakers.
 public sealed class SoundCapture : IDisposable
 {
     static readonly Guid FloatSubFormat = new("00000003-0000-0010-8000-00aa00389b71");
@@ -87,7 +85,7 @@ public sealed class SoundCapture : IDisposable
     {
         if (_cap == null) return;
         try { _cap.StopRecording(); }
-        catch (InvalidOperationException) { } // never started
+        catch (InvalidOperationException) { Log.Write("sound: the speakers were never started, nothing to stop"); }
         _cap.Dispose();
         _cap = null;
     }
@@ -116,8 +114,7 @@ public sealed class SoundCapture : IDisposable
         {
             if (!_clockGo.Wait(TimeSpan.FromSeconds(3)))
                 Log.Write("sound: the picture's start was never seen, sound clock started without it");
-            // Windows hands loopback sound over a little after it plays, so the sound clock starts that much later to line
-            // the two back up.
+            // Windows hands loopback sound over a little after it plays, so the sound clock starts that much later.
             Thread.Sleep(HandOverMs);
             while (_queue.TryDequeue(out _)) { } // sound from before the picture started has no place in the cast
             var clock = Stopwatch.StartNew();
@@ -160,6 +157,9 @@ public sealed class SoundCapture : IDisposable
         catch (Exception ex) when (ex is SharpGen.Runtime.SharpGenException or ObjectDisposedException)
         {
             if (_running) Log.Write("sound: the sound encoder stopped: " + ex.Message);
+            // Nothing takes the speakers' sound now, so the copy stops too; otherwise it piles up for the rest of the cast.
+            CloseSpeakers();
+            _queue.Clear();
         }
     }
 

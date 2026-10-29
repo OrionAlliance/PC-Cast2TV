@@ -19,6 +19,12 @@
                     <TextBlock FontSize="14" Text="GITHUB PAGE" />
                 </Button>
             </Grid>
+            <Grid Margin="0,8,0,0">
+                <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" Text="REPORTING A PROBLEM?" />
+                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
+                    <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
+                </Button>
+            </Grid>
         </StackPanel>
     </Border>
 </Window>

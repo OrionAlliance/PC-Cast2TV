@@ -3,8 +3,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// A Roku with no player on it: how to add the free DisplayHUB channel. ADD DISPLAYHUB opens its store page on the
-// Roku; the OK that adds it stays on the Roku remote. Display only.
+// A Roku with no player: how to add DisplayHUB; ADD DISPLAYHUB opens its store page, the adding OK stays on the remote.
 public partial class RokuAppWindow : Window
 {
     Device _roku;
@@ -15,8 +14,7 @@ public partial class RokuAppWindow : Window
         SourceInitialized += (_, _) => DarkTitleBar.Apply(this);
     }
 
-    // waitForApp asks the Roku until a player shows up; then the popup closes by itself. OK is the popup's cancel
-    // button too, so it closes it by itself (as Enter and Esc do), and closing it stops the asking.
+    // waitForApp asks the Roku until a player shows up, then closes the popup; OK, Enter, Esc and closing it all stop the asking.
     public static void Tell(Window owner, Device roku, Func<CancellationToken, Task> waitForApp)
     {
         using var stop = new CancellationTokenSource();

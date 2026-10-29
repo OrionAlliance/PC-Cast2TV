@@ -1,7 +1,6 @@
 namespace PCCast2TV.Helpers;
 
-// One sound device's own format to 16-bit stereo at the cast's rate (what AAC takes): every channel folds into left
-// and right by the speaker it feeds, mono goes to both.
+// A sound device's own format to 16-bit stereo at the cast's rate: each channel folds into left and right by its speaker.
 public sealed class SoundConverter
 {
     readonly int _inRate, _inChannels, _inBits, _inBlock, _rate;
@@ -29,8 +28,7 @@ public sealed class SoundConverter
         for (; ch < channels; ch++) _mix[ch] = (0.5f, 0.5f); // more channels than the map names
     }
 
-    // Each speaker's share of left and right: fronts straight across, center and surrounds at 0.707, the bass
-    // channel left out (as standard downmixes do), height speakers to both.
+    // Each speaker's share of left and right: fronts straight across, center and surrounds 0.707, bass left out, heights to both.
     static (float, float) Share(int speaker) => speaker switch
     {
         0x1 or 0x40 => (1, 0),            // front left, front left of center

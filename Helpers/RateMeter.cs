@@ -1,7 +1,6 @@
 namespace PCCast2TV.Helpers;
 
-// Turns byte counts into the readout: Mbps now, the peak, the two wave lines and the signal bars.
-// The device grabs each piece in a quick burst, so rates are averaged over 4 seconds to roll instead of spike.
+// Turns byte counts into the readout (now, peak, wave lines, signal), averaged over 4 seconds so bursty fetches roll, not spike.
 public sealed class RateMeter
 {
     public const int History = 90;
@@ -43,8 +42,7 @@ public sealed class RateMeter
         Now = sent;
         Peak = Math.Max(Peak, sent);
 
-        // Signal = how much of what was made the device actually took. A piece counts as made the moment it's
-        // written and gets fetched about a second later, so "taken" looks one second further ahead than "made".
+        // Signal = how much of what was made the device took; a piece is fetched about a second after it's made, so taken looks 1 s ahead.
         long made = _encRaw.Take(_encRaw.Count - 1).Sum(), taken = _sentRaw.Skip(1).Sum(), lately = _sentRaw.TakeLast(4).Sum();
         double ratio = made == 0 ? 0 : (double)taken / made;
         Measuring = _encRaw.Count < 2;

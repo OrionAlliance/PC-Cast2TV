@@ -4,15 +4,13 @@ using System.IO;
 
 namespace PCCast2TV.Helpers;
 
-// Windows blocks TVs from reaching the app unless a firewall rule lets them in, and some PCs never show the
-// "allow this app?" prompt. So Connect checks for the app's own rule and, when it's missing, asks Windows for it
-// with one admin prompt: home (private) networks only, the app's own ports only, devices on the same network only.
+// The app's own firewall rule, asked for once with an admin prompt: private networks, the app's ports, same-network devices only.
 public static class FirewallRule
 {
     const string Name = "PC Cast2TV";
 
     static string Exe => Environment.ProcessPath;
-    // Windows' own netsh by full path, never one sitting in the app's folder.
+    // Windows' own netsh, by its full path.
     static string NetshExe => Path.Combine(Environment.SystemDirectory, "netsh.exe");
 
     // Reading rules needs no admin rights. A rule counts only if it points at this copy of the app.

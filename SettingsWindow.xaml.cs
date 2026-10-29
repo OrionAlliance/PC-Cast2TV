@@ -6,8 +6,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// The cog's window, display only: it draws the theme pills and hands each click to ThemeColors, which applies and saves it.
-// Under the 8 themes: RANDOM rolls a new color, SAVE keeps the roll on screen as MY COLOR.
+// The cog's window, display only: theme pills hand clicks to ThemeColors; RANDOM rolls a color, SAVE keeps it as MY COLOR.
 public partial class SettingsWindow : Window
 {
     SettingsWindow()
@@ -23,6 +22,8 @@ public partial class SettingsWindow : Window
     public static void Open(Window owner) => new SettingsWindow { Owner = owner }.ShowDialog();
 
     void GitHub_Click(object sender, RoutedEventArgs e) => AppUpdater.OpenPage();
+
+    void LogFolder_Click(object sender, RoutedEventArgs e) => Log.ShowInFolder();
 
     void OnThemeChanged()
     {

@@ -5,11 +5,10 @@ using System.Text;
 
 namespace PCCast2TV.Helpers;
 
-// Finds Chromecast-style screens (Google Cast) with one mDNS question per home adapter. Only devices whose
-// capability flags include a screen make the list, so Cast speakers stay off it.
+// Finds Chromecast-style screens with one mDNS question per home adapter; Cast speakers (no screen flag) stay off the list.
 public static class CastFinder
 {
-    sealed record Rec(string Name, int Type, List<string> Texts, int Port, string Target, string Address);
+    sealed record Rec(string Name, int Type, List<string> Texts, int Port);
 
     static readonly byte[] Query = BuildQuery();
 
@@ -25,8 +24,10 @@ public static class CastFinder
     static Task SearchOnAsync(IPAddress local, ConcurrentDictionary<string, Device> found) =>
         NetUtil.AskAsync(local, MdnsGroup, new[] { Query }, "ask for Cast devices", r =>
         {
-            var d = Read(r.Buffer, r.RemoteEndPoint.Address.ToString());
-            if (d != null) found.TryAdd(d.Id, d);
+            var from = r.RemoteEndPoint.Address.ToString();
+            if (!NetUtil.SameNetwork(local.ToString(), from)) return; // only devices on the network of the adapter that asked
+            var d = Read(r.Buffer, from);
+            if (d != null) found.TryAdd($"{d.Id} at {d.Ip}", d); // two addresses with one ID both go on, for Detect to sort out
         });
 
     // A PTR question for _googlecast._tcp.local, with the "answer me directly" bit so replies come to this socket.
@@ -42,7 +43,7 @@ public static class CastFinder
         return q.ToArray();
     }
 
-    // One answer packet: TXT carries the name (fn), model (md), id and capability flags (ca); SRV the port; A the address.
+    // One answer packet: TXT carries the name (fn), model (md), id and flags (ca), SRV the port, the sender the address.
     static Device Read(byte[] packet, string fromIp)
     {
         List<Rec> recs;
@@ -59,14 +60,13 @@ public static class CastFinder
         var model = kv.GetValueOrDefault("md") is { Length: > 0 } md ? md : null;
         if (!int.TryParse(kv.GetValueOrDefault("ca"), out var caps) || (caps & 1) == 0)
         {
-            Log.Write($"detect: {model ?? "a Cast device"} at {fromIp} has no screen, left off the list"); // its model, never its given name
+            Log.Write($"detect: {Log.Outside(model) ?? "a Cast device"} at {fromIp} has no screen, left off the list"); // its model, never its given name
             return null;
         }
         var name = kv.GetValueOrDefault("fn") is { Length: > 0 } fn ? fn : model ?? "Chromecast";
         var srv = recs.FirstOrDefault(r => r.Type == 33 && r.Name == txt.Name);
-        var ip = recs.FirstOrDefault(r => r.Type == 1 && srv != null && r.Name == srv.Target)?.Address ?? fromIp;
-        var id = kv.GetValueOrDefault("id") is { Length: > 0 } i ? i : ip;
-        return new Device("cast:" + id, name, DeviceKind.Cast, ip, Port: srv?.Port ?? 8009, Model: model);
+        var id = kv.GetValueOrDefault("id") is { Length: > 0 } i ? i : fromIp;
+        return new Device("cast:" + id, name, DeviceKind.Cast, fromIp, Port: srv?.Port ?? 8009, Model: model);
     }
 
     static List<Rec> Parse(byte[] p)
@@ -83,12 +83,10 @@ public static class CastFinder
             if (end > p.Length) throw new InvalidDataException("record runs past the packet");
             var texts = new List<string>();
             int port = 0;
-            string target = null, address = null;
             if (type == 16)
                 for (int t = i; t < end; t += p[t] + 1) texts.Add(Encoding.UTF8.GetString(p, t + 1, p[t]));
-            else if (type == 33) { port = p[i + 4] << 8 | p[i + 5]; int at = i + 6; target = Name(p, ref at); }
-            else if (type == 1 && len == 4) address = $"{p[i]}.{p[i + 1]}.{p[i + 2]}.{p[i + 3]}";
-            list.Add(new Rec(name, type, texts, port, target, address));
+            else if (type == 33) port = p[i + 4] << 8 | p[i + 5];
+            list.Add(new Rec(name, type, texts, port));
             i = end;
         }
         return list;

@@ -7,8 +7,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// The dial in the middle and the readouts beside it. The dial glides to each new reading, the way Fan Control's
-// needles sweep, instead of jumping once a second.
+// The dial and the readouts beside it; the dial glides to each reading like Fan Control's needles instead of jumping.
 public partial class MainWindow
 {
     // On the 910 x 428 design: rate ring outside, signal ring inside.
