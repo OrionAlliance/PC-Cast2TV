@@ -29,14 +29,14 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **Uses your graphics card's video encoder** (NVIDIA, AMD or Intel), so casting barely touches your processor. If the card's encoder won't start, the processor takes over at 30 frames a second.
 - **Casts to:**
   - **Rokus:** Roku streaming sticks and boxes, and Roku TVs (through the free DisplayHUB channel, which the app helps you add).
-  - **TVs with Chromecast built in:** many VIZIO, Sony, TCL and Hisense TVs, plus Chromecast dongles and Google TV boxes. No extra app needed.
+  - **TVs with Chromecast built in:** many VIZIO, Sony, TCL and Hisense TVs, plus Chromecast dongles and Google TV boxes. They get your screen live through the TV's own screen mirroring, the same way Chrome casts a screen. No extra app needed.
   - **Other smart TVs** that can play video from your home network (DLNA).
 
   Not sure about yours? Just click Detect. If your TV shows up in the list, the app can cast to it.
 - **One portable exe.** No installer, no extra programs, nothing running in the background. Its settings live in a `Settings` folder next to the app.
 - **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
 - **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
-- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also shows your version and links back to this page.
+- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also shows your version, links back to this page, and opens the folder with your debug log.
 
 ## Requirements
 
