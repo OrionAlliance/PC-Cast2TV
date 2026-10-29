@@ -38,6 +38,11 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
 - **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also shows your version, links back to this page, and opens the folder with your debug log.
 
+<p align="center">
+  <img src="Screenshots/settings.png" width="420" alt="The Settings window: theme colors, version, GitHub page and OPEN LOG FOLDER" /><br>
+  <i>Settings: pick a theme color, check your version, or open your debug log.</i>
+</p>
+
 ## Requirements
 
 - **Works on Windows 10 and Windows 11** (64-bit). It looks best on Windows 11, where the title bar picks up your theme color and the window gets rounded corners.
