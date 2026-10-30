@@ -9,7 +9,7 @@ public static class ThemeColors
 {
     public sealed record Palette(string Name, Color Main, Color Soft, Color Second, Color Enc, Color Peak, Color Dim, Color DimText, string Roll = null);
 
-    // Saved keys: one of the 8 by name, HUE:<degrees> for a rolled color, GREY:<degrees>:<tint %>:<lightness %> for a rolled grey.
+    // Saved keys: one of the 8 by name, HUE:<degrees> for a rolled color, GREY:<degrees>:<tint %>:<brightness %> for a rolled grey.
     const string HueKey = "HUE:", GreyKey = "GREY:";
 
     public static IReadOnlyList<Palette> All { get; } = new[]
@@ -28,9 +28,6 @@ public static class ThemeColors
 
     // After the colors change; windows repaint what they drew themselves (title bar, glow, device row).
     public static event Action Changed;
-
-    // What the settings file keeps for a theme.
-    public static string KeyOf(Palette p) => p.Roll ?? p.Name;
 
     // RANDOM: about 1 in 6 rolls is a grey (plain or lightly tinted), and each roll differs enough from the current one to show.
     public static string Roll()
@@ -105,7 +102,7 @@ public static class ThemeColors
     // A pill clicked in settings: the colors change at once and are kept for next time.
     public static void Pick(string key)
     {
-        if (key == KeyOf(Current)) return;
+        if (key == (Current.Roll ?? Current.Name)) return; // already the theme in use
         Apply(key);
         AppSettings.SetTheme(key);
     }

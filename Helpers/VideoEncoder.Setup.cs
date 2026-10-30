@@ -18,7 +18,7 @@ public sealed partial class VideoEncoder
     static readonly Guid MaxBitRate = new(0x9651eae4, 0x39b9, 0x4ebf, 0x85, 0xef, 0xd7, 0xf4, 0x44, 0xec, 0x74, 0x65);
     static readonly Guid MinQp = new(0x0ee22c6a, 0xa37c, 0x4568, 0xb5, 0xf1, 0x9d, 0x4c, 0x2b, 0x3a, 0xb8, 0x86);
     static readonly Guid IidCodecApi = new(0x901db4c7, 0x31ce, 0x41a2, 0x85, 0xdc, 0x8f, 0xa0, 0xbf, 0x41, 0xb8, 0xda);
-    // Pieces have no bitrate cap (his call): every picture at the same quality, the bitrate follows the picture. Mirroring holds to its cap.
+    // Pieces have no bitrate cap: every picture at the same quality, the bitrate follows the picture. Mirroring holds to its cap.
     const uint Qp = 19;
     const uint AvgBps = 20_000_000; // the output type must name one; quality mode ignores it
 
@@ -46,7 +46,7 @@ public sealed partial class VideoEncoder
             if (!Set(MinQp, Qp)) skipped.Add("quality floor"); // never sharper than quality mode, so calm scenes stay as small as before
         }
         else if (!Set(RateControlMode, 3) || !SetQp(Qp)) skipped.Add("quality mode"); // constant quality
-        if (!Set(GopSize, (uint)_fps)) skipped.Add("keyframe spacing"); // a keyframe each second: every piece starts with one
+        if (!Set(GopSize, _maxBitRate > 0 ? int.MaxValue : (uint)_fps)) skipped.Add("keyframe spacing"); // pieces: one each second; mirroring: only when asked (Chrome's way)
         if (!Set(BFrames, 0)) skipped.Add("b-frames");
         if (!SetBool(LowLatency)) skipped.Add("low latency");
         if (!SetBool(Cabac)) skipped.Add("cabac");
@@ -104,6 +104,21 @@ public sealed partial class VideoEncoder
         var setValue = (delegate* unmanaged[Stdcall]<IntPtr, Guid*, Variant24*, int>)(*(IntPtr**)_codecApi)[9];
         return setValue(_codecApi, &key, &v) >= 0;
     }
+
+    // Up: the peak first, so the average never tops it; down: the average first. Kept once both took, so a refusal retries.
+    void Tell(int bps)
+    {
+        if (bps == _told) return;
+        bool took = bps > _told ? Set(MaxBitRate, (uint)bps) & Set(MeanBitRate, (uint)bps) : Set(MeanBitRate, (uint)bps) & Set(MaxBitRate, (uint)bps);
+        if (took) _told = bps;
+        else if (!_saidRate)
+        {
+            _saidRate = true;
+            Log.Write("encoder: it didn't take a new bitrate");
+        }
+    }
+
+    static double Now() => System.Diagnostics.Stopwatch.GetTimestamp() * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
 
     bool Set(Guid key, uint value) => Set(key, new Variant24 { Type = 19 /* VT_UI4 */, UInt = value });
     bool SetBool(Guid key) => Set(key, new Variant24 { Type = 11 /* VT_BOOL */, Bool = -1 });

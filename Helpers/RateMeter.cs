@@ -60,9 +60,5 @@ public sealed class RateMeter
         while (q.Count > SignalWindow) q.Dequeue();
     }
 
-    static double Mbps(IEnumerable<long> perSecond)
-    {
-        var list = perSecond.ToList();
-        return list.Count == 0 ? 0 : list.Average() * 8 / 1_000_000;
-    }
+    static double Mbps(IEnumerable<long> perSecond) => perSecond.DefaultIfEmpty().Average() * 8 / 1_000_000;
 }

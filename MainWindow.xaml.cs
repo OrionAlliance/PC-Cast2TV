@@ -179,6 +179,7 @@ public partial class MainWindow : Window
         CastTitle.FontSize = size;
         CastTitle.Foreground = casting ? Ink : ready ? Main : Second;
         CastSub.Text = sub;
+        CastSub.FontSize = ready ? 18 : 13; // the device's name reads bigger than the other small lines
         CastSub.Visibility = sub.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         CastSub.Foreground = casting ? Ink : Second;
     }

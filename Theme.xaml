@@ -25,6 +25,12 @@
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
+    <!-- Sentences: the same font at its normal width and weight, easier to read than the condensed titles. -->
+    <Style x:Key="Sentence" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+        <Setter Property="FontStretch" Value="Normal" />
+        <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+
     <!-- Icon inside a pill: draws in the button's own text color. -->
     <Style x:Key="PillIcon" TargetType="Path">
         <Setter Property="StrokeThickness" Value="1.9" />

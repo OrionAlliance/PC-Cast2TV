@@ -6,7 +6,7 @@ namespace PCCast2TV.Helpers;
 // DesignWidth and DesignHeight are the layout the size was saved for, so a size from an older layout isn't reused.
 public sealed record WindowPlace(double Left, double Top, double Width, double Height, bool Maximized, double DesignWidth = 0, double DesignHeight = 0);
 
-// Saved devices, the bookmark, hidden devices, the window's spot and the theme, in Settings\settings.json beside the app.
+// Saved devices, the bookmark, hidden devices, the window's spot, the theme and the controller switch, in Settings\settings.json.
 public static class AppSettings
 {
     sealed class Saved
@@ -17,6 +17,7 @@ public static class AppSettings
         public WindowPlace Window { get; set; }
         public string Theme { get; set; } // a ThemeColors key (one of the 8, or a RANDOM roll); none = CYAN
         public string MyTheme { get; set; } // the one RANDOM roll kept with SAVE, as a ThemeColors key
+        public bool StreamController { get; set; } // off unless turned on in Settings
     }
 
     static string FilePath => Path.Combine(Log.Folder, "settings.json");
@@ -29,6 +30,7 @@ public static class AppSettings
     public static WindowPlace Window => Data.Window;
     public static string Theme => Data.Theme;
     public static string MyTheme => Data.MyTheme;
+    public static bool StreamController => Data.StreamController;
 
     public static bool IsHidden(string id) => Data.Hidden.Any(d => d.Id == id);
 
@@ -113,6 +115,12 @@ public static class AppSettings
     {
         Data.MyTheme = key;
         if (Save()) Log.Write("settings: my color is " + key);
+    }
+
+    public static void SetStreamController(bool on)
+    {
+        Data.StreamController = on;
+        if (Save()) Log.Write("settings: stream controller " + (on ? "on" : "off"));
     }
 
     public static void SetWindow(WindowPlace w)

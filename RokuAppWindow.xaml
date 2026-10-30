@@ -7,7 +7,7 @@
     <Border Padding="28,24,28,24">
         <StackPanel Width="560">
             <TextBlock x:Name="TitleText" Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextWrapping="Wrap" />
-            <TextBlock Margin="0,14,0,0" Style="{StaticResource Label}" FontSize="18" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
+            <TextBlock Margin="0,14,0,0" Style="{StaticResource Sentence}" FontSize="18" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
                        Text="To play your PC on this Roku, add the free DisplayHUB channel to it:" />
 
             <Grid Margin="0,20,0,0">
@@ -18,16 +18,16 @@
                 <Image Source="Images/displayhub.png" Width="128" VerticalAlignment="Top" />
                 <StackPanel Grid.Column="1" Margin="18,0,0,0">
                     <TextBlock Style="{StaticResource Label}" FontSize="18" Foreground="{DynamicResource Main}" Text="DISPLAYHUB" />
-                    <TextBlock Margin="0,6,0,0" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
+                    <TextBlock Margin="0,6,0,0" Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
                                Text="A free channel in the Roku Channel Store. Click ADD DISPLAYHUB and its page opens on the TV, then press OK on the Roku remote to add it." />
-                    <TextBlock Margin="0,6,0,0" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" TextWrapping="Wrap"
+                    <TextBlock Margin="0,6,0,0" Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Second}" TextWrapping="Wrap"
                                Text="With DisplayHUB, the Roku remote can't pause, play or skip on the PC." />
                     <Button x:Name="AddHubBtn" Width="150" Height="30" Margin="0,10,0,0" HorizontalAlignment="Left" Style="{StaticResource OutlinePill}"
                             ToolTip="Opens DisplayHUB's page in the Roku Channel Store on the TV" Click="AddDisplayHub_Click">
                         <TextBlock FontSize="14" Text="ADD DISPLAYHUB" />
                     </Button>
                     <!-- After a press: what to do on the TV, or the Search way if the Roku turned it down -->
-                    <TextBlock x:Name="HubResult" Margin="0,8,0,0" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Main}"
+                    <TextBlock x:Name="HubResult" Margin="0,8,0,0" Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Main}"
                                TextWrapping="Wrap" Visibility="Collapsed" />
                 </StackPanel>
             </Grid>

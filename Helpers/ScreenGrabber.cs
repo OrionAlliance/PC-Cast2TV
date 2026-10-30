@@ -25,7 +25,6 @@ public sealed partial class ScreenGrabber : IDisposable
     }
 
     readonly int _fps;
-    readonly Func<bool> _hold;
     readonly IDXGIOutput1 _output;
     readonly ID3D11DeviceContext _ctx;
     readonly ID3D11VideoDevice _video;
@@ -80,11 +79,9 @@ public sealed partial class ScreenGrabber : IDisposable
     }
 
     // Sets everything up on the card that drives the main screen; throws InvalidOperationException with the reason.
-    // hold: true while the last picture should repeat instead of a new one.
-    public ScreenGrabber(int fps, Func<bool> hold)
+    public ScreenGrabber(int fps)
     {
         _fps = fps;
-        _hold = hold;
         try
         {
             var (adapter, output) = MainScreen();
@@ -187,7 +184,7 @@ public sealed partial class ScreenGrabber : IDisposable
                 if (wait > 0) timer.Wait(wait, 1000);
                 double now = Stopwatch.GetTimestamp() / rate;
                 long current = Math.Max(next, (long)((now - t0) * _fps)); // the tick whose time has come
-                var fresh = _hold() ? null : TakeNewest(0); // a mirrored TV that's behind gets the last picture again, tiny to send
+                var fresh = TakeNewest(0);
                 // Fell behind: the ticks it slept through keep the last picture, so the timeline stays whole.
                 int missed = (int)(current - next);
                 if (missed > 0) Send(last, missed);

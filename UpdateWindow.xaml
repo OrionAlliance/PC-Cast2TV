@@ -7,7 +7,7 @@
     <Border Padding="28,24,28,24">
         <StackPanel Width="440">
             <TextBlock Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" Text="UPDATE READY" />
-            <TextBlock x:Name="BodyText" Margin="0,14,0,0" Style="{StaticResource Label}" FontSize="18" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" />
+            <TextBlock x:Name="BodyText" Margin="0,14,0,0" Style="{StaticResource Sentence}" FontSize="18" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" />
             <TextBlock x:Name="StatusText" Margin="0,16,0,0" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" TextWrapping="Wrap" Visibility="Collapsed" />
             <ProgressBar x:Name="Progress" Height="6" Margin="0,10,0,0" IsIndeterminate="True" Visibility="Collapsed" BorderThickness="0"
                          Foreground="{DynamicResource Main}" Background="{DynamicResource Dim}" />

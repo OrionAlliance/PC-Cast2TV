@@ -6,7 +6,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// The cog's window, display only: theme pills hand clicks to ThemeColors; RANDOM rolls a color, SAVE keeps it as MY COLOR.
+// The cog's window, display only: theme pills go to ThemeColors (RANDOM rolls, SAVE keeps MY COLOR), the controller's to AppSettings.
 public partial class SettingsWindow : Window
 {
     SettingsWindow()
@@ -16,6 +16,7 @@ public partial class SettingsWindow : Window
         ThemeColors.Changed += OnThemeChanged;
         Closed += (_, _) => ThemeColors.Changed -= OnThemeChanged;
         BuildSwatches();
+        BuildController();
         VersionText.Text = $"VERSION {AppUpdater.Installed}";
     }
 
@@ -29,6 +30,23 @@ public partial class SettingsWindow : Window
     {
         DarkTitleBar.Apply(this);
         BuildSwatches(); // the ring and tick move to the new pick
+        BuildController();
+    }
+
+    // OFF and ON for the stream controller: the one in use is filled, with a ring and a tick.
+    void BuildController()
+    {
+        var now = ThemeColors.Current;
+        bool on = AppSettings.StreamController;
+        ControllerPills.Children.Clear();
+        ControllerPills.Children.Add(Swatch("OFF", on ? null : new SolidColorBrush(now.Main), on ? null : now.Soft, () => SetController(false)));
+        ControllerPills.Children.Add(Swatch("ON", on ? new SolidColorBrush(now.Main) : null, on ? now.Soft : null, () => SetController(true)));
+    }
+
+    void SetController(bool on)
+    {
+        if (on != AppSettings.StreamController) AppSettings.SetStreamController(on);
+        BuildController();
     }
 
     // Each pill is painted in its own color, whatever theme is on now; the one on now has a ring and a tick.

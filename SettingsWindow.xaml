@@ -12,6 +12,10 @@
             <UniformGrid x:Name="Swatches" Columns="4" Rows="2" />
             <!-- On the same 4 columns: RANDOM rolls a new color, SAVE keeps it as MY COLOR (just one; a new save replaces it), CLOSE -->
             <UniformGrid x:Name="Own" Columns="4" Margin="0,4,0,0" />
+            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,6" Text="STREAM CONTROLLER" />
+            <TextBlock Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" Margin="4,0,4,10"
+                       Text="Watches how well your TV keeps up, and lowers or raises the cast's data rate to keep the picture smooth. For TVs with Chromecast built in. Works right away, even during a cast." />
+            <UniformGrid x:Name="ControllerPills" Columns="4" />
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="ABOUT" />
             <Grid>
                 <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" />

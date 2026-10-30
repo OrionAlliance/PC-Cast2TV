@@ -46,7 +46,7 @@ public sealed partial class MirrorSender
         return p;
     }
 
-    // Sends the line out, paced, waiting 1 ms at a time when it's ahead.
+    // Sends paced, waiting in 1 ms steps; each packet is picked as it goes, so a re-send asked for meanwhile goes first.
     void SendLoop()
     {
         using var timer = new PreciseTimer();
@@ -54,23 +54,48 @@ public sealed partial class MirrorSender
         {
             double room = BurstBytes;
             long last = Stopwatch.GetTimestamp();
-            foreach (var p in _out.GetConsumingEnumerable(_stop.Token))
+            while (true)
             {
                 while (true)
                 {
                     long now = Stopwatch.GetTimestamp();
                     room = Math.Min(BurstBytes, room + (now - last) * BytesPerSecond / Stopwatch.Frequency);
                     last = now;
-                    if (room >= p.Length) break;
+                    if (room >= MaxPacket) break;
                     timer.Wait(0.001, 100);
                 }
+                byte[] p = null;
+                lock (_gate)
+                    while (!_closed && (p = Next(Stopwatch.GetTimestamp())) == null) Monitor.Wait(_gate, 100);
+                if (p == null) return; // closed
                 room -= p.Length;
-                Interlocked.Add(ref _queued, -p.Length);
                 Send(p);
             }
         }
-        catch (OperationCanceledException) { }
         catch (ObjectDisposedException) { }
+    }
+
+    // The next packet in Chrome's and WebRTC's order: sound, then the oldest unconfirmed picture, so re-sends beat new ones.
+    byte[] Next(long now)
+    {
+        for (int t = 0; t < 2; t++)
+        {
+            var s = t == 0 ? _audio : _video;
+            if (s == null) continue;
+            foreach (var f in s.Kept)
+            {
+                if (f.Pending == 0) continue;
+                int i = Array.IndexOf(f.Need, true);
+                f.Need[i] = false;
+                f.Pending--;
+                f.SentAt[i] = now;
+                if (f.Tries[i] < 255) f.Tries[i]++;
+                if (f.FirstSent == 0) f.FirstSent = now;
+                _queued -= f.Packets[i].Length;
+                return f.Packets[i];
+            }
+        }
+        return null;
     }
 
     // A packet Windows couldn't send (no room, or the network gone for a moment) is counted, and the TV asks again.

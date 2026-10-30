@@ -34,10 +34,13 @@ public sealed class ScreenRecorder : IDisposable
     {
         _piecesToo = piecesToo;
         _mirror = m;
+        if (_video != null) _video.KeysEverySecond = m == null || piecesToo;
     }
     public (int Width, int Height) Size => _grab == null ? default : (_grab.Width, _grab.Height);
     public int SoundRate => _sound?.Rate ?? 0;
     public void ForceKey() => _video?.ForceKey();
+    public void SetBitRate(int bps) => _video?.SetBitRate(bps);
+    public string EncoderRate => _video?.RateNote;
 
     // The pieces and the live list, for the server; null until there is one.
     public string Playlist => _ts?.Playlist;
@@ -60,13 +63,13 @@ public sealed class ScreenRecorder : IDisposable
         return pct;
     }
 
-    // Run off the window's thread (Windows' media parts need it); maxBitRate 0 is no cap. Throws InvalidOperationException saying why when the encoder won't start.
+    // Run off the window's thread (Windows' media parts need it); maxBitRate 0: no cap. Throws, saying why, if the encoder won't start.
     public void Start(EncoderChoice enc, OutputKind kind, int maxBitRate)
     {
         try
         {
             VideoEncoder.EnsureStarted();
-            _grab = new ScreenGrabber(enc.Fps, TvCatchingUp);
+            _grab = new ScreenGrabber(enc.Fps);
             _video = new VideoEncoder(_grab, enc.Fps, maxBitRate, OnVideo);
             if (enc.OnCard && !_video.Open(enc.Vendor, true))
             {
@@ -75,7 +78,7 @@ public sealed class ScreenRecorder : IDisposable
                 _video.Dispose();
                 _grab.Dispose();
                 enc = EncoderPicker.Processor();
-                _grab = new ScreenGrabber(enc.Fps, TvCatchingUp);
+                _grab = new ScreenGrabber(enc.Fps);
                 _video = new VideoEncoder(_grab, enc.Fps, maxBitRate, OnVideo);
             }
             if (!enc.OnCard && !_video.Open(null, false)) throw new InvalidOperationException("no H.264 encoder would start");
@@ -104,9 +107,6 @@ public sealed class ScreenRecorder : IDisposable
         }
         catch (SharpGen.Runtime.SharpGenException ex) { throw new InvalidOperationException(ex.Message, ex); }
     }
-
-    // A mirrored TV that's behind gets the same picture again until it catches up.
-    bool TvCatchingUp() => _mirror?.Behind() == true;
 
     void OnVideo(byte[] frame, long pts, bool key)
     {

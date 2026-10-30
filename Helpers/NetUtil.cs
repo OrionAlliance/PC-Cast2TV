@@ -64,6 +64,6 @@ public static class NetUtil
 
     static uint ToUInt(IPAddress a) => System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(a.GetAddressBytes());
 
-    // True when any VPN is connected, for the hints shown only when nothing answers.
+    // True when any VPN is connected: for the hints when nothing answers, and to tell a VPN block from another network.
     public static bool AnyVpnUp => NetworkInterface.GetAllNetworkInterfaces().Any(n => n.OperationalStatus == OperationalStatus.Up && IsVpn(n));
 }

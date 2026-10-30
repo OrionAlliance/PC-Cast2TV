@@ -41,7 +41,8 @@ public sealed partial class CastPlayer
             await c.SendAsync(NsConnection, c._transportId, new { type = "CONNECT" });
 
             var (w, h) = rec.Size;
-            m = new MirrorSender(rec.Running.Fps, w, h, rec.HasSound ? rec.SoundRate : 0, rec.ForceKey);
+            Log.Write("cast: stream controller " + (AppSettings.StreamController ? "on" : "off"));
+            m = new MirrorSender(rec.Running.Fps, w, h, rec.HasSound ? rec.SoundRate : 0, rec.ForceKey, rec.SetBitRate, () => AppSettings.StreamController);
             int seq = c.NextId();
             await c.SendAsync(NsWebRtc, c._transportId, m.Offer(seq));
             var answer = await c.WaitAsync(NsWebRtc, x => Type(x) == "ANSWER" && SeqOf(x) == seq, 10);

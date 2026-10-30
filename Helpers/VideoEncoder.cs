@@ -21,7 +21,12 @@ public sealed partial class VideoEncoder : IDisposable
     int _outSize;
     byte[] _header = Array.Empty<byte>(); // SPS + PPS, put in front of every keyframe that lacks them
     Thread _thread;
-    volatile bool _stop, _keyWanted;
+    volatile bool _stop, _keyWanted, _keysEverySecond = true;
+    int _newRate; // a bitrate asked for, set on the encoder's own thread before its next picture
+    int _wanted, _told;
+    readonly EncoderRateAdjuster _adjust; // capped only: keeps what it makes to the bitrate wanted
+    volatile string _rateNote;
+    bool _saidRate;
     readonly Queue<ScreenGrabber.Picture> _inFlight = new();
     long _frames, _framesOut;
     // Windows' own encoder: the picture buffers it was fed, by frame, each used again once its frame has come out.
@@ -40,8 +45,9 @@ public sealed partial class VideoEncoder : IDisposable
     {
         _grab = grab;
         _fps = fps;
-        _maxBitRate = maxBitRate;
+        _maxBitRate = _wanted = _told = maxBitRate; // set up with the cap as both its average and its peak
         _onFrame = onFrame;
+        if (maxBitRate > 0) _adjust = new EncoderRateAdjuster(fps);
     }
 
     // The names of the card encoders Windows has, best first, for the card that drives the main screen.
@@ -97,6 +103,15 @@ public sealed partial class VideoEncoder : IDisposable
 
     // The next picture fed comes out as a keyframe.
     public void ForceKey() => _keyWanted = true;
+
+    // Pieces need a keyframe every second; a mirrored TV gets one only when it asks, Chrome's way.
+    public bool KeysEverySecond { set => _keysEverySecond = value; }
+
+    // The bitrate to hold to from the next picture on (the stream controller's).
+    public void SetBitRate(int bps) => Interlocked.Exchange(ref _newRate, bps);
+
+    // For the log: what the encoder was last told, for what bitrate, and how far over it ran (null: no cap).
+    public string RateNote => _rateNote;
 
     public void Start()
     {
@@ -164,8 +179,16 @@ public sealed partial class VideoEncoder : IDisposable
         long n = _frames++;
         sample.SampleTime = n * 10_000_000 / _fps;
         sample.SampleDuration = 10_000_000 / _fps;
+        int rate = Interlocked.Exchange(ref _newRate, 0);
+        if (rate > 0) _wanted = rate;
+        // Like WebRTC, the overshoot is checked on every new bitrate and at least once a second.
+        if (_adjust != null && (rate > 0 || n % _fps == 0))
+        {
+            Tell(_adjust.Tell(_wanted, Now()));
+            _rateNote = $"told {_told / 1e6:0.0} Mbps for {_wanted / 1e6:0.0} wanted (it ran {(_adjust.Factor - 1) * 100:0}% over)";
+        }
         // Every piece starts with a keyframe, whatever the card's own spacing; a mirrored TV can also ask for one.
-        if (n % _fps == 0 || _keyWanted)
+        if (_keysEverySecond && n % _fps == 0 || _keyWanted)
         {
             _keyWanted = false;
             Set(ForceKeyFrame, 1);
@@ -212,7 +235,8 @@ public sealed partial class VideoEncoder : IDisposable
         byte[] frame;
         try { unsafe { frame = Annex.Finish(new ReadOnlySpan<byte>((void*)at, length), key, ref _header); } } // read in place, copied once
         finally { buf.Unlock(); }
-        _onFrame(frame, (sample.SampleTime * 9 + 500) / 1000, key); // 100 ns to 90 kHz, rounded
+        _adjust?.OnPicture(frame.Length, Now());
+        _onFrame(frame,(sample.SampleTime * 9 + 500) / 1000, key); // 100 ns to 90 kHz, rounded
         return true;
     }
 

@@ -7,7 +7,7 @@
     <Border Padding="28,24,28,24">
         <StackPanel Width="440">
             <TextBlock x:Name="TitleText" Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextWrapping="Wrap" />
-            <TextBlock x:Name="BodyText" Margin="0,14,0,0" Style="{StaticResource Label}" FontSize="18" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" />
+            <TextBlock x:Name="BodyText" Margin="0,14,0,0" Style="{StaticResource Sentence}" FontSize="18" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" />
             <Button Width="150" Margin="0,22,0,0" HorizontalAlignment="Right" Style="{StaticResource Pill}" Background="{DynamicResource Main}"
                     IsDefault="True" IsCancel="True">
                 <TextBlock Text="OK" />

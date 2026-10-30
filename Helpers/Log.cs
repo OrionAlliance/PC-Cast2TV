@@ -32,7 +32,8 @@ public static class Log
     // OPEN LOG FOLDER: the folder in File Explorer with debug.log picked, ready to drag into a GitHub post.
     public static void ShowInFolder()
     {
-        try { Process.Start("explorer.exe", File.Exists(FilePath) ? $"/select,\"{FilePath}\"" : $"\"{Folder}\"").Dispose(); }
+        string explorer = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+        try { Process.Start(explorer, File.Exists(FilePath) ? $"/select,\"{FilePath}\"" : $"\"{Folder}\"").Dispose(); }
         catch (System.ComponentModel.Win32Exception ex) { Write("app: couldn't open the log folder: " + ex.Message); }
     }
 

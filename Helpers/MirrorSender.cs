@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -19,8 +18,7 @@ public sealed partial class MirrorSender : IDisposable
     const double BytesPerSecond = 70e6 / 8;
     const long MaxQueued = 8 << 20;
     const uint Cast = 0x43415354;
-    static readonly long ResendGap = Stopwatch.Frequency / 20, KeyGrace = Stopwatch.Frequency * 3 / 10, KeptFor = Stopwatch.Frequency;
-    static readonly long CatchUp = Stopwatch.Frequency * DelayMs / 3000; // a third of the TV's hold, Chrome's in-flight limit
+    static readonly long KeyGrace = Stopwatch.Frequency * 3 / 10, KeptFor = Stopwatch.Frequency;
 
     // One track (picture or sound): its key, ids, working buffers and the frames kept for resending.
     sealed class Track
@@ -47,20 +45,24 @@ public sealed partial class MirrorSender : IDisposable
         }
     }
 
-    // A sent frame's packets, kept until the TV has it.
+    // A frame's packets, kept until the TV has it; Need marks the ones still to send, the first time or again (Chrome's way: no line).
     sealed class Sent(uint id, long at, byte[][] packets)
     {
         public readonly uint Id = id;
         public readonly long At = at;
         public readonly byte[][] Packets = packets;
-        public readonly long[] Resent = Enumerable.Repeat(at, packets.Length).ToArray();
+        public readonly bool[] Need = Enumerable.Repeat(true, packets.Length).ToArray();
+        public readonly long[] SentAt = new long[packets.Length];
+        public readonly byte[] Tries = new byte[packets.Length];
+        public int Pending = packets.Length;
+        public long FirstSent;
+        public int Bytes;
     }
 
     readonly object _gate = new();
     readonly Action _askKey;
     readonly int _fps, _width, _height;
     Track _video, _audio;
-    readonly BlockingCollection<byte[]> _out = new();
     readonly CancellationTokenSource _stop = new();
     readonly TaskCompletionSource _heard = new(TaskCreationOptions.RunContinuationsAsynchronously);
     readonly DateTime _ntpBase = DateTime.UtcNow;
@@ -68,18 +70,24 @@ public sealed partial class MirrorSender : IDisposable
     Socket _sock;
     Thread _sender, _listener;
     (long At, long Pts)? _origin;
-    long _lastKey, _queued, _sent, _lastHeardTicks;
-    int _port, _frames, _resent, _keysAsked, _tvDelay, _sendMisses, _dropped, _held, _lastSendError, _lastHearError;
+    long _lastKey, _queued, _sent, _lastHeardTicks, _rtt;
+    int _port, _frames, _resent, _keysAsked, _tvDelay, _sendMisses, _dropped, _lastSendError, _lastHearError;
+    // For the 10-second log lines: slow confirms and why, the TV's longest quiet, picture sizes.
+    int _slow, _slowOnResend, _mostTries, _biggest, _keys, _stalls, _stallsNearKey, _bigBeforeStall;
+    readonly Queue<(long At, int Bytes, bool Key)> _recent = new(); // the last second's pictures, to see what came just before a stall
+    long _quiet, _heardAt, _videoBytes, _keyBytes, _reportAt = Stopwatch.GetTimestamp();
+    readonly List<long> _confirms = new(); // how long each picture took the TV to confirm, for the 10-second line
     volatile bool _closed;
 
     public long SentBytes => Interlocked.Read(ref _sent);
     public bool HasSound => _audio != null;
     public DateTime LastHeardUtc => new(Interlocked.Read(ref _lastHeardTicks), DateTimeKind.Utc);
 
-    // The cast's picture size and rate, and the sound's rate (0: no sound).
-    public MirrorSender(int fps, int width, int height, int soundRate, Action askKey)
+    // Picture size and rate, sound rate (0: none), how to set the encoder's bitrate, and the controller switch (read live).
+    public MirrorSender(int fps, int width, int height, int soundRate, Action askKey, Action<int> setBitRate, Func<bool> controllerOn)
     {
-        (_fps, _width, _height, _askKey) = (fps, width, height, askKey);
+        (_fps, _width, _height, _askKey, _setBitRate, _controllerOn) = (fps, width, height, askKey, setBitRate, controllerOn);
+        if (controllerOn()) _controller = NewController();
         _video = new Track(true, 90_000);
         if (soundRate > 0) _audio = new Track(false, soundRate);
     }
@@ -191,18 +199,7 @@ public sealed partial class MirrorSender : IDisposable
         }
     }
 
-    // Chrome's catch-up rule: true while the TV sits on a frame past a third of its hold (the screen clock then repeats the last picture).
-    public bool Behind()
-    {
-        lock (_gate)
-        {
-            if (_closed || _video.Acked < 0 || _video.Kept.First is not { } oldest || Stopwatch.GetTimestamp() - oldest.Value.At <= CatchUp) return false;
-            _held++;
-            return true;
-        }
-    }
-
-    // Locks a frame, packs it and lines it up (kept for resends); while the TV is stalled, frames drop until a keyframe.
+    // Locks a frame, packs it and marks its packets to send (kept for resends); while the TV is stalled, frames drop until a keyframe.
     bool Queue(Track s, byte[] data, long pts, uint ticks, bool key)
     {
         if (pts <= s.LastPts) return false;
@@ -220,20 +217,30 @@ public sealed partial class MirrorSender : IDisposable
         var packets = new byte[count][];
         for (int i = 0; i < count; i++) packets[i] = Packet(s, id, alone ? id : id - 1, alone, s.Offset + ticks, data.Length, i, count);
         long now = Stopwatch.GetTimestamp();
-        s.Kept.AddLast(new Sent(id, now, packets));
-        while (s.Kept.Count > 240 || now - s.Kept.First.Value.At > KeptFor) s.Kept.RemoveFirst();
+        s.Kept.AddLast(new Sent(id, now, packets) { Bytes = data.Length });
+        while (s.Kept.Count > 240 || now - s.Kept.First.Value.At > KeptFor) DropFirst(s);
         s.Packets += (uint)count;
         s.Octets += (uint)data.Length;
-        if (s.Video) _frames++;
-        foreach (var p in packets) Put(p);
+        if (s.Video)
+        {
+            _frames++;
+            _videoBytes += data.Length;
+            _biggest = Math.Max(_biggest, data.Length);
+            if (key) { _keys++; _keyBytes += data.Length; }
+            _recent.Enqueue((now, data.Length, key));
+            while (now - _recent.Peek().At > Stopwatch.Frequency) _recent.Dequeue();
+        }
+        foreach (var p in packets) _queued += p.Length;
+        Monitor.PulseAll(_gate);
         return true;
     }
 
-    void Put(byte[] p)
+    // A frame done with (the TV has it, or it's too old to matter): its packets still waiting go with it.
+    void DropFirst(Track s)
     {
-        if (_closed) return;
-        Interlocked.Add(ref _queued, p.Length);
-        _out.Add(p);
+        var f = s.Kept.First.Value;
+        for (int i = 0; f.Pending > 0 && i < f.Packets.Length; i++) if (f.Need[i]) _queued -= f.Packets[i].Length;
+        s.Kept.RemoveFirst();
     }
 
     // Closed under the frames' lock, so no frame is half way into the line when it closes.
@@ -243,6 +250,7 @@ public sealed partial class MirrorSender : IDisposable
         {
             if (_closed) return;
             _closed = true;
+            Monitor.PulseAll(_gate);
         }
         _stop.Cancel();
         _sender?.Join(500);

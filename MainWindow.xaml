@@ -101,7 +101,10 @@
                     <Ellipse x:Name="CastRing" StrokeThickness="3" />
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock x:Name="CastTitle" Style="{StaticResource Label}" HorizontalAlignment="Center" />
-                        <TextBlock x:Name="CastSub" Style="{StaticResource Label}" FontSize="13" HorizontalAlignment="Center" MaxWidth="140" TextTrimming="CharacterEllipsis" />
+                        <!-- A long device name shrinks to fit instead of being cut -->
+                        <Viewbox MaxWidth="140" StretchDirection="DownOnly" HorizontalAlignment="Center">
+                            <TextBlock x:Name="CastSub" Style="{StaticResource Label}" />
+                        </Viewbox>
                     </StackPanel>
                 </Grid>
             </Button>

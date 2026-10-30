@@ -36,11 +36,12 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **One portable exe.** No installer, no extra programs, nothing running in the background. Its settings live in a `Settings` folder next to the app.
 - **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
 - **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
-- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also shows your version, links back to this page, and opens the folder with your debug log.
+- **A stream controller** for TVs with Chromecast built in, in Settings and off to start. If the picture stutters, turn it on: it watches how well your TV keeps up and lowers or raises the data rate to keep the picture smooth. It works right away, even during a cast.
+- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also holds the stream controller, shows your version, links back to this page, and opens the folder with your debug log.
 
 <p align="center">
-  <img src="Screenshots/settings.png" width="420" alt="The Settings window: theme colors, version, GitHub page and OPEN LOG FOLDER" /><br>
-  <i>Settings: pick a theme color, check your version, or open your debug log.</i>
+  <img src="Screenshots/settings.png" width="420" alt="The Settings window: theme colors, stream controller, version, GitHub page and OPEN LOG FOLDER" /><br>
+  <i>Settings: pick a theme color, turn the stream controller on or off, check your version, or open your debug log.</i>
 </p>
 
 ## Requirements

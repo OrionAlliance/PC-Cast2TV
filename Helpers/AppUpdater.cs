@@ -31,7 +31,7 @@ public static class AppUpdater
     public static async Task<Update> StartUpAsync()
     {
         if (JustUpdated()) Log.Write($"update: now running v{Installed}");
-        CleanUp();
+        await CleanUpAsync();
         return await CheckAsync();
     }
 
@@ -161,21 +161,24 @@ public static class AppUpdater
     // True right after an update, while the previous version is still left behind.
     public static bool JustUpdated() => File.Exists(ExePath + ".old");
 
-    // Deletes the previous version and any half download (OneCopy waited for the old copy to close, so it's free).
-    static void CleanUp()
+    // Deletes the old version and any half download, retrying for 10 s while an old copy (before 0.3.99) is still closing.
+    static async Task CleanUpAsync()
     {
         string exe = ExePath;
         foreach (var leftover in new[] { exe + ".old", exe + ".new" })
         {
-            if (!File.Exists(leftover)) continue;
-            try
+            for (int i = 0; i < 20 && File.Exists(leftover); i++)
             {
-                File.Delete(leftover);
-                Log.Write($"update: removed the {Path.GetExtension(leftover)} copy");
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                Log.Write($"update: couldn't remove the {Path.GetExtension(leftover)} copy ({ex.GetType().Name}), the next start tries again");
+                try
+                {
+                    File.Delete(leftover);
+                    Log.Write($"update: removed the {Path.GetExtension(leftover)} copy");
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    if (i == 19) Log.Write($"update: couldn't remove the {Path.GetExtension(leftover)} copy yet ({ex.GetType().Name}), the next start tries again");
+                    else await Task.Delay(500);
+                }
             }
         }
     }
