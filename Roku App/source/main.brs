@@ -1,4 +1,4 @@
-' PC Cast2TV for Roku: plays the cast the PC opens it with (launch/dev?url=, or an input event while open) and sends buttons back.
+' PC Cast2TV for Roku: plays the cast the PC opens it with (url or contentId at launch, or an input event while open) and sends buttons back.
 sub Main(args as Dynamic)
     screen = CreateObject("roSGScreen")
     port = CreateObject("roMessagePort")

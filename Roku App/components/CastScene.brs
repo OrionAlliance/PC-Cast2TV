@@ -21,35 +21,66 @@ sub init()
     m.newest = -1
     clearWindow()
     m.casting = false
+    m.launched = false
+    m.loading = m.top.FindNode("loading")
     m.top.SetFocus(true)
 end sub
 
-' The PC's address comes from the cast's own link (http://<PC>:<port>/live/index.m3u8).
+' The cast's link (http://<PC>:<port>/live/index.m3u8) comes as url from PC Cast2TV, or as the contentId of a standard launch.
 sub onCast()
     c = m.top.cast
-    if c = invalid or c.url = invalid or c.url = "" then return ' opened from the home screen
-    pc = CreateObject("roRegex", "^(http://[^/]+)/", "").Match(c.url)
-    if pc.Count() < 2 then return
-    print "pc2tv: cast from "; pc[1]
-    m.keys.pc = pc[1]
+    link = ""
+    if c <> invalid then link = textOf(c.url)
+    if link = "" and c <> invalid then link = textOf(c.contentId)
+    pc = castFrom(link)
+    if pc = invalid
+        if link <> "" then print "pc2tv: not a PC Cast2TV link, left alone"
+        launched() ' the waiting card is the home screen
+        return
+    end if
+    print "pc2tv: cast from "; pc
+    m.keys.pc = pc
     startReport()
     content = CreateObject("roSGNode", "ContentNode")
-    content.url = c.url
+    content.url = link
     content.streamFormat = "hls"
     content.live = true
     m.video.content = content
     m.video.visible = true
+    m.loading.visible = true
     hideBadge()
     m.video.control = "play"
     m.casting = true
     m.top.SetFocus(true) ' the remote's buttons come here, not to the player
 end sub
 
+' Only PC Cast2TV's own links play: a home-network address, its ports (8765 to 8784) and its live list; returns the PC's part.
+function castFrom(link as String) as Dynamic
+    re = CreateObject("roRegex", "^(http://(10\.\d{1,3}|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}:(876[5-9]|877\d|878[0-4]))/live/(index|master)\.m3u8(\?[^/#]*)?$", "")
+    found = re.Match(link)
+    if found.Count() < 2 then return invalid
+    return found[1]
+end function
+
+function textOf(x as Dynamic) as String
+    if Type(x) = "roString" or Type(x) = "String" then return x
+    return ""
+end function
+
+' Roku times the launch by this: sent once, when the waiting card is up or a direct launch's cast starts playing.
+sub launched()
+    if m.launched then return
+    m.launched = true
+    m.top.signalBeacon("AppLaunchComplete")
+end sub
+
 sub onState()
     state = m.video.state
     print "pc2tv: player "; state
+    m.loading.visible = (state = "buffering")
     if state = "playing"
         m.played = true
+        launched()
         if m.stallFrom <> invalid
             m.stallMs = m.stallMs + m.clock.TotalMilliseconds() - m.stallFrom
             m.stallFrom = invalid
@@ -60,6 +91,7 @@ sub onState()
     end if
     if state <> "error" and state <> "finished" then return
     if state = "error" then print "pc2tv: player error "; m.video.errorCode; " "; m.video.errorMsg
+    launched()
     m.reportTimer.control = "stop"
     m.video.visible = false
     m.casting = false
@@ -182,10 +214,10 @@ sub hideBadge()
     m.badge.visible = false
 end sub
 
-' Each button goes to the PC by name; the PC turns it into the matching key press.
+' During a cast: OK and Play pause or play the video on the PC (its play/pause key), Back ends the cast and leaves.
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if not m.casting then return false ' waiting card: Back leaves, the rest does nothing
-    names = { play: "playpause", OK: "playpause", fastforward: "forward", rewind: "rewind", replay: "rewind", right: "next", left: "previous", back: "back" }
+    names = { play: "playpause", OK: "playpause", back: "back" }
     name = names[key]
     if name = invalid then return false
     if press

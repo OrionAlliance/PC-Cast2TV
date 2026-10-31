@@ -2,7 +2,7 @@
 <!-- The one screen: a waiting card until the PC sends a cast, then the cast full screen. -->
 <component name="CastScene" extends="Scene">
     <interface>
-        <field id="cast" type="assocarray" onChange="onCast" />
+        <field id="cast" type="assocarray" onChange="onCast" alwaysNotify="true" />
         <field id="leave" type="boolean" />
     </interface>
     <script type="text/brightscript" uri="CastScene.brs" />
@@ -11,14 +11,17 @@
         <Label id="note" width="1920" height="60" translation="[0, 880]" horizAlign="center" vertAlign="center"
                color="0xA8E6FAFF" font="font:MediumSystemFont" text="Start a cast from PC Cast2TV on your PC." />
         <Video id="video" width="1920" height="1080" visible="false" enableUI="false" />
-        <!-- PLAY/PAUSE for 2 seconds when it's pressed, top left over the cast -->
+        <!-- Shown while the video fills up, over the black of a starting cast -->
+        <Label id="loading" width="1920" height="1080" visible="false" horizAlign="center" vertAlign="center"
+               color="0x3CCBF4FF" font="font:LargeBoldSystemFont" text="LOADING VIDEO..." />
+        <!-- What a button did, for 3 seconds after it's pressed, top left over the cast -->
         <Group id="badge" visible="false" translation="[80, 60]">
-            <Rectangle width="440" height="100" color="0x03070BD9" />
+            <Rectangle width="600" height="100" color="0x03070BD9" />
             <Rectangle width="10" height="100" color="0x3CCBF4FF" />
-            <Label id="badgeText" translation="[10, 0]" width="430" height="100" horizAlign="center" vertAlign="center"
+            <Label id="badgeText" translation="[10, 0]" width="590" height="100" horizAlign="center" vertAlign="center"
                    color="0x3CCBF4FF" font="font:LargeBoldSystemFont" />
         </Group>
-        <Timer id="badgeTimer" duration="2" />
+        <Timer id="badgeTimer" duration="3" />
         <Timer id="leaveTimer" duration="1.5" />
         <Timer id="reportTimer" duration="10" repeat="true" />
     </children>
