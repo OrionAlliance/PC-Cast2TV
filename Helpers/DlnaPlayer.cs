@@ -8,7 +8,7 @@ namespace PCCast2TV.Helpers;
 // Tells a DLNA TV to play the live stream and to stop, through its AVTransport service.
 public static class DlnaPlayer
 {
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(5) };
+    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(5), MaxResponseContentBufferSize = 1_000_000 };
 
     public static async Task<bool> AnsweringAsync(Device d) => await TransportStateAsync(d) != null;
 

@@ -20,13 +20,16 @@ public sealed partial class MirrorSender
                 {
                     int n = _sock.Receive(buf);
                     Interlocked.Exchange(ref _lastHeardTicks, DateTime.UtcNow.Ticks);
+                    string[] notes = null;
                     lock (_gate)
                     {
                         long t = Stopwatch.GetTimestamp();
                         if (_heardAt > 0) _quiet = Math.Max(_quiet, t - _heardAt);
                         _heardAt = t;
                         Heard(buf.AsSpan(0, n));
+                        if (_notes.Count > 0) { notes = [.. _notes]; _notes.Clear(); }
                     }
+                    if (notes != null) foreach (var line in notes) Log.Write(line);
                 }
                 catch (SocketException ex) when (ex.SocketErrorCode != SocketError.TimedOut)
                 {

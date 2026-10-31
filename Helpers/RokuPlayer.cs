@@ -11,7 +11,7 @@ public static class RokuPlayer
     const string OurApp = "dev";
     const string OurName = "PC Cast2TV"; // the developer slot holds one app; this checks it's ours
     const string DisplayHub = "835615";
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(4) };
+    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(4), MaxResponseContentBufferSize = 1_000_000 };
 
     // Which player is on the Roku, from its app list: ours first, DisplayHUB as the backup. Null when the list can't be read.
     public static async Task<RokuApp?> PlayerOnAsync(Device d, bool logFailure = true)

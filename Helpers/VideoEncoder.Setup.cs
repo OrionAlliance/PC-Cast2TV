@@ -18,7 +18,7 @@ public sealed partial class VideoEncoder
     static readonly Guid MaxBitRate = new(0x9651eae4, 0x39b9, 0x4ebf, 0x85, 0xef, 0xd7, 0xf4, 0x44, 0xec, 0x74, 0x65);
     static readonly Guid MinQp = new(0x0ee22c6a, 0xa37c, 0x4568, 0xb5, 0xf1, 0x9d, 0x4c, 0x2b, 0x3a, 0xb8, 0x86);
     static readonly Guid IidCodecApi = new(0x901db4c7, 0x31ce, 0x41a2, 0x85, 0xdc, 0x8f, 0xa0, 0xbf, 0x41, 0xb8, 0xda);
-    // Pieces have no bitrate cap: every picture at the same quality, the bitrate follows the picture. Mirroring holds to its cap.
+    // Roku and DLNA casts have no cap (same quality, the bitrate follows the picture); Chromecast casts hold to theirs.
     const uint Qp = 19;
     const uint AvgBps = 20_000_000; // the output type must name one; quality mode ignores it
 
@@ -46,7 +46,7 @@ public sealed partial class VideoEncoder
             if (!Set(MinQp, Qp)) skipped.Add("quality floor"); // never sharper than quality mode, so calm scenes stay as small as before
         }
         else if (!Set(RateControlMode, 3) || !SetQp(Qp)) skipped.Add("quality mode"); // constant quality
-        if (!Set(GopSize, _maxBitRate > 0 ? int.MaxValue : (uint)_fps)) skipped.Add("keyframe spacing"); // pieces: one each second; mirroring: only when asked (Chrome's way)
+        if (!Set(GopSize, _maxBitRate > 0 ? int.MaxValue : (uint)_fps)) skipped.Add("keyframe spacing"); // Roku and DLNA: one each second; Chromecast: only when asked for (Chrome's way)
         if (!Set(BFrames, 0)) skipped.Add("b-frames");
         if (!SetBool(LowLatency)) skipped.Add("low latency");
         if (!SetBool(Cabac)) skipped.Add("cabac");

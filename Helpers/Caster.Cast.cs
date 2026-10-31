@@ -177,7 +177,7 @@ public sealed partial class Caster
         if (!error) _ = BackToReadyAsync();
     }
 
-    // The TV's player goes back off: a Roku goes home (if ours is still on screen), a Chromecast closes, DLNA stops.
+    // The TV's player goes back off: a Roku goes home (if the cast's player is still on screen), a Chromecast closes, DLNA stops.
     static async Task StopPlayerAsync(Device d, RokuApp rokuApp, CastPlayer player)
     {
         if (d.IsRoku) await RokuPlayer.StopAsync(d, rokuApp);

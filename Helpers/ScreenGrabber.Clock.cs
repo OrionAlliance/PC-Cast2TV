@@ -2,9 +2,7 @@ using System.Diagnostics;
 
 namespace PCCast2TV.Helpers;
 
-// The grab's clock, Sunshine's way (display_base.cpp): it starts from a real screen update and ticks on a steady beat,
-// and when a tick misses its time or finds nothing new it waits for the next real update and starts again from there.
-// The TV's timeline stays fps a second: picture n is n/fps seconds in, the last picture filling any tick it missed.
+// The grab's clock, Sunshine's way (display_base.cpp): steady ticks from a real screen update, started over when one slips.
 public sealed partial class ScreenGrabber
 {
     static double Now() => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency;
@@ -15,7 +13,9 @@ public sealed partial class ScreenGrabber
         try
         {
             Picture last = null;
-            for (int i = 0; i < 50 && last == null && !_stop.IsCancellationRequested; i++) last = TakeNewest(100, first: true);
+            // Up to 5 s for the first picture; while the screen copy is away it answers at once, so each try waits a tenth of a second.
+            for (double giveUp = Now() + 5; last == null && !_stop.IsCancellationRequested && Now() < giveUp;)
+                if ((last = TakeNewest(100, first: true)) == null && _dupBroken) timer.Wait(0.1, 1000);
             if (last == null)
             {
                 if (!_stop.IsCancellationRequested) Log.Write("grab: Windows gave no first picture"); // not when the cast just ended first
@@ -37,7 +37,6 @@ public sealed partial class ScreenGrabber
                     if (target > Now())
                     {
                         timer.Wait(target - Now(), 1000);
-                        lock (_countGate) _longestWake = Math.Max(_longestWake, (Now() - target) * 1000);
                         fresh = TakeNewest(0);
                     }
                     if (fresh != null) inGroup++;
@@ -48,7 +47,8 @@ public sealed partial class ScreenGrabber
                     (group, inGroup) = (_shownAt, 1);
                     lock (_countGate) _resyncs++;
                 }
-                long current = Math.Max(next, (long)((Now() - t0) * _fps)); // the tick whose time has come
+                double now = Now();
+                long current = Math.Max(next, (long)((now - t0) * _fps)); // the tick whose time has come
                 // Fell behind: the ticks it slept through keep the last picture, so the timeline stays whole.
                 int missed = (int)(current - next);
                 if (missed > 0) Send(last, missed);
@@ -58,6 +58,7 @@ public sealed partial class ScreenGrabber
                 {
                     _ticks += missed + 1;
                     _late += missed;
+                    _longestWake = Math.Max(_longestWake, (now - due) * 1000);
                     if (fresh != null) _new++;
                 }
                 next = current + 1;
@@ -75,8 +76,7 @@ public sealed partial class ScreenGrabber
         }
     }
 
-    // The screen's next real update, looked for until the TV's next tick is due; null if none came by then.
-    // Asked with no wait about every millisecond: waiting inside Windows' call holds the card the encoder shares (it froze the encoder).
+    // The screen's next update, asked for about every millisecond until the TV's tick is due (a wait in Windows' call holds the card from the encoder).
     Picture WaitForUpdate(double due, PreciseTimer timer)
     {
         while (!_stop.IsCancellationRequested)

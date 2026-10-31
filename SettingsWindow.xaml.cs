@@ -75,7 +75,7 @@ public partial class SettingsWindow : Window
         Own.Children.Add(Swatch("CLOSE", null, null, Close, cancel: true));
     }
 
-    // A pill in a ring slot. Filled = a color; no fill = an action, outlined. No click = dim and can't be pressed.
+    // A pill in a ring slot: filled for a color or the choice in use, outlined for an action, dim when it can't be clicked.
     Border Swatch(string name, Brush fill, Color? ring, Action click, string icon = null, bool cancel = false)
     {
         var text = new StackPanel { Orientation = Orientation.Horizontal };

@@ -56,36 +56,45 @@ public sealed partial class ScreenGrabber
     {
         if (_dupBroken && !Reopen()) return null;
         var r = _dup.AcquireNextFrame(waitMs, out OutduplFrameInfo info, out IDXGIResource res);
-        if (r.Code == Vortice.DXGI.ResultCode.WaitTimeout.Code) return null;
-        if (r.Failure)
+        bool got = false;
+        if (r.Success)
         {
-            if (r.Code != Vortice.DXGI.ResultCode.AccessLost.Code) Log.Write($"grab: Windows' screen copy failed ({r.Code:X8}), reopening it");
-            _dupBroken = true; // screen mode changed or a secure screen (UAC) is up; the last picture holds meanwhile
+            try
+            {
+                if (first || (info.LastPresentTime != 0 && info.AccumulatedFrames != 0))
+                {
+                    lock (_countGate) _screenUpdates += (int)info.AccumulatedFrames;
+                    _shownAt = info.LastPresentTime > 0 ? info.LastPresentTime / (double)System.Diagnostics.Stopwatch.Frequency : Now();
+                    using var tex = res.QueryInterface<ID3D11Texture2D>();
+                    var d = tex.Description;
+                    if (d.Width != _inW || d.Height != _inH || _dupTurn != _inTurn) BuildInput(d.Width, d.Height); // the screen changed mode mid-cast
+                    _ctx.CopyResource(_copy, tex);
+                    _unsent = got = true;
+                }
+            }
+            finally
+            {
+                res.Dispose();
+                _dup.ReleaseFrame();
+            }
+        }
+        else if (r.Code != Vortice.DXGI.ResultCode.WaitTimeout.Code)
+        {
+            Log.Write(r.Code == Vortice.DXGI.ResultCode.AccessLost.Code ? "grab: Windows' screen copy went away (a lock screen, a permission popup or a screen change), the TV holds the last picture"
+                : $"grab: Windows' screen copy failed ({r.Code:X8}), reopening it");
+            _dupBroken = true;
             return null;
         }
-        try
-        {
-            if (!first && (info.LastPresentTime == 0 || info.AccumulatedFrames == 0)) return null;
-            lock (_countGate) _screenUpdates += (int)info.AccumulatedFrames;
-            _shownAt = info.LastPresentTime > 0 ? info.LastPresentTime / (double)System.Diagnostics.Stopwatch.Frequency : Now();
-            using var tex = res.QueryInterface<ID3D11Texture2D>();
-            var d = tex.Description;
-            if (d.Width != _inW || d.Height != _inH || _dupTurn != _inTurn) BuildInput(d.Width, d.Height); // the screen changed mode mid-cast
-            _ctx.CopyResource(_copy, tex);
-        }
-        finally
-        {
-            res.Dispose();
-            _dup.ReleaseFrame();
-        }
+        if (!_unsent) return null;
         Picture p;
         lock (_gate)
         {
-            if (_free.Count == 0) { lock (_countGate) _heldBack++; return null; } // the encoder is behind: hold the last picture
+            if (_free.Count == 0) { if (got) lock (_countGate) _heldBack++; return null; } // the encoder is behind: the update waits in the copy
             p = _free.Pop();
             p.Refs = 1;
         }
         _vctx.VideoProcessorBlt(_vp, p.View, 0, 1, new[] { new VideoProcessorStream { Enable = true, InputSurface = _input } }).CheckError();
+        _unsent = false;
         return p;
     }
 

@@ -1,7 +1,6 @@
 namespace PCCast2TV.Helpers;
 
-// WebRTC's encoder adjuster (encoder_bitrate_adjuster.cc): measures how far the encoder runs over what it's told,
-// then tells it that much less, so what it makes matches the bitrate wanted.
+// WebRTC's encoder adjuster (encoder_bitrate_adjuster.cc): tells the encoder less by however far it runs over, so it makes what's wanted.
 public sealed class EncoderRateAdjuster(int fps)
 {
     // 3 s of pictures; the factor stays between 1 and 2 (never below half the wanted rate); 1.2 until 30 pictures are in.

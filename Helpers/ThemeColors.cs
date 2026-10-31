@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace PCCast2TV.Helpers;
 
-// The 8 themes, lightest to darkest, each CYAN's steps from its own main color; RANDOM builds one from any hue (Roll saves it).
+// The 8 themes, lightest to darkest, each CYAN's steps from its own main color; RANDOM builds one from any hue (its key kept in Roll).
 public static class ThemeColors
 {
     public sealed record Palette(string Name, Color Main, Color Soft, Color Second, Color Enc, Color Peak, Color Dim, Color DimText, string Roll = null);

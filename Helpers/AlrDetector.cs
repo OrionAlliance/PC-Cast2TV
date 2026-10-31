@@ -1,7 +1,6 @@
 namespace PCCast2TV.Helpers;
 
-// WebRTC's calm-picture detector (alr_detector.cc): a 500 ms budget filling at 65% of the bitrate, drained by what's sent.
-// Over 80% unspent: the picture is calm; under 50%: not anymore.
+// WebRTC's calm-picture detector (alr_detector.cc): a 500 ms budget at 65% of the bitrate; calm over 80% unspent, not under 50%.
 public sealed class AlrDetector
 {
     const double WindowMs = 500, UsageRatio = 0.65, StartRatio = 0.80, StopRatio = 0.50;

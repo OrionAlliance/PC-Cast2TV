@@ -45,7 +45,7 @@ public sealed partial class ScreenGrabber : IDisposable
     readonly CancellationTokenSource _stop = new();
     readonly int _screenW, _screenH;
     Thread _clock;
-    bool _dupBroken, _ended;
+    bool _dupBroken, _ended, _unsent; // _unsent: the screen copy holds an update no picture has yet
     long _nextReopen; // when the screen copy may next be reopened (Environment.TickCount64)
 
     // Counts for the 10-second timing line.

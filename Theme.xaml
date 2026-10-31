@@ -85,7 +85,7 @@
         </Setter>
     </Style>
 
-    <!-- An action next to color pills: a ring in the theme color with a dark middle, so a filled pill always means a color. -->
+    <!-- An action next to the pills: a ring in the theme color with a dark middle, so it never reads as a color or a choice. -->
     <Style x:Key="OutlinePill" TargetType="Button" BasedOn="{StaticResource Pill}">
         <Setter Property="Foreground" Value="{DynamicResource Main}" />
         <Setter Property="Template">

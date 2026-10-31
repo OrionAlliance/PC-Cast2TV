@@ -11,6 +11,9 @@ public sealed partial class MirrorSender
     double _sentRate = MaxBitRate, _lowestRate = MaxBitRate, _peakTrend;
     int _cutsAtReport, _behindTimes;
     long _behindSince, _longestBehind, _sentAtControl;
+    readonly List<string> _notes = new(); // written once the lock is let go, so the disk never holds up the stream
+
+    void Note(string line) => _notes.Add(line);
 
     // Follows the Settings switch live and hears each confirmation; the encoder gets any cut at once, rises in 5% steps.
     void Control(long firstSent, long now, int bytes)
@@ -19,7 +22,7 @@ public sealed partial class MirrorSender
         if (on != (_controller != null))
         {
             _controller = on ? NewController() : null;
-            Log.Write("cast: stream controller turned " + (on ? "on" : "off"));
+            Note("cast: stream controller turned " + (on ? "on" : "off"));
             (_lowestRate, _cutsAtReport) = (MaxBitRate, 0);
             if (!on && _sentRate < MaxBitRate) _setBitRate(MaxBitRate); // off: straight back to the cap
             _sentRate = MaxBitRate;
@@ -32,23 +35,23 @@ public sealed partial class MirrorSender
         _sentAtControl = sent;
         _peakTrend = Math.Max(_peakTrend, _controller.DelayTrendMs);
         if (_controller.LetGo != letGo)
-            Log.Write($"cast: controller let go of where the TV fell behind ({_controller.LetGoOfMbps:0.0} Mbps), the TV took {_controller.Took}, so it climbs fast again");
+            Note($"cast: controller let go of where the TV fell behind ({_controller.LetGoOfMbps:0.0} Mbps), the TV took {_controller.Took}, so it climbs fast again");
         if (_controller.WentBack != wentBack)
-            Log.Write($"cast: controller went back up to {_controller.Bitrate / 1e6:0.00} Mbps: it had cut while the picture was calm, and the TV recovered");
+            Note($"cast: controller went back up to {_controller.Bitrate / 1e6:0.00} Mbps: it had cut while the picture was calm, and the TV recovered");
         if (!wasBehind && _controller.FallingBehind)
         {
             (_behindSince, _behindTimes) = (now, _behindTimes + 1);
-            Log.Write($"cast: controller saw the TV falling behind (delay trend {_controller.DelayTrendMs:0} ms over its {_controller.DelayLimitMs:0} ms limit), the TV took {_controller.Took}" +
+            Note($"cast: controller saw the TV falling behind (delay trend {_controller.DelayTrendMs:0} ms over its {_controller.DelayLimitMs:0} ms limit), the TV took {_controller.Took}" +
                       (_controller.Calm ? ", the picture was calm" : ""));
         }
         else if (wasBehind && !_controller.FallingBehind)
         {
             _longestBehind = Math.Max(_longestBehind, now - _behindSince);
-            Log.Write($"cast: controller saw the TV catch up after {(now - _behindSince) * ms:0} ms, bitrate now {_controller.Bitrate / 1e6:0.0} Mbps");
+            Note($"cast: controller saw the TV catch up after {(now - _behindSince) * ms:0} ms, bitrate now {_controller.Bitrate / 1e6:0.0} Mbps");
         }
         if (!changed) return;
         double rate = _controller.Bitrate;
-        if (rate < before) Log.Write($"cast: controller cut the bitrate from {before / 1e6:0.00} to {rate / 1e6:0.00} Mbps");
+        if (rate < before) Note($"cast: controller cut the bitrate from {before / 1e6:0.00} to {rate / 1e6:0.00} Mbps");
         _lowestRate = Math.Min(_lowestRate, rate);
         if (rate >= _sentRate && rate < _sentRate * 1.05) return;
         _sentRate = rate;

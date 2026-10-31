@@ -26,7 +26,7 @@ public sealed partial class VideoEncoder : IDisposable
     int _wanted, _told;
     readonly EncoderRateAdjuster _adjust; // capped only: keeps what it makes to the bitrate wanted
     volatile string _rateNote;
-    bool _saidRate;
+    bool _saidRate, _saidKey;
     readonly Queue<ScreenGrabber.Picture> _inFlight = new();
     long _frames, _framesOut;
     // Windows' own encoder: the picture buffers it was fed, by frame, each used again once its frame has come out.
@@ -191,7 +191,11 @@ public sealed partial class VideoEncoder : IDisposable
         if (_keysEverySecond && n % _fps == 0 || _keyWanted)
         {
             _keyWanted = false;
-            Set(ForceKeyFrame, 1);
+            if (!Set(ForceKeyFrame, 1) && !_saidKey)
+            {
+                _saidKey = true;
+                Log.Write("encoder: it didn't take a request for a keyframe");
+            }
         }
         if (pic != null) _inFlight.Enqueue(pic);
         _mft.ProcessInput(0, sample, 0);

@@ -14,8 +14,7 @@ public sealed class RateController(double maxBps, double minBps)
     int _deltas, _overuseCount;
     Usage _usage;
 
-    // What the TV took, Chrome's cast sender's way (bandwidth_estimator.cc): confirmed bytes at arrival less a round trip,
-    // summed over the last 2.56 s in 256 slices of 10 ms.
+    // What the TV took (Chrome's bandwidth_estimator.cc): confirmed bytes at arrival less a round trip, over 2.56 s in 10 ms slices.
     const int Slices = 256;
     const double SliceMs = 10;
     readonly long[] _slice = new long[Slices];
@@ -31,8 +30,7 @@ public sealed class RateController(double maxBps, double minBps)
     double _bitrate = maxBps, _lastChange = double.NegativeInfinity;
     Step _step = Step.Hold;
 
-    // Back up after a calm-picture drop (probe_controller.cc): under 66% within 5 s, calm or just calm: 85% once the TV recovers.
-    // WebRTC probes first; Cast TVs can't report a probe, so the TV recovering stands in for it.
+    // Back up after a calm-picture drop (probe_controller.cc): 85% of before once the TV recovers, standing in for WebRTC's probe.
     const double DropRatio = 0.66, DropTimeoutMs = 5000, CalmEndedMs = 3000, BackFraction = 0.85, BackUncertainty = 0.05, MinBetweenMs = 5000;
     readonly AlrDetector _alr = new(maxBps);
     double _dropAtMs = double.NegativeInfinity, _beforeDrop, _wentBackAtMs = double.NegativeInfinity;
@@ -52,8 +50,7 @@ public sealed class RateController(double maxBps, double minBps)
     public bool Calm => _alr.StartedMs != null;
     public int WentBack { get; private set; }
 
-    // A confirmation that moved the TV's checkpoint: the newest picture's first send, when the confirmation came, the bytes it covered,
-    // and all bytes sent since the last one; true when the rate changed.
+    // A confirmation that moved the TV's checkpoint, plus all bytes sent since the last one; true when the rate changed.
     public bool OnFeedback(double sentMs, double arrivedMs, int bytes, double rttMs, long sentBytes)
     {
         _alr.OnSent(sentBytes, arrivedMs);
