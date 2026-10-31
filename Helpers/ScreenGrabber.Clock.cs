@@ -75,20 +75,16 @@ public sealed partial class ScreenGrabber
         }
     }
 
-    // The screen's next real update, waited for until the TV's next tick is due; null if none came by then.
-    // Sunshine waits up to 200 ms here; the TV needs a picture every tick, so this waits one tick at most.
+    // The screen's next real update, looked for until the TV's next tick is due; null if none came by then.
+    // Asked with no wait about every millisecond: waiting inside Windows' call holds the card the encoder shares (it froze the encoder).
     Picture WaitForUpdate(double due, PreciseTimer timer)
     {
         while (!_stop.IsCancellationRequested)
         {
+            var p = TakeNewest(0);
             double left = due - Now();
-            var p = TakeNewest(left > 0 ? (uint)Math.Ceiling(left * 1000) : 0);
             if (p != null || left <= 0) return p;
-            if (_dupBroken) // the screen copy is away: wait out the tick instead of asking again at once
-            {
-                timer.Wait(due - Now(), 1000);
-                return null;
-            }
+            timer.Wait(Math.Min(left, 0.001), 1000);
         }
         return null;
     }
