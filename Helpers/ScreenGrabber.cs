@@ -1,10 +1,9 @@
-using System.Diagnostics;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 
 namespace PCCast2TV.Helpers;
 
-// The screen grab, timed like OBS: a steady clock takes the newest picture fps times a second, so picture n is n/fps seconds in.
+// The screen grab: Windows' copy of the screen, turned into video pictures and handed to the encoder on the clock's ticks (ScreenGrabber.Clock.cs).
 public sealed partial class ScreenGrabber : IDisposable
 {
     const int PoolSize = 16;
@@ -51,8 +50,8 @@ public sealed partial class ScreenGrabber : IDisposable
 
     // Counts for the 10-second timing line.
     readonly object _countGate = new();
-    int _ticks, _new, _late, _screenUpdates, _heldBack, _mostWaiting;
-    double _longestWake;
+    int _ticks, _new, _late, _screenUpdates, _heldBack, _mostWaiting, _resyncs;
+    double _longestWake, _shownAt; // _shownAt: when the screen showed the newest update taken (seconds, the Stopwatch clock)
 
     public ID3D11Device Device { get; }
     public int Width { get; }
@@ -99,6 +98,8 @@ public sealed partial class ScreenGrabber : IDisposable
             using (var mt = Device.QueryInterface<ID3D11Multithread>()) mt.SetMultithreadProtected(true); // clock and encoder share the card
             _dup = _output.DuplicateOutput(Device);
             _dupTurn = _dup.Description.Rotation;
+            var hz = _dup.Description.ModeDescription.RefreshRate;
+            Log.Write($"grab: the screen refreshes {hz.Numerator}/{hz.Denominator} times a second ({(double)hz.Numerator / Math.Max(1u, hz.Denominator):0.000})");
 
             (Width, Height) = ScreenInfo.SentSize(_screenW, _screenH);
 
@@ -130,12 +131,12 @@ public sealed partial class ScreenGrabber : IDisposable
         _clock.Start();
     }
 
-    public (int Ticks, int NewPictures, int Late, double LongestWakeMs, int ScreenUpdates, int HeldBack, int MostWaiting) TakeCounts()
+    public (int Ticks, int NewPictures, int Late, double LongestWakeMs, int ScreenUpdates, int HeldBack, int MostWaiting, int Resyncs) TakeCounts()
     {
         lock (_countGate)
         {
-            var c = (_ticks, _new, _late, _longestWake, _screenUpdates, _heldBack, _mostWaiting);
-            (_ticks, _new, _late, _longestWake, _screenUpdates, _heldBack, _mostWaiting) = (0, 0, 0, 0, 0, 0, 0);
+            var c = (_ticks, _new, _late, _longestWake, _screenUpdates, _heldBack, _mostWaiting, _resyncs);
+            (_ticks, _new, _late, _longestWake, _screenUpdates, _heldBack, _mostWaiting, _resyncs) = (0, 0, 0, 0, 0, 0, 0, 0);
             return c;
         }
     }
@@ -159,56 +160,6 @@ public sealed partial class ScreenGrabber : IDisposable
                 w.Pic.Refs--; // the line's hold passes to the encoder's
             }
             return w.Pic;
-        }
-    }
-
-    void ClockLoop()
-    {
-        var timer = new PreciseTimer();
-        try
-        {
-            Picture last = null;
-            for (int i = 0; i < 50 && last == null && !_stop.IsCancellationRequested; i++) last = TakeNewest(100, first: true);
-            if (last == null)
-            {
-                if (!_stop.IsCancellationRequested) Log.Write("grab: Windows gave no first picture"); // not when the cast just ended first
-                return;
-            }
-            FirstPicture?.Invoke();
-            double rate = Stopwatch.Frequency, t0 = Stopwatch.GetTimestamp() / rate;
-            Send(last, 1);
-            long next = 1;
-            while (!_stop.IsCancellationRequested)
-            {
-                double due = t0 + (double)next / _fps, wait = due - Stopwatch.GetTimestamp() / rate;
-                if (wait > 0) timer.Wait(wait, 1000);
-                double now = Stopwatch.GetTimestamp() / rate;
-                long current = Math.Max(next, (long)((now - t0) * _fps)); // the tick whose time has come
-                var fresh = TakeNewest(0);
-                // Fell behind: the ticks it slept through keep the last picture, so the timeline stays whole.
-                int missed = (int)(current - next);
-                if (missed > 0) Send(last, missed);
-                if (fresh != null) { Release(last); last = fresh; }
-                Send(last, 1);
-                lock (_countGate)
-                {
-                    _ticks += missed + 1;
-                    _late += missed;
-                    _longestWake = Math.Max(_longestWake, (now - due) * 1000);
-                    if (fresh != null) _new++;
-                }
-                next = current + 1;
-            }
-            Release(last);
-        }
-        catch (Exception ex) when (ex is SharpGen.Runtime.SharpGenException or ObjectDisposedException)
-        {
-            if (!_stop.IsCancellationRequested) Log.Write("grab: stopped: " + ex.Message);
-        }
-        finally
-        {
-            timer.Dispose();
-            Ended();
         }
     }
 

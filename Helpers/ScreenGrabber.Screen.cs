@@ -67,6 +67,7 @@ public sealed partial class ScreenGrabber
         {
             if (!first && (info.LastPresentTime == 0 || info.AccumulatedFrames == 0)) return null;
             lock (_countGate) _screenUpdates += (int)info.AccumulatedFrames;
+            _shownAt = info.LastPresentTime > 0 ? info.LastPresentTime / (double)System.Diagnostics.Stopwatch.Frequency : Now();
             using var tex = res.QueryInterface<ID3D11Texture2D>();
             var d = tex.Description;
             if (d.Width != _inW || d.Height != _inH || _dupTurn != _inTurn) BuildInput(d.Width, d.Height); // the screen changed mode mid-cast

@@ -49,7 +49,7 @@ public sealed class ScreenRecorder : IDisposable
     public int? NewestPiece => _ts?.Newest;
 
     // The screen clock's counts since the last call: ticks, new pictures, late ticks, and whether the encoder kept up.
-    public (int Ticks, int NewPictures, int Late, double LongestWakeMs, int ScreenUpdates, int HeldBack, int MostWaiting) TakeGrabCounts()
+    public (int Ticks, int NewPictures, int Late, double LongestWakeMs, int ScreenUpdates, int HeldBack, int MostWaiting, int Resyncs) TakeGrabCounts()
         => _grab?.TakeCounts() ?? default;
 
     // This app's share of the whole processor since the last call, in percent (the grab, sound and pieces all run here).

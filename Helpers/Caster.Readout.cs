@@ -39,7 +39,7 @@ public sealed partial class Caster
             {
                 var gpu = GpuLoad.Sample(); // read off the window's thread: Windows' counters can take a moment
                 Log.Write($"cast: timing: {g.Ticks} ticks ({g.NewPictures} new pictures, {g.Late} late, longest wake {g.LongestWakeMs:0.0} ms), " +
-                          $"screen changed {g.ScreenUpdates} times, encoder: most waiting {g.MostWaiting}, held back {g.HeldBack}{(rate == null ? "" : ", " + rate)}, " +
+                          $"screen changed {g.ScreenUpdates} times, clock re-synced {g.Resyncs} times, encoder: most waiting {g.MostWaiting}, held back {g.HeldBack}{(rate == null ? "" : ", " + rate)}, " +
                           $"app cpu {cpu:0}%, {gpu.Line}");
                 _ui.Post(_ => OnEncoderLoad(gpu.Encoder, cast), null);
             });
