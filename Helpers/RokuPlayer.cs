@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Xml.Linq;
 
@@ -5,21 +6,23 @@ namespace PCCast2TV.Helpers;
 
 public enum RokuApp { None, Ours, DisplayHub }
 
-// Plays and stops the cast on a Roku over ECP (port 8060), through our app in its developer slot or DisplayHUB when ours isn't on it.
+// Plays and stops the cast on a Roku over ECP (port 8060), through our app (store or developer slot) or DisplayHUB when ours isn't on it.
 public static class RokuPlayer
 {
-    const string OurApp = "dev";
-    const string OurName = "PC Cast2TV"; // the developer slot holds one app; this checks it's ours
+    const string DevSlot = "dev";
+    const string OurName = "PC Cast2TV"; // our app's name on the Roku's app list, however it was installed
     const string DisplayHub = "835615";
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(4), MaxResponseContentBufferSize = 1_000_000 };
+    static readonly ConcurrentDictionary<string, string> OurIds = new(); // our app's id on each Roku, from its last app list
 
-    // Which player is on the Roku, from its app list: ours first, DisplayHUB as the backup. Null when the list can't be read.
+    // Which player is on the Roku, from its app list: ours first (the dev slot copy wins), DisplayHUB as the backup. Null when the list can't be read.
     public static async Task<RokuApp?> PlayerOnAsync(Device d, bool logFailure = true)
     {
         try
         {
             var apps = XDocument.Parse(await Http.GetStringAsync($"http://{d.Ip}:8060/query/apps")).Root.Elements("app").ToList();
-            if (apps.FirstOrDefault(a => (string)a.Attribute("id") == OurApp)?.Value == OurName) return RokuApp.Ours;
+            var ours = apps.Where(a => a.Value.Trim() == OurName).OrderBy(a => (string)a.Attribute("id") == DevSlot ? 0 : 1).FirstOrDefault();
+            if ((string)ours?.Attribute("id") is { Length: > 0 } id) { OurIds[d.Id] = id; return RokuApp.Ours; }
             return apps.Any(a => (string)a.Attribute("id") == DisplayHub) ? RokuApp.DisplayHub : RokuApp.None;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException)
@@ -45,7 +48,7 @@ public static class RokuPlayer
         }
     }
 
-    static string IdOf(RokuApp app) => app == RokuApp.Ours ? OurApp : DisplayHub;
+    static string IdOf(Device d, RokuApp app) => app == RokuApp.Ours ? OurIds.GetValueOrDefault(d.Id, DevSlot) : DisplayHub;
     static string LabelOf(RokuApp app) => app == RokuApp.Ours ? "our app" : "DisplayHUB";
 
     // Answering at its last address, and still the same Roku (serial matches).
@@ -72,7 +75,7 @@ public static class RokuPlayer
         string label = LabelOf(app), link = Uri.EscapeDataString(url);
         try
         {
-            using var r = await Http.PostAsync($"http://{d.Ip}:8060/launch/{IdOf(app)}?{(app == RokuApp.Ours ? "url" : "contentID")}={link}", null);
+            using var r = await Http.PostAsync($"http://{d.Ip}:8060/launch/{IdOf(d, app)}?{(app == RokuApp.Ours ? "url" : "contentID")}={link}", null);
             Log.Write($"roku: {label} asked to play, answer {(int)r.StatusCode}");
             if (!r.IsSuccessStatusCode) return failed;
         }
@@ -125,7 +128,7 @@ public static class RokuPlayer
         try
         {
             var onScreen = await ActiveAppAsync(d);
-            if (onScreen != IdOf(app))
+            if (onScreen != IdOf(d, app))
             {
                 Log.Write($"roku: player no longer on screen (shows {Log.Outside(onScreen) ?? "home"}), left alone");
                 return;
