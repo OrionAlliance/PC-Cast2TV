@@ -66,7 +66,7 @@ public sealed partial class MirrorSender
     {
         if (_controller == null) return ", controller off";
         string s = $", controller {_controller.Bitrate / 1e6:0.0} Mbps (lowest {_lowestRate / 1e6:0.0}, " +
-                   $"cut {_controller.Cuts - _cutsAtReport} times, delay limit {_controller.DelayLimitMs:0} ms)" +
+                   $"cut {_controller.Cuts - _cutsAtReport} times)" +
                    $"\ncontroller: saw the TV fall behind {_behindTimes} time{(_behindTimes == 1 ? "" : "s")}" +
                    (_behindTimes > 0 ? $" (longest {_longestBehind * 1000 / Stopwatch.Frequency} ms)" : "") +
                    $", biggest delay trend {_peakTrend:0} ms against a {_controller.DelayLimitMs:0} ms limit, the TV took {_controller.Took}, now {_controller.Doing}";

@@ -20,7 +20,7 @@ public sealed partial class Caster
         var now = DateTime.UtcNow;
         if (++_ticks % 10 == 0) // the readout, written down every 10 seconds so a cast can be judged from the log
         {
-            Log.Write($"cast: made {Meter.EncodedLine[^1]:0.0} Mbps, sent {Meter.Now:0.0}, peak {Meter.Peak:0.0}, signal {Meter.SignalLabel}");
+            Log.Write($"cast: made {Meter.EncodedLine[^1]:0.0} Mbps, sent {Meter.Now:0.0}, signal {Meter.SignalLabel}");
             if (mirrored) Log.Write(_castPlayer.TakeMirrorReport());
             else if (CastingTo.Kind == DeviceKind.Cast) // the Roku reports its own side; this is the Chromecast's
             {

@@ -172,7 +172,7 @@ public sealed partial class Caster
         Set(Phase.Stopping, "ENDING CAST...");
         await StopPlayerAsync(d, _rokuApp, _castPlayer);
         CleanupCast();
-        Log.Write("cast: ended" + (message == null ? "" : " (" + ForLog(about, message) + ")"));
+        Log.Write($"cast: ended, peak {Meter.Peak:0.0} Mbps" + (message == null ? "" : " (" + ForLog(about, message) + ")"));
         Set(Phase.Online, message == null ? "CAST ENDED" : Shown(about, message));
         if (!error) _ = BackToReadyAsync();
     }
