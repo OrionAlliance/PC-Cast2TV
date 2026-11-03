@@ -5,6 +5,7 @@
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False" UseLayoutRounding="True">
 
     <Border Padding="28,24,28,24">
+        <StackPanel Orientation="Horizontal">
         <StackPanel Width="380">
             <TextBlock Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" Text="SETTINGS" />
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="THEME COLOR" />
@@ -29,6 +30,23 @@
                     <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
                 </Button>
             </Grid>
+        </StackPanel>
+
+        <!-- The Roku remote: a purple line from the note to the OK button -->
+        <StackPanel Margin="36,0,0,0">
+            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,48,0,10" Text="ROKU REMOTE" />
+            <Grid Width="444" Height="430">
+                <Image Source="Images/roku-remote.png" Width="230" Height="430" HorizontalAlignment="Left" VerticalAlignment="Top"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
+                <TextBlock x:Name="OkNote" Width="186" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="258,148,0,0"
+                           Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
+                           Text="Pressing the OK button on the remote during video playback, will pause the video. This will allow you to grab a snack or something to drink. Press the OK button again to resume video playback." />
+                <Canvas IsHitTestVisible="False">
+                    <Line X1="250" Y1="234" X2="133" Y2="234" Stroke="#8A5CF6" StrokeThickness="2" />
+                    <Ellipse Canvas.Left="91" Canvas.Top="213" Width="42" Height="42" Stroke="#8A5CF6" StrokeThickness="2" />
+                </Canvas>
+            </Grid>
+        </StackPanel>
         </StackPanel>
     </Border>
 </Window>
