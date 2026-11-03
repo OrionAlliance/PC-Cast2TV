@@ -32,7 +32,7 @@
             </Grid>
         </StackPanel>
 
-        <!-- The Roku remote: a purple line from the note to the OK button -->
+        <!-- The Roku remote: a line in the theme color from the note to the OK button -->
         <StackPanel Margin="36,0,0,0">
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,48,0,10" Text="ROKU REMOTE" />
             <Grid Width="444" Height="430">
@@ -42,8 +42,8 @@
                            Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
                            Text="Pressing the OK button on the remote during video playback, will pause the video. This will allow you to grab a snack or something to drink. Press the OK button again to resume video playback." />
                 <Canvas IsHitTestVisible="False">
-                    <Line X1="250" Y1="234" X2="133" Y2="234" Stroke="#8A5CF6" StrokeThickness="2" />
-                    <Ellipse Canvas.Left="91" Canvas.Top="213" Width="42" Height="42" Stroke="#8A5CF6" StrokeThickness="2" />
+                    <Line X1="250" Y1="234" X2="133" Y2="234" Stroke="{DynamicResource Main}" StrokeThickness="2" />
+                    <Ellipse Canvas.Left="91" Canvas.Top="213" Width="42" Height="42" Stroke="{DynamicResource Main}" StrokeThickness="2" />
                 </Canvas>
             </Grid>
         </StackPanel>
