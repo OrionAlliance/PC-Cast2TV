@@ -36,7 +36,7 @@
             </Grid>
             <Border Canvas.Left="866" Canvas.Top="20" Width="24" Height="30" CornerRadius="0,15,15,0" Background="{DynamicResource Main}" />
 
-            <!-- Left, in the order you use it: Connect, Detect, then the devices to pick from -->
+            <!-- Left, in the order you use it: Detect, then the devices to pick from (the app connects by itself on open) -->
             <TextBlock Canvas.Left="24" Canvas.Top="146" Style="{StaticResource Label}" FontSize="15" Foreground="{DynamicResource Second}" Text="CAST TO" />
             <TextBlock x:Name="ListNote" Canvas.Left="130" Canvas.Top="148" Width="136" TextAlignment="Right" Style="{StaticResource Label}" FontWeight="Normal" FontSize="13" Foreground="{DynamicResource DimText}" />
             <ScrollViewer Canvas.Left="20" Canvas.Top="170" Width="246" Height="228" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
@@ -47,23 +47,15 @@
                 <TextBlock x:Name="EmptyTitle" Style="{StaticResource Label}" FontSize="20" Foreground="{DynamicResource Second}" />
                 <TextBlock x:Name="EmptyText" Style="{StaticResource Label}" FontWeight="Normal" FontSize="15" Foreground="{DynamicResource DimText}" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
-            <Button x:Name="ConnectBtn" Canvas.Left="20" Canvas.Top="88" Width="118" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Connect_Click">
-                <!-- Full height so icon and text center (-1.5 cancels the icon's blank edge), unrounded to stay exact at any scale. -->
-                <StackPanel Orientation="Horizontal" Height="40">
-                    <Viewbox Width="18" Height="18" Margin="-1.5,0,6,0" VerticalAlignment="Center">
-                        <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoWifi}" /></Canvas>
-                    </Viewbox>
-                    <TextBlock x:Name="ConnectLabel" Style="{StaticResource PillLabel}" Text="CONNECT" />
-                </StackPanel>
-            </Button>
             <!-- Right-click (even while it's greyed out) is caught by the window: see Window_RightClick -->
-            <Button x:Name="DetectBtn" Canvas.Left="148" Canvas.Top="88" Width="118" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Detect_Click"
+            <Button x:Name="DetectBtn" Canvas.Left="20" Canvas.Top="88" Width="246" Height="40" FontSize="16" UseLayoutRounding="False" Style="{StaticResource Pill}" Click="Detect_Click"
                     ToolTip="Right-click to show hidden devices" ToolTipService.ShowOnDisabled="True">
+                <!-- Full height so icon and text center (-1.5 cancels the icon's blank edge), unrounded to stay exact at any scale. -->
                 <StackPanel Orientation="Horizontal" Height="40">
                     <Viewbox Width="18" Height="18" Margin="-1.5,0,6,0" VerticalAlignment="Center">
                         <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoPc}" /></Canvas>
                     </Viewbox>
-                    <TextBlock x:Name="DetectLabel" Style="{StaticResource PillLabel}" Text="DETECT" />
+                    <TextBlock x:Name="DetectLabel" Style="{StaticResource PillLabel}" Text="DETECT DEVICE(S)" />
                 </StackPanel>
             </Button>
 

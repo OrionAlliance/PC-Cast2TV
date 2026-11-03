@@ -36,7 +36,7 @@ public sealed partial class Caster
             // A Roku box answers even with the TV off, so for one of those the box itself is the thing to check.
             var check = d.Kind == DeviceKind.Roku ? "Make sure the Roku is plugged in and turned on." : "Make sure the TV is turned on.";
             Notice?.Invoke($"{name} ISN'T ANSWERING", check + "\n\n" +
-                (NetUtil.AnyVpnUp ? "If it's on, your VPN may be blocking it. " + AllowLan : "If it's on, click Detect to find it again."));
+                (NetUtil.AnyVpnUp ? "If it's on, your VPN may be blocking it. " + AllowLan : "If it's on, click DETECT DEVICE(S) to find it again."));
             return;
         }
         _ = TvInfo.LogAsync(d); // maker, model and software for the log, asked alongside the start
@@ -76,7 +76,16 @@ public sealed partial class Caster
             }
             return;
         }
-        if (!await Task.Run(FirewallRule.Exists)) { FailCast("FIREWALL BLOCKS TVS · CLICK CONNECT AGAIN"); return; }
+        // Turned down when the app opened (or removed since): Windows is asked again, once per cast.
+        if (!await Task.Run(FirewallRule.Exists))
+        {
+            if (Phase != Phase.Starting) return;
+            Set(Phase.Starting, "ASKING WINDOWS TO LET TVS IN...");
+            bool added = await Task.Run(FirewallRule.Add);
+            Log.Write("cast: firewall rule " + (added ? "added" : "still missing"));
+            if (Phase != Phase.Starting) return;
+            if (!added) { FailCast("FIREWALL BLOCKS TVS · CAST AGAIN TO ASK WINDOWS"); return; }
+        }
         if (Phase != Phase.Starting) return;
 
         // A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, so it runs at 60 while casting.

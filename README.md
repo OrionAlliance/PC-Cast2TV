@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>Cast your Windows PC's screen and sound to your TV or Roku, over your home network.</b><br>
-  <b>Roku, Chromecast and smart TVs. Click Connect, pick your device, click Cast. That's the app.</b>
+  <b>Roku, Chromecast and smart TVs. Open it, pick your device, click Cast. That's the app.</b>
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
   - **TVs with Chromecast built in:** many VIZIO, Sony, TCL and Hisense TVs, plus Chromecast dongles and Google TV boxes. They get your screen live through the TV's own screen mirroring, the same way Chrome casts a screen. No extra app needed.
   - **Other smart TVs** that can play video from your home network (DLNA).
 
-  Not sure about yours? Just click Detect. If your TV shows up in the list, the app can cast to it.
+  Not sure about yours? Just click **DETECT DEVICE(S)**. If your TV shows up in the list, the app can cast to it.
 - **One portable exe.** No installer, no extra programs, nothing running in the background. Its settings live in a `Settings` folder next to the app.
 - **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
 - **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
@@ -54,8 +54,8 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 
 1. Download **`PC-Cast2TV.exe`** from the [Releases](../../releases) page. That's the only official download. Copies posted anywhere else aren't from me, so don't run them.
 2. Put it in its own folder (it keeps its `Settings` folder next to it) and run it. **Windows will show a blue "Windows protected your PC" warning.** That's SmartScreen reacting to an unsigned open-source app with no download reputation yet, not a threat detection. Click **More info → Run anyway**. (Don't take my word for what the app does. The entire source code is this repository.)
-3. Click **Connect**. The first time, Windows asks once to let your TVs and Roku reach the app. That's a firewall rule for this app only, on private networks only.
-4. Click **Detect** to find your TVs and Roku, click the one you want, and click **Cast**.
+3. It connects to your home network by itself. The first time you open it, Windows asks once to let your TVs and Roku reach the app. That's a firewall rule for this app only, on private networks only.
+4. Click **DETECT DEVICE(S)** to find your TVs and Roku, click the one you want, and click **Cast**.
 
 ## Roku: one free app, and PC Cast2TV adds it for you
 
@@ -104,13 +104,13 @@ A Roku plays the cast in one-second pieces and keeps a few of them in hand, so a
 A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, which shows as a stutter. So while you cast, the app runs your screen at 60 Hz, and it puts your screen back the way it was when the cast ends.
 
 **It says the TV isn't answering.**
-Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, click Detect to find it again.
+Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, click **DETECT DEVICE(S)** to find it again.
 
 **My Roku won't start the cast, or ADD PC CAST2TV didn't open anything.**
 PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and make sure it is turned on (enabled).
 
 **Can I hide a device I don't use?**
-Right-click it in the list and click **HIDE FROM THE LIST**. It stays saved, Detect leaves it off too, and right-clicking Detect brings it back.
+Right-click it in the list and click **HIDE FROM THE LIST**. It stays saved, DETECT DEVICE(S) leaves it off too, and right-clicking DETECT DEVICE(S) brings it back.
 
 ## Your data stays yours
 

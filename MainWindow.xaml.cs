@@ -34,6 +34,7 @@ public partial class MainWindow : Window
         _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over
         _caster.Notice += (title, body) => NoticeWindow.Tell(this, title, body);
         _caster.NeedsRokuApp += roku => RokuAppWindow.Tell(this, roku, stop => _caster.WaitForRokuAppAsync(roku, stop));
+        Loaded += async (_, _) => await _caster.ConnectAsync(); // the app goes online by itself when it opens
         ContentRendered += async (_, _) => await CheckForUpdateAsync();
         ThemeColors.Changed += OnThemeChanged;
         Glow(ThemeColors.Current.Main);
@@ -57,7 +58,6 @@ public partial class MainWindow : Window
 
     void Cog_Click(object sender, RoutedEventArgs e) => SettingsWindow.Open(this);
 
-    async void Connect_Click(object sender, RoutedEventArgs e) => await _caster.ToggleConnectAsync();
     async void Detect_Click(object sender, RoutedEventArgs e) => await _caster.DetectAsync();
     async void Cast_Click(object sender, RoutedEventArgs e) => await _caster.ToggleCastAsync();
 
@@ -100,15 +100,12 @@ public partial class MainWindow : Window
         Block3.Text = c.Encoder?.Label ?? "ENCODER";
         Block4.Text = c.VideoLabel;
 
-        ConnectLabel.Text = c.IsOnline ? "DISCONNECT" : "CONNECT";
-        ConnectBtn.Background = c.IsOnline ? Main : Second;
-        ConnectBtn.IsEnabled = ph is Phase.Offline or Phase.Online or Phase.Casting;
         DetectBtn.IsEnabled = ph == Phase.Online;
-        DetectLabel.Text = ph == Phase.Detecting ? "DETECTING" : "DETECT";
+        DetectLabel.Text = ph == Phase.Detecting ? "DETECTING" : "DETECT DEVICE(S)";
 
         EmptyHint.Visibility = c.Devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         EmptyTitle.Text = c.AllHidden ? "ALL YOUR DEVICES ARE HIDDEN" : "NO DEVICES YET";
-        EmptyText.Text = c.AllHidden ? "RIGHT-CLICK DETECT TO BRING THEM BACK." : "CLICK CONNECT, THEN DETECT TO FIND YOUR TVS AND ROKUS.";
+        EmptyText.Text = c.AllHidden ? "RIGHT-CLICK DETECT DEVICE(S) TO BRING THEM BACK." : "CLICK DETECT DEVICE(S) TO FIND YOUR TVS AND ROKUS.";
         ListNote.Text = c.Devices.Count > 4 ? $"+{c.Devices.Count - 4} MORE · SCROLL" : ""; // the list shows 4 at a time
 
         // This PC's side; each device's own side is on its row.
@@ -144,13 +141,13 @@ public partial class MainWindow : Window
         var c = _caster;
         if (c.LinkOf(d) is { } link) return link;
         if (c.LinkAsked(d)) return d.Kind == DeviceKind.Dlna ? "DOESN'T SAY" : "DIDN'T ANSWER";
-        return c.IsOnline ? "CHECKING..." : "CONNECT TO CHECK";
+        return c.IsOnline ? "CHECKING..." : "OFFLINE";
     }
 
     // " · PC2TV" after a Roku's address once it has answered that it has our app.
     string PlayerText(Device d) => _caster.LinkOf(d) != null && _caster.PlayerOf(d) == RokuApp.Ours ? " · PC2TV" : "";
 
-    // The big button names the next step (Connect, Detect, Select, Cast); only Cast and Casting can be pressed.
+    // The big button names the next step (Detect, Select, Cast); only Cast and Casting can be pressed.
     void DrawCastButton()
     {
         var c = _caster;
@@ -165,7 +162,7 @@ public partial class MainWindow : Window
         {
             CastStep.Casting => ("CASTING", "CLICK TO END", 34.0),
             CastStep.Cast => ("CAST", "TO " + c.Picked.Name.ToUpperInvariant(), 46.0),
-            CastStep.ConnectFirst => ("CONNECT", "FIRST", 30.0),
+            CastStep.Offline => ("OFFLINE", "", 30.0),
             CastStep.DetectFirst => ("DETECT", "FIRST", 30.0),
             CastStep.SelectDevice => ("SELECT", "A DEVICE", 30.0),
             _ => (c.Phase switch { Phase.Connecting => "CONNECTING", Phase.Detecting => "DETECTING", Phase.Starting => "STARTING", _ => "ENDING" }, "", 26.0),

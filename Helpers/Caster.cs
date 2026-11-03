@@ -4,8 +4,8 @@ namespace PCCast2TV.Helpers;
 
 public enum Phase { Offline, Connecting, Online, Detecting, Starting, Casting, Stopping }
 
-// The center button's next step: a first run walks Connect, Detect, Select, Cast.
-public enum CastStep { ConnectFirst, DetectFirst, SelectDevice, Cast, Casting, Busy }
+// The center button's next step: a first run walks Detect, Select, Cast (Offline only if going online failed).
+public enum CastStep { Offline, DetectFirst, SelectDevice, Cast, Casting, Busy }
 
 // The one owner of the app's state: every button lands here, the checks run in order, and the window just draws what it reads.
 public sealed partial class Caster
@@ -14,7 +14,7 @@ public sealed partial class Caster
     readonly CastServer _server = new();
     ScreenRecorder _rec;
     CastPlayer _castPlayer;
-    HashSet<string> _answering = new(); // devices that answered the last check (Connect, Detect or a cast start)
+    HashSet<string> _answering = new(); // devices that answered the last check (going online, Detect or a cast start)
     Timer _tick;
     DateTime _castStartUtc;
     int _ticks;
@@ -30,7 +30,7 @@ public sealed partial class Caster
     public Device Default => AppSettings.Default;
     public Device CastingTo { get; private set; }
     public bool Detected { get; private set; }
-    public string Status { get; private set; } = "OFFLINE · CLICK CONNECT";
+    public string Status { get; private set; } = "CONNECTING...";
     public EncoderChoice Encoder { get; private set; }
     public RateMeter Meter { get; } = new();
     // The health readout: the log's 10-second readings, null until this cast's first, kept after a cast until the next one plays.
@@ -55,7 +55,7 @@ public sealed partial class Caster
 
     public Caster()
     {
-        // Opening the app touches nothing on the network: it shows the devices earlier Detects found.
+        // The row starts with the devices earlier Detects found; the window has the app go online once it's open.
         Devices = Row();
         Picked = Devices.FirstOrDefault(d => d.Id == Default?.Id);
         NetworkChange.NetworkAddressChanged += (_, _) => _ui.Post(_ => RefreshNetwork(), null);
@@ -70,7 +70,7 @@ public sealed partial class Caster
     // The center button casts to the picked device (the bookmarked one is picked when the app opens).
     public CastStep Step => Phase switch
     {
-        Phase.Offline => CastStep.ConnectFirst,
+        Phase.Offline => CastStep.Offline,
         Phase.Online when Devices.Count == 0 => CastStep.DetectFirst,
         Phase.Online when Picked == null => CastStep.SelectDevice,
         Phase.Online => CastStep.Cast,
@@ -107,18 +107,13 @@ public sealed partial class Caster
         }));
     }
 
-    // ---- Connect / Disconnect ----
+    // ---- Online when the app opens, offline when it closes ----
 
-    public async Task ToggleConnectAsync()
+    public async Task ConnectAsync()
     {
-        if (Phase == Phase.Offline) await ConnectAsync();
-        else if (Phase is Phase.Online or Phase.Casting) await DisconnectAsync();
-    }
-
-    async Task ConnectAsync()
-    {
+        if (Phase != Phase.Offline) return;
         Set(Phase.Connecting, "CONNECTING...");
-        Encoder = await EncoderPicker.PickAsync(); // each Connect, so a main screen moved to another card is followed
+        Encoder = await EncoderPicker.PickAsync(); // the card driving the main screen when the app opens
         if (Phase != Phase.Connecting) return; // the app closed meanwhile
         if (Encoder == null)
         {
@@ -146,13 +141,13 @@ public sealed partial class Caster
         _tick = new Timer(_ => _ui.Post(_ => Tick(), null), null, 1000, 1000);
         SetNetwork(true);
         Log.Write("connect: online on " + (PcLink ?? "NO NETWORK"));
-        Set(Phase.Online, !firewallOk ? "FIREWALL BLOCKS TVS · CASTS WILL FAIL"
-                        : Devices.Count > 0 ? Ready : "CONNECTED · CLICK DETECT");
+        Set(Phase.Online, !firewallOk ? "FIREWALL BLOCKS TVS · CAST TO ASK WINDOWS AGAIN"
+                        : Devices.Count > 0 ? Ready : "CONNECTED · CLICK DETECT DEVICE(S)");
         _ = LoadLinksAsync();
         await CheckDevicesAsync();
     }
 
-    // Once per Connect: asks each device on the row if it's there, for the log (the rows' CHECKING... is LoadLinksAsync's).
+    // Once when the app goes online: asks each device on the row if it's there, for the log (the rows' CHECKING... is LoadLinksAsync's).
     async Task CheckDevicesAsync()
     {
         _answering.Clear();
@@ -184,10 +179,10 @@ public sealed partial class Caster
         _answering.Clear();
         Detected = false; // offline the row is just what's saved
         Log.Write("connect: offline");
-        Set(Phase.Offline, "OFFLINE · CLICK CONNECT");
+        Set(Phase.Offline, "OFFLINE");
     }
 
-    // Closing is Disconnect with 8 seconds at most; a cast starting or ending gets up to 6 of them to tell the TV to stop.
+    // Closing takes the app offline in 8 seconds at most; a cast starting or ending gets up to 6 of them to tell the TV to stop.
     public Task ShutdownAsync() => Task.WhenAny(CloseDownAsync(), Task.Delay(TimeSpan.FromSeconds(8)));
 
     async Task CloseDownAsync()
@@ -241,7 +236,7 @@ public sealed partial class Caster
         bool letGo = Picked?.Id == d.Id && PickClicked;
         Picked = letGo ? null : d;
         PickClicked = !letGo;
-        Status = IsOnline ? Ready : "OFFLINE · CLICK CONNECT";
+        if (IsOnline) Status = Ready; // offline, the line keeps saying why
         SetNetwork(IsOnline);
         Raise();
         if (!letGo && d.IsRoku && IsOnline) _ = CheckRokuAppAsync(d);
