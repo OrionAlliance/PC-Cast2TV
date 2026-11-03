@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace PCCast2TV.Helpers;
 
-// A Roku remote button as a PC key: play/pause, next and previous as media keys, forward and rewind as arrow keys.
+// A Roku remote button as a PC key: OK and Play send the media play/pause key.
 public static class RemoteKeys
 {
     const uint KeyboardInput = 1, ExtendedKey = 0x1, KeyUp = 0x2;
@@ -10,10 +10,6 @@ public static class RemoteKeys
     static readonly Dictionary<string, ushort> Keys = new()
     {
         ["playpause"] = 0xB3, // media play/pause
-        ["next"] = 0xB0,      // media next track
-        ["previous"] = 0xB1,  // media previous track
-        ["forward"] = 0x27,   // right arrow
-        ["rewind"] = 0x25,    // left arrow
     };
 
     public static bool Knows(string name) => Keys.ContainsKey(name);

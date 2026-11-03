@@ -9,7 +9,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>PCCast2TV</RootNamespace>
     <AssemblyName>PC Cast2TV</AssemblyName>
-    <Version>0.4.6</Version>
+    <Version>0.4.7</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- DisplayHUB's icon for the Roku popup, as the Roku shows it -->
-    <Resource Include="Images\displayhub.png" />
+    <!-- Our Roku app's icon for the Roku popup, as the Roku shows it -->
+    <Resource Include="Images\pc-cast2tv-roku.png" />
   </ItemGroup>
 
   <ItemGroup>

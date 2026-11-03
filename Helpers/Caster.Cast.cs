@@ -41,8 +41,7 @@ public sealed partial class Caster
         }
         _ = TvInfo.LogAsync(d); // maker, model and software for the log, asked alongside the start
 
-        // A Roku plays through our Roku app, or DisplayHUB when ours isn't on it; with neither, the window shows how to add one.
-        var rokuApp = RokuApp.None;
+        // A Roku plays through our Roku app; without it, the window shows how to add it.
         if (d.IsRoku)
         {
             var on = await RokuPlayer.PlayerOnAsync(d);
@@ -51,11 +50,10 @@ public sealed partial class Caster
             if (on == null) { FailCast("STOPPED ANSWERING", d); return; }
             if (on == RokuApp.None)
             {
-                FailCast("NEEDS DISPLAYHUB", d);
+                FailCast("NEEDS THE PC CAST2TV APP", d);
                 NeedsRokuApp?.Invoke(d);
                 return;
             }
-            rokuApp = on.Value;
         }
 
         var localIp = NetUtil.LocalIpToward(d.Ip);
@@ -126,7 +124,7 @@ public sealed partial class Caster
         string error;
         CastPlayer player = null;
         bool viaPieces = true;
-        if (d.IsRoku) error = await RokuPlayer.PlayAsync(d, rokuApp, hlsUrl, () => _server.PiecesServed);
+        if (d.IsRoku) error = await RokuPlayer.PlayAsync(d, hlsUrl, () => _server.PiecesServed);
         else if (d.Kind == DeviceKind.Cast)
         {
             (player, error) = await CastPlayer.MirrorAsync(d, _rec);
@@ -143,10 +141,9 @@ public sealed partial class Caster
             }
         }
         else error = await DlnaPlayer.PlayAsync(d, $"http://{localIp}:{_server.Port}/stream.ts");
-        if (Phase != Phase.Starting) { await StopPlayerAsync(d, rokuApp, player); return; } // closed mid-start: don't leave the TV's player open
+        if (Phase != Phase.Starting) { await StopPlayerAsync(d, player); return; } // closed mid-start: don't leave the TV's player open
         if (error != null) { PlayerFailed(error, d, viaPieces); return; }
         _castPlayer = player;
-        _rokuApp = rokuApp;
 
         // The last cast's health numbers stay up until this one is really playing, so a start that fails keeps them.
         HealthFrom = d;
@@ -170,7 +167,7 @@ public sealed partial class Caster
     {
         var d = CastingTo;
         Set(Phase.Stopping, "ENDING CAST...");
-        await StopPlayerAsync(d, _rokuApp, _castPlayer);
+        await StopPlayerAsync(d, _castPlayer);
         CleanupCast();
         Log.Write($"cast: ended, peak {Meter.Peak:0.0} Mbps" + (message == null ? "" : " (" + ForLog(about, message) + ")"));
         Set(Phase.Online, message == null ? "CAST ENDED" : Shown(about, message));
@@ -178,9 +175,9 @@ public sealed partial class Caster
     }
 
     // The TV's player goes back off: a Roku goes home (if the cast's player is still on screen), a Chromecast closes, DLNA stops.
-    static async Task StopPlayerAsync(Device d, RokuApp rokuApp, CastPlayer player)
+    static async Task StopPlayerAsync(Device d, CastPlayer player)
     {
-        if (d.IsRoku) await RokuPlayer.StopAsync(d, rokuApp);
+        if (d.IsRoku) await RokuPlayer.StopAsync(d);
         else if (d.Kind == DeviceKind.Cast) { if (player != null) await player.StopAsync(); }
         else await DlnaPlayer.StopAsync(d);
     }
@@ -230,13 +227,13 @@ public sealed partial class Caster
         CastingTo = null;
     }
 
-    // A Roku remote button from our Roku app: Back ends the cast, the rest become PC key presses (the Roku shows play/pause).
+    // A Roku remote button from our Roku app: Back ends the cast, OK and Play press the PC's play/pause key.
     void OnRemoteButton(string name)
     {
         if (Phase != Phase.Casting) return;
-        if (_rokuApp != RokuApp.Ours)
+        if (CastingTo?.IsRoku != true)
         {
-            Log.Write("remote: a button from a cast that isn't through our Roku app, ignored");
+            Log.Write("remote: a button while the cast isn't on a Roku, ignored");
             return;
         }
         if (name == "back")

@@ -28,7 +28,7 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **Casts your main screen and your PC's sound** at up to 1080p and 60 frames a second. Bigger screens are scaled down to fit.
 - **Uses your graphics card's video encoder** (NVIDIA, AMD or Intel), so casting barely touches your processor. If the card's encoder won't start, the processor takes over at 30 frames a second.
 - **Casts to:**
-  - **Rokus:** Roku streaming sticks and boxes, and Roku TVs (through the free DisplayHUB channel, which the app helps you add).
+  - **Rokus:** Roku streaming sticks and boxes, and Roku TVs, through our own free PC Cast2TV app from the Roku Channel Store (the app helps you add it).
   - **TVs with Chromecast built in:** many VIZIO, Sony, TCL and Hisense TVs, plus Chromecast dongles and Google TV boxes. They get your screen live through the TV's own screen mirroring, the same way Chrome casts a screen. No extra app needed.
   - **Other smart TVs** that can play video from your home network (DLNA).
 
@@ -57,29 +57,31 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 3. Click **Connect**. The first time, Windows asks once to let your TVs and Roku reach the app. That's a firewall rule for this app only, on private networks only.
 4. Click **Detect** to find your TVs and Roku, click the one you want, and click **Cast**.
 
-## Roku: one free channel, and the app adds it for you
+## Roku: one free app, and PC Cast2TV adds it for you
 
-A Roku plays your PC through **DisplayHUB**, a free channel in the Roku Channel Store. You don't have to go looking for it:
+A Roku plays your PC through **PC Cast2TV for Roku**, our own free app in the Roku Channel Store. You don't have to go looking for it:
 
 <p align="center">
-  <img src="Images/displayhub.png" width="290" alt="The DisplayHUB channel icon" /><br>
-  <i>DisplayHUB on your Roku's home screen.</i>
+  <img src="Images/pc-cast2tv-roku.png" width="290" alt="The PC Cast2TV Roku app icon" /><br>
+  <i>PC Cast2TV on your Roku's home screen.</i>
 </p>
 
 1. Click your Roku in PC Cast2TV's list.
-2. If DisplayHUB isn't on your Roku yet, PC Cast2TV pops up and shows you. Click **ADD DISPLAYHUB** and its page opens on your TV.
+2. If the PC Cast2TV app isn't on your Roku yet, PC Cast2TV pops up and shows you. Click **ADD PC CAST2TV** and its page opens on your TV.
 3. Press **OK** on your Roku remote. PC Cast2TV sees it arrive, the popup closes by itself, and you're ready to click **Cast**.
 
-**Something to know:** with DisplayHUB, the Roku remote can't pause, play or skip on your PC.
+You can also add it yourself: search the Roku Channel Store for **PC Cast2TV**, or add it with the code **PCCast2TV** at [my.roku.com/account/add/PCCast2TV](https://my.roku.com/account/add/PCCast2TV).
 
-PC Cast2TV's own Roku app is coming soon to the Roku Channel Store. With it, the Roku remote controls your PC too. Once it's in the store, PC Cast2TV will add it for you the same way, with one OK on the remote.
+**The remote, while you cast:** when a video is playing on your PC, press **OK** on the Roku remote to pause or play it, so you can step away without walking back to the PC. Press **Back** to end the cast.
+
+The Roku app's code is in the [Roku App](Roku%20App) folder of this repository.
 
 ## What it's been tested on
 
 So far it has run on:
 
 - Two desktop PCs on Windows 11, both wired to the network: one with an AMD Radeon card, one with an NVIDIA RTX 5060 Ti.
-- A Roku Ultra (Roku OS 15.3), on Wi-Fi, through DisplayHUB.
+- A Roku Ultra (Roku OS 15.3), on Wi-Fi, through the PC Cast2TV Roku app.
 - A VIZIO TV with Chromecast built in, wired.
 
 Not tested yet:
@@ -104,7 +106,7 @@ A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, 
 **It says the TV isn't answering.**
 Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, click Detect to find it again.
 
-**My Roku won't start the cast, or ADD DISPLAYHUB didn't open anything.**
+**My Roku won't start the cast, or ADD PC CAST2TV didn't open anything.**
 PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and make sure it is turned on (enabled).
 
 **Can I hide a device I don't use?**

@@ -14,7 +14,6 @@ public sealed partial class Caster
     readonly CastServer _server = new();
     ScreenRecorder _rec;
     CastPlayer _castPlayer;
-    RokuApp _rokuApp; // the player a Roku cast went through
     HashSet<string> _answering = new(); // devices that answered the last check (Connect, Detect or a cast start)
     Timer _tick;
     DateTime _castStartUtc;

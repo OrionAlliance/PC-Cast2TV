@@ -147,13 +147,8 @@ public partial class MainWindow : Window
         return c.IsOnline ? "CHECKING..." : "CONNECT TO CHECK";
     }
 
-    // A Roku's player after its address once it has answered (" · PC2TV" or " · DISPLAYHUB"); nothing with neither.
-    string PlayerText(Device d) => _caster.LinkOf(d) == null ? "" : _caster.PlayerOf(d) switch
-    {
-        RokuApp.Ours => " · PC2TV",
-        RokuApp.DisplayHub => " · DISPLAYHUB",
-        _ => "",
-    };
+    // " · PC2TV" after a Roku's address once it has answered that it has our app.
+    string PlayerText(Device d) => _caster.LinkOf(d) != null && _caster.PlayerOf(d) == RokuApp.Ours ? " · PC2TV" : "";
 
     // The big button names the next step (Connect, Detect, Select, Cast); only Cast and Casting can be pressed.
     void DrawCastButton()
