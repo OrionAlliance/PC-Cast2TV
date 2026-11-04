@@ -51,7 +51,7 @@
         </StackPanel>
         </StackPanel>
 
-        <!-- Across the bottom, under both sides, centered: the version and GitHub, then the log folder -->
+        <!-- Across the bottom, under both sides, centered: the version and GitHub, the log folder, then DONATE -->
         <Border Style="{StaticResource Divider}" Margin="2,16,2,0" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
             <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="0,0,14,0" />
@@ -61,6 +61,14 @@
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="56,0,14,0" Text="REPORTING A PROBLEM?" />
             <Button Width="150" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
                 <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
+            </Button>
+            <Button Width="120" Height="30" Margin="56,0,0,0" Style="{StaticResource OutlinePill}" ToolTip="Opens PC Cast2TV's Ko-fi page in your browser" Click="Donate_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Viewbox Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoHeart}" /></Canvas>
+                    </Viewbox>
+                    <TextBlock FontSize="14" Text="DONATE" VerticalAlignment="Center" />
+                </StackPanel>
             </Button>
         </StackPanel>
         </StackPanel>

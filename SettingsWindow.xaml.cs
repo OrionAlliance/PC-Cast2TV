@@ -25,6 +25,8 @@ public partial class SettingsWindow : Window
 
     void GitHub_Click(object sender, RoutedEventArgs e) => AppUpdater.OpenPage();
 
+    void Donate_Click(object sender, RoutedEventArgs e) => WebPage.Open(WebPage.Donate, "the Ko-fi page");
+
     void LogFolder_Click(object sender, RoutedEventArgs e) => Log.ShowInFolder();
 
     void OnThemeChanged()

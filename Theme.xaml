@@ -25,6 +25,7 @@
     <Geometry x:Key="IcoStop">M6,6 H18 V18 H6 Z</Geometry>
     <Geometry x:Key="IcoVideo">M3,5 H21 V17 H3 Z M10,8.5 L15,11 L10,13.5 Z M8,20.5 H16</Geometry>
     <Geometry x:Key="IcoLaptop">M5,6 H19 V15 H5 Z M2.5,18.5 H21.5</Geometry>
+    <Geometry x:Key="IcoHeart">M12,20.5 C12,20.5 3,14.8 3,8.8 A4.6,4.6 0 0 1 12,7 A4.6,4.6 0 0 1 21,8.8 C21,14.8 12,20.5 12,20.5 Z</Geometry>
     <Geometry x:Key="IcoWifi">M2.5,9.5 Q12,1.5 21.5,9.5 M5.8,13 Q12,7.6 18.2,13 M9,16.4 Q12,13.9 15,16.4 M11,19.5 A1,1 0 1 0 13,19.5 A1,1 0 1 0 11,19.5 Z</Geometry>
 
     <Style x:Key="Label" TargetType="TextBlock">

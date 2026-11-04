@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -15,11 +14,7 @@ public static class AppUpdater
     public const string AfterUpdate = "--after-update"; // the new version's start, so it waits for the old one to close
 
     // The app's GitHub page in the default browser (Settings > ABOUT).
-    public static void OpenPage()
-    {
-        try { Process.Start(new ProcessStartInfo(Page) { UseShellExecute = true }); }
-        catch (System.ComponentModel.Win32Exception ex) { Log.Write("update: couldn't open the GitHub page: " + ex.Message); }
-    }
+    public static void OpenPage() => WebPage.Open(Page, "the GitHub page");
 
     public sealed record Update(Version Installed, Version Latest, string DownloadUrl, long Size);
 
