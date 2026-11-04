@@ -47,7 +47,15 @@ public sealed partial class Caster
             var on = await RokuPlayer.PlayerOnAsync(d);
             NotePlayer(d, on);
             if (Phase != Phase.Starting) return;
-            if (on == null) { FailCast("STOPPED ANSWERING", d); return; }
+            if (on == null)
+            {
+                // Answering but refusing: its "Control by mobile apps" setting shuts us out, so the popup says where to change it.
+                var mode = await RokuPlayer.BlockingModeAsync(d);
+                if (Phase != Phase.Starting) return;
+                FailCast(mode == null ? "STOPPED ANSWERING" : "IS SET TO " + mode, d);
+                if (mode != null) TellBlocked(d, mode);
+                return;
+            }
             if (on == RokuApp.None)
             {
                 FailCast("NEEDS THE PC CAST2TV APP", d);

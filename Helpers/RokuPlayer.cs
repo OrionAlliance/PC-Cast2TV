@@ -27,7 +27,23 @@ public static class RokuPlayer
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException)
         {
-            if (logFailure) Log.Write($"roku: could not read the app list: {ex.GetType().Name}");
+            if (logFailure) Log.Write($"roku: could not read the app list: {ex.GetType().Name}" + (ex is HttpRequestException { StatusCode: { } code } ? $" (answer {(int)code})" : ""));
+            return null;
+        }
+    }
+
+    // Its "Control by mobile apps" setting when that shuts us out (like LIMITED, Roku's default since OS 14.1.4); null when it lets us in.
+    public static async Task<string> BlockingModeAsync(Device d)
+    {
+        try
+        {
+            var mode = XDocument.Parse(await Http.GetStringAsync($"http://{d.Ip}:8060/query/device-info")).Root?.Element("ecp-setting-mode")?.Value?.Trim().ToLowerInvariant();
+            Log.Write($"roku: control by mobile apps is {Log.Outside(mode) ?? "not reported"}");
+            return string.IsNullOrEmpty(mode) || mode is "enabled" or "permissive" ? null : Log.Outside(mode).ToUpperInvariant();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Xml.XmlException)
+        {
+            Log.Write($"roku: its control setting couldn't be read: {ex.GetType().Name}");
             return null;
         }
     }

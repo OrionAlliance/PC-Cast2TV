@@ -42,7 +42,7 @@ public static class TvInfo
             var x = await RokuInfoAsync(d);
             string g(string n) => Log.Outside(x.Root?.Element(n)?.Value?.Trim() ?? "");
             return $"{ModelText(g("vendor-name"), g("model-name"), g("model-number"))}, Roku OS {g("software-version")} build {g("software-build")}" +
-                   $", {RokuLink(x) ?? "connection not reported"}";
+                   $", {RokuLink(x) ?? "connection not reported"}, control by mobile apps {(g("ecp-setting-mode") is { Length: > 0 } m ? m : "not reported")}";
         }
         if (d.Kind == DeviceKind.Cast)
         {

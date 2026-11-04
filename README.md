@@ -107,7 +107,7 @@ A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, 
 Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, click **DETECT DEVICE(S)** to find it again.
 
 **My Roku won't start the cast, or ADD PC CAST2TV didn't open anything.**
-PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and make sure it is turned on (enabled).
+PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and pick **Enabled**. Newer Rokus come set to **Limited**, which blocks PC Cast2TV; when that's the case, the app shows a popup with these same steps.
 
 **Can I hide a device I don't use?**
 Right-click it in the list and click **HIDE FROM THE LIST**. It stays saved, DETECT DEVICE(S) leaves it off too, and right-clicking DETECT DEVICE(S) brings it back.

@@ -18,13 +18,23 @@ public sealed partial class Caster
         Raise();
     }
 
-    // A clicked Roku is asked whether it has our app (no: the window shows how to add it), and a cast asks again.
+    // A clicked Roku is asked whether it has our app (no: the window shows how to add it; refused: how to let us in), and a cast asks again.
     async Task CheckRokuAppAsync(Device d)
     {
         var on = await RokuPlayer.PlayerOnAsync(d);
         NotePlayer(d, on);
         if (on == RokuApp.None && Phase == Phase.Online && Picked?.Id == d.Id) NeedsRokuApp?.Invoke(d);
+        if (on == null && await RokuPlayer.BlockingModeAsync(d) is { } mode && Phase == Phase.Online && Picked?.Id == d.Id)
+        {
+            Note($"{d.Name.ToUpperInvariant()} IS SET TO {mode}");
+            TellBlocked(d, mode);
+        }
     }
+
+    // The popup for a Roku that shuts us out: where its setting is, and what to pick.
+    void TellBlocked(Device d, string mode) => Notice?.Invoke($"{d.Name.ToUpperInvariant()} IS SET TO {mode}",
+        $"Its \"Control by mobile apps\" setting is on {mode}, which blocks PC Cast2TV.\n\n" +
+        $"On the {(d.Kind == DeviceKind.RokuTv ? "TV" : "Roku")}, go to Settings > System > Advanced system settings > Control by mobile apps and pick Enabled. Then click CAST again.");
 
     // While the popup is open, asks the Roku each second until our app shows up, then says so and closes it; closing it first stops this.
     public async Task WaitForRokuAppAsync(Device d, CancellationToken stop)
