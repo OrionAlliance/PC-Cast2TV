@@ -80,18 +80,17 @@ The Roku app's code is in the [Roku App](Roku%20App) folder of this repository.
 
 So far it has run on:
 
-- Two desktop PCs on Windows 11, both wired to the network: one with an AMD Radeon card, one with an NVIDIA RTX 5060 Ti.
-- A Roku Ultra (Roku OS 15.3), on Wi-Fi, through the PC Cast2TV Roku app.
+- Desktop PCs on Windows 10 and Windows 11, wired to the network, with AMD Radeon and NVIDIA RTX graphics cards.
+- Rokus on Wi-Fi (Roku OS 15.3) through the PC Cast2TV Roku app: a Roku Ultra and a TCL Roku TV.
 - A VIZIO TV with Chromecast built in, wired.
 
 Not tested yet:
 
 - **Laptops,** especially ones with two graphics chips.
 - **Intel graphics** (the app supports Intel's video encoder, but no Intel card has been tested).
-- **A Windows 10 PC.**
-- **A PC on Wi-Fi.** (The Roku on Wi-Fi works fine.)
+- **A PC on Wi-Fi.** (The Rokus on Wi-Fi work fine.)
 - **DLNA smart TVs.** The app supports them, but none have been tested.
-- **Other Rokus** (Roku TVs, Express, Streaming Stick) and **Chromecast dongles or Google TV boxes.**
+- **Other Rokus** (Express, Streaming Stick) and **Chromecast dongles or Google TV boxes.**
 
 If it works, or doesn't, on your setup, please open an [Issue](../../issues) with your `debug.log`. That's how this list gets shorter.
 
