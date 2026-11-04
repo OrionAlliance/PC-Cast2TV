@@ -32,14 +32,17 @@ public partial class MainWindow : Window
         BuildSignalRing();
         _caster.Changed += Draw;
         _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over
-        _caster.Notice += (title, body) => NoticeWindow.Tell(this, title, body);
+        _caster.Notice += (title, body) => NoticeWindow.Tell(this, title, WindowLook.Words(body));
         _caster.NeedsRokuApp += roku => RokuAppWindow.Tell(this, roku, stop => _caster.WaitForRokuAppAsync(roku, stop));
         Loaded += async (_, _) => await _caster.ConnectAsync(); // the app goes online by itself when it opens
         ContentRendered += async (_, _) => await CheckForUpdateAsync();
         ThemeColors.Changed += OnThemeChanged;
         Glow(ThemeColors.Current.Main);
         SourceInitialized += (_, _) => DarkTitleBar.Apply(this);
-        if (!RestorePlace()) OpenAtDesignSize();
+        Simple.Attach(_caster);
+        WindowLook.Changed += ApplyLook;
+        if (WindowLook.Simple) OpenSimple();
+        else if (!RestorePlace()) OpenAtDesignSize();
         Closing += OnClosing;
         Draw();
     }
@@ -50,6 +53,7 @@ public partial class MainWindow : Window
         DarkTitleBar.Apply(this);
         Glow(ThemeColors.Current.Main);
         _rowKey = null; // the device list is rebuilt in the new colors
+        Simple.Repaint();
         Draw();
     }
 
@@ -64,16 +68,9 @@ public partial class MainWindow : Window
     // Right-click Detect shows the hidden devices, caught here because a greyed-out button gets no clicks.
     void Window_RightClick(object sender, MouseButtonEventArgs e)
     {
-        if (!new Rect(DetectBtn.RenderSize).Contains(e.GetPosition(DetectBtn)) || !_caster.Idle) return;
+        if (WindowLook.Simple || !new Rect(DetectBtn.RenderSize).Contains(e.GetPosition(DetectBtn)) || !_caster.Idle) return;
         e.Handled = true;
-        var aside = _caster.SetAside;
-        if (aside.Count == 0)
-        {
-            NoticeWindow.Tell(this, "NOTHING HIDDEN", "No devices are hidden. Right-click a device in the list to hide it.");
-            return;
-        }
-        var keep = DevicePickerWindow.Ask(this, aside);
-        if (keep != null) _caster.BringBack(keep);
+        DevicePickerWindow.ShowHidden(this, _caster);
     }
 
     // Closing = Disconnect: the cast ends and the TV goes back to its home screen before the window goes.
@@ -91,8 +88,14 @@ public partial class MainWindow : Window
         _ = Dispatcher.InvokeAsync(Close);
     }
 
+    // Only the look on screen is drawn; switching looks draws the other at once.
     void Draw()
     {
+        if (WindowLook.Simple)
+        {
+            Simple.Draw();
+            return;
+        }
         var c = _caster;
         var ph = c.Phase;
         StatusText.Text = c.Status;
@@ -136,18 +139,6 @@ public partial class MainWindow : Window
         t.Foreground = value != null ? Soft : DimText;
     }
 
-    // "WI-FI" or "WIRED" as the device says; otherwise why it isn't known yet.
-    string LinkText(Device d)
-    {
-        var c = _caster;
-        if (c.LinkOf(d) is { } link) return link;
-        if (c.LinkAsked(d)) return d.Kind == DeviceKind.Dlna ? "DOESN'T SAY" : "DIDN'T ANSWER";
-        return c.IsOnline ? "CHECKING..." : "OFFLINE";
-    }
-
-    // " · PC2TV" after a Roku's address once it has answered that it has our app.
-    string PlayerText(Device d) => _caster.LinkOf(d) != null && _caster.PlayerOf(d) == RokuApp.Ours ? " · PC2TV" : "";
-
     // The big button names the next step (Detect, Select, Cast); only Cast and Casting can be pressed.
     void DrawCastButton()
     {
@@ -182,7 +173,7 @@ public partial class MainWindow : Window
     {
         var c = _caster;
         var lit = c.PickClicked ? c.Picked?.Id : null; // only a device you clicked is lit
-        var key = string.Join("|", c.Devices.Select(d => d.Id + d.Name + d.Ip + LinkText(d) + PlayerText(d))) + "#" + lit + "#" + c.Default?.Id;
+        var key = string.Join("|", c.Devices.Select(d => d.Id + d.Name + d.Ip + DeviceText.Link(_caster, d) + DeviceText.Player(_caster, d))) + "#" + lit + "#" + c.Default?.Id;
         if (key == _rowKey) return;
         _rowKey = key;
         DeviceList.Children.Clear();
@@ -199,8 +190,8 @@ public partial class MainWindow : Window
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         text.Children.Add(Label($"{d.Name.ToUpperInvariant()} · {d.KindLabel}", 20, Soft));
         var link = Label("", 15, Second);
-        link.Inlines.Add(new Run(LinkText(d)) { Foreground = _caster.LinkOf(d) != null ? Second : DimText });
-        link.Inlines.Add(new Run(" · " + d.Ip + PlayerText(d)));
+        link.Inlines.Add(new Run(DeviceText.Link(_caster, d)) { Foreground = _caster.LinkOf(d) != null ? Second : DimText });
+        link.Inlines.Add(new Run(" · " + d.Ip + DeviceText.Player(_caster, d)));
         text.Children.Add(link);
         g.Children.Add(text);
 

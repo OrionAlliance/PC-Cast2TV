@@ -38,6 +38,13 @@ public sealed partial class Caster
     public int DroppedFrames { get; private set; } // frames the screen clock missed this cast (the TV repeats the last one)
     public double? CpuLoad { get; private set; }   // this app's share of the processor
     public double? EncoderLoad { get; private set; } // the graphics card's video encoder, every program on it
+    // The details page's steps, from the same 10-second readings: the screen's new pictures a second, frames late lately, the Roku's own report.
+    public double? ScreenFps { get; private set; }
+    public int RecentMissed { get; private set; }
+    public double? TvBehindSec { get; private set; }
+    public int? TvStalls { get; private set; } // the whole cast's; null until the Roku app reports
+    public int RecentStalls { get; private set; }
+    public TimeSpan CastTime => Phase == Phase.Casting ? DateTime.UtcNow - _castStartUtc : TimeSpan.Zero;
     public string PcLink { get; private set; }       // how this PC reaches the device: "WIRED" or "WI-FI"
     readonly Dictionary<string, string> _links = new(); // each device's own connection by id; null = asked, it doesn't say
 
@@ -60,6 +67,16 @@ public sealed partial class Caster
         Picked = Devices.FirstOrDefault(d => d.Id == Default?.Id);
         NetworkChange.NetworkAddressChanged += (_, _) => _ui.Post(_ => RefreshNetwork(), null);
         _server.RemoteButton = name => _ui.Post(_ => OnRemoteButton(name), null);
+        _server.TvReport = n => _ui.Post(_ => OnTvReport(n), null);
+    }
+
+    void OnTvReport(RokuReport.Numbers n)
+    {
+        if (Phase != Phase.Casting || CastingTo?.IsRoku != true) return;
+        TvBehindSec = n.BehindSec;
+        TvStalls = (TvStalls ?? 0) + n.Stalls;
+        RecentStalls = n.Stalls;
+        Raise();
     }
 
     // The row: every device Detect has found (the bookmark is always one of them), minus the hidden ones.

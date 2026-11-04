@@ -107,6 +107,17 @@ public static class ThemeColors
         AppSettings.SetTheme(key);
     }
 
+    // The simple look's "watch this step" color: amber, or red when the theme itself is an amber-like color.
+    public static Color Warning
+    {
+        get
+        {
+            var m = Current.Main;
+            double spread = (Math.Max(m.R, Math.Max(m.G, m.B)) - Math.Min(m.R, Math.Min(m.G, m.B))) / 255.0, d = Math.Abs(HueOf(m) - HueOf(All[0].Main));
+            return spread > 0.2 && Math.Min(d, 360 - d) < 45 ? All[6].Main : All[0].Main;
+        }
+    }
+
     // MY COLOR: the one RANDOM roll kept with SAVE, or null before any.
     public static string MyColor => AppSettings.MyTheme;
 

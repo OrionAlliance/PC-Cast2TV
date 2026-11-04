@@ -46,6 +46,8 @@ public sealed partial class CastServer
          Volatile.Read(ref _lastPieceAsked));
     // The PC Cast2TV Roku app sends /key/<button>; called off the window's thread.
     public Action<string> RemoteButton { get; set; }
+    // The Roku app's 10-second player numbers, for the details page; called off the window's thread.
+    public Action<RokuReport.Numbers> TvReport { get; set; }
 
     // Listens on every adapter.
     public void Start()
@@ -220,7 +222,12 @@ public sealed partial class CastServer
         }
         if (r.Path == "/report") // the PC Cast2TV Roku app's player numbers, every 10 seconds
         {
-            if (!head) Log.Write("roku: " + RokuReport.Describe(r.Query, _source?.NewestPiece));
+            if (!head)
+            {
+                int? newest = _source?.NewestPiece;
+                Log.Write("roku: " + RokuReport.Describe(r.Query, newest));
+                TvReport?.Invoke(RokuReport.Read(r.Query, newest));
+            }
             return await SendAsync(s, "204 No Content", "text/plain", null, r.KeepAlive, ct);
         }
         if (r.Path == "/stream.ts") return await StreamLiveAsync(s, head, ct);

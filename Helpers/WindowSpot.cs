@@ -15,15 +15,21 @@ public static class WindowSpot
             Log.Write("window: saved size was for the old layout, opening at the new size");
             return null;
         }
-        var screens = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
-                               SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
-        screens.Inflate(16, 16); // a window against a screen edge sits a few pixels past it
-        if (p.Width < 400 || p.Height < 260 || !screens.Contains(new Rect(p.Left, p.Top, p.Width, p.Height)))
+        if (p.Width < 400 || p.Height < 260 || !OnScreens(new Rect(p.Left, p.Top, p.Width, p.Height)))
         {
             Log.Write("window: saved spot doesn't fit these screens, opening at the design size");
             return null;
         }
         return p;
+    }
+
+    // Inside the screens attached now.
+    public static bool OnScreens(Rect r)
+    {
+        var screens = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
+                               SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
+        screens.Inflate(16, 16); // a window against a screen edge sits a few pixels past it
+        return screens.Contains(r);
     }
 
     // How much the design size shrinks to fit this screen (1 = full size).

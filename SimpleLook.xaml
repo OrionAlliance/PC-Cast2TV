@@ -1,0 +1,98 @@
+<UserControl x:Class="PCCast2TV.SimpleLook"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#03070B">
+
+    <!-- Two pages in one spot: DETAILS slides the steps page in over the picker, BACK slides it out -->
+    <Grid x:Name="Pages" ClipToBounds="True" SizeChanged="Pages_SizeChanged">
+
+        <!-- Page 1, in the order you use it: find, pick, cast -->
+        <Grid x:Name="Picker" Margin="28,18,28,20">
+            <Grid.RenderTransform><TranslateTransform x:Name="PickerShift" /></Grid.RenderTransform>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource DimText}" VerticalAlignment="Center" Text="PC CAST2TV" />
+            <Button HorizontalAlignment="Right" Style="{StaticResource Bare}" ToolTip="Settings" Click="Cog_Click">
+                <Viewbox Width="20" Height="20">
+                    <Path Fill="{DynamicResource Second}" Data="{StaticResource IcoCog}" />
+                </Viewbox>
+            </Button>
+            <TextBlock Grid.Row="1" Style="{StaticResource Label}" FontSize="34" Foreground="{DynamicResource Soft}" HorizontalAlignment="Center" Margin="0,2,0,14"
+                       Text="WHICH TV / ROKU?" />
+            <!-- FIND first, then a card per device, 3 to a row; the window grows with them -->
+            <WrapPanel x:Name="Cards" Grid.Row="2" HorizontalAlignment="Left" Margin="-6,0,-6,0" />
+            <Button x:Name="CastBtn" Grid.Row="3" Width="440" Height="64" Margin="0,16,0,0" HorizontalAlignment="Center" Style="{StaticResource Pill}" Click="Cast_Click">
+                <Button.Effect>
+                    <DropShadowEffect x:Name="CastGlow" Color="#3CCBF4" BlurRadius="24" ShadowDepth="0" Opacity="0" />
+                </Button.Effect>
+                <StackPanel Orientation="Horizontal">
+                    <Viewbox Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24"><Path x:Name="CastIcon" Style="{StaticResource PillIcon}" /></Canvas>
+                    </Viewbox>
+                    <!-- A long device name shrinks to fit instead of being cut -->
+                    <Viewbox MaxWidth="360" StretchDirection="DownOnly" VerticalAlignment="Center">
+                        <TextBlock x:Name="CastLabel" FontSize="24" RenderTransform="1,0,0,1,0,1.5" />
+                    </Viewbox>
+                </StackPanel>
+            </Button>
+            <Grid Grid.Row="4" Margin="0,24,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse x:Name="StatusDot" Width="9" Height="9" Margin="0,0,10,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="StatusText" Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Second}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button Grid.Column="1" Style="{StaticResource Bare}" Margin="12,0,-4,0" ToolTip="Each step of the cast, and where a stutter would come from" Click="Details_Click">
+                    <TextBlock Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Main}" Text="DETAILS ›" />
+                </Button>
+            </Grid>
+        </Grid>
+
+        <!-- Page 2: the cast's steps, the same size as page 1 -->
+        <Grid x:Name="Steps" Margin="28,18,28,20" Width="{Binding ActualWidth, ElementName=Picker}" Height="{Binding ActualHeight, ElementName=Picker}">
+            <Grid.RenderTransform><TranslateTransform x:Name="StepsShift" X="4000" /></Grid.RenderTransform>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel>
+                <TextBlock x:Name="StepsTitle" Style="{StaticResource Label}" FontSize="26" Foreground="{DynamicResource Main}" TextTrimming="CharacterEllipsis" Margin="0,0,130,0" />
+                <TextBlock x:Name="StepsSub" Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource DimText}" Margin="2,2,0,0" />
+            </StackPanel>
+            <Button x:Name="StopBtn" Width="110" Height="40" HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource Pill}" Background="{DynamicResource Main}" Click="Stop_Click">
+                <TextBlock FontSize="18" Text="STOP" RenderTransform="1,0,0,1,0,1" />
+            </Button>
+            <!-- The video, this app, the network, the TV: each spans two of the 8 columns, the line runs center to center -->
+            <Grid x:Name="StepRow" Grid.Row="1" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition />
+                    <ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="1" Grid.ColumnSpan="6" Height="4" CornerRadius="2" VerticalAlignment="Top" Margin="0,34,0,0" Background="{DynamicResource Dim}" />
+            </Grid>
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button Style="{StaticResource Bare}" Margin="-4,0,0,0" VerticalAlignment="Bottom" Click="Back_Click">
+                    <TextBlock Style="{StaticResource Label}" FontSize="14" Foreground="{DynamicResource Main}" Text="‹ BACK" />
+                </Button>
+                <Border Grid.Column="1" HorizontalAlignment="Right" CornerRadius="12" BorderThickness="1" BorderBrush="{DynamicResource Dim}" Padding="14,8" Margin="16,0,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="StepsDot" Width="9" Height="9" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="StepsLine" Style="{StaticResource Sentence}" FontSize="14" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" MaxWidth="330" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

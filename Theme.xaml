@@ -18,6 +18,15 @@
     <!-- Settings cog, filled: 8 teeth around a round hole -->
     <Geometry x:Key="IcoCog">F0 M20.11,9.83 L23.05,10.15 L23.05,13.85 L20.11,14.17 L19.27,16.20 L21.12,18.50 L18.50,21.12 L16.20,19.27 L14.17,20.11 L13.85,23.05 L10.15,23.05 L9.83,20.11 L7.80,19.27 L5.50,21.12 L2.88,18.50 L4.73,16.20 L3.89,14.17 L0.95,13.85 L0.95,10.15 L3.89,9.83 L4.73,7.80 L2.88,5.50 L5.50,2.88 L7.80,4.73 L9.83,3.89 L10.15,0.95 L13.85,0.95 L14.17,3.89 L16.20,4.73 L18.50,2.88 L21.12,5.50 L19.27,7.80 Z M15.6,12 A3.6,3.6 0 1 0 8.4,12 A3.6,3.6 0 1 0 15.6,12 Z</Geometry>
 
+    <!-- The simple look's icons, drawn as lines on a 24 x 24 grid -->
+    <Geometry x:Key="IcoSearch">M17,10.5 A6.5,6.5 0 1 1 4,10.5 A6.5,6.5 0 1 1 17,10.5 Z M15.3,15.3 L20.5,20.5</Geometry>
+    <Geometry x:Key="IcoTv">M3,5 H21 V17 H3 Z M8,20.5 H16</Geometry>
+    <Geometry x:Key="IcoPlay">M8,5 L19,12 L8,19 Z</Geometry>
+    <Geometry x:Key="IcoStop">M6,6 H18 V18 H6 Z</Geometry>
+    <Geometry x:Key="IcoVideo">M3,5 H21 V17 H3 Z M10,8.5 L15,11 L10,13.5 Z M8,20.5 H16</Geometry>
+    <Geometry x:Key="IcoLaptop">M5,6 H19 V15 H5 Z M2.5,18.5 H21.5</Geometry>
+    <Geometry x:Key="IcoWifi">M2.5,9.5 Q12,1.5 21.5,9.5 M5.8,13 Q12,7.6 18.2,13 M9,16.4 Q12,13.9 15,16.4 M11,19.5 A1,1 0 1 0 13,19.5 A1,1 0 1 0 11,19.5 Z</Geometry>
+
     <Style x:Key="Label" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Bahnschrift" />
         <Setter Property="FontStretch" Value="Condensed" />

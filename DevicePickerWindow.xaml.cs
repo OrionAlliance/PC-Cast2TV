@@ -4,7 +4,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// The hidden devices, ticked (right-click Detect); display only, it hands back the ones still ticked.
+// The hidden devices, ticked (right-click Detect or FIND); the ones still ticked stay hidden, the rest come back.
 public partial class DevicePickerWindow : Window
 {
     readonly List<(Device Device, CheckBox Box)> _rows = new();
@@ -22,6 +22,19 @@ public partial class DevicePickerWindow : Window
             _rows.Add((d, box));
         }
         SourceInitialized += (_, _) => DarkTitleBar.Apply(this);
+    }
+
+    // Right-click Detect (or FIND in the simple look): the hidden devices, ticked; anything unticked comes back.
+    public static void ShowHidden(Window owner, Caster caster)
+    {
+        var aside = caster.SetAside;
+        if (aside.Count == 0)
+        {
+            NoticeWindow.Tell(owner, "NOTHING HIDDEN", "No devices are hidden. Right-click a device in the list to hide it.");
+            return;
+        }
+        var keep = Ask(owner, aside);
+        if (keep != null) caster.BringBack(keep);
     }
 
     // The checked devices, or null when Cancel or the X closed it.

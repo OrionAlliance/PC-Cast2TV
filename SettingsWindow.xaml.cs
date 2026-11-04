@@ -16,6 +16,7 @@ public partial class SettingsWindow : Window
         ThemeColors.Changed += OnThemeChanged;
         Closed += (_, _) => ThemeColors.Changed -= OnThemeChanged;
         BuildSwatches();
+        BuildLook();
         BuildController();
         VersionText.Text = $"VERSION {AppUpdater.Installed}";
     }
@@ -30,7 +31,24 @@ public partial class SettingsWindow : Window
     {
         DarkTitleBar.Apply(this);
         BuildSwatches(); // the ring and tick move to the new pick
+        BuildLook();
         BuildController();
+    }
+
+    // DIAL and SIMPLE for the main window: the one in use is filled, with a ring and a tick; the window swaps at once.
+    void BuildLook()
+    {
+        var now = ThemeColors.Current;
+        bool simple = WindowLook.Simple;
+        LookPills.Children.Clear();
+        LookPills.Children.Add(Swatch("DIAL", simple ? null : new SolidColorBrush(now.Main), simple ? null : now.Soft, () => SetLook(false)));
+        LookPills.Children.Add(Swatch("SIMPLE", simple ? new SolidColorBrush(now.Main) : null, simple ? now.Soft : null, () => SetLook(true)));
+    }
+
+    void SetLook(bool simple)
+    {
+        WindowLook.Pick(simple);
+        BuildLook();
     }
 
     // OFF and ON for the stream controller: the one in use is filled, with a ring and a tick.

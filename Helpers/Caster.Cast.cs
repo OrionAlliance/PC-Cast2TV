@@ -156,8 +156,9 @@ public sealed partial class Caster
 
         // The last cast's health numbers stay up until this one is really playing, so a start that fails keeps them.
         HealthFrom = d;
-        DroppedFrames = 0;
-        CpuLoad = EncoderLoad = null;
+        DroppedFrames = RecentMissed = RecentStalls = 0;
+        CpuLoad = EncoderLoad = ScreenFps = TvBehindSec = null;
+        TvStalls = null;
         CastingTo = d;
         _castStartUtc = DateTime.UtcNow;
         Meter.Reset(_rec.EncodedBytes, SentBytes);

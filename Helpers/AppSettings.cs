@@ -6,7 +6,7 @@ namespace PCCast2TV.Helpers;
 // DesignWidth and DesignHeight are the layout the size was saved for, so a size from an older layout isn't reused.
 public sealed record WindowPlace(double Left, double Top, double Width, double Height, bool Maximized, double DesignWidth = 0, double DesignHeight = 0);
 
-// Saved devices, the bookmark, hidden devices, the window's spot, the theme and the controller switch, in Settings\settings.json.
+// Saved devices, the bookmark, hidden devices, the window's spot and look, the theme and the controller switch, in Settings\settings.json.
 public static class AppSettings
 {
     sealed class Saved
@@ -18,6 +18,8 @@ public static class AppSettings
         public string Theme { get; set; } // a ThemeColors key (one of the 8, or a RANDOM roll); none = CYAN
         public string MyTheme { get; set; } // the one RANDOM roll kept with SAVE, as a ThemeColors key
         public bool StreamController { get; set; } // off unless turned on in Settings
+        public string Look { get; set; } // "SIMPLE" for the simple look; none = the dial
+        public WindowPlace SimpleWindow { get; set; } // the simple look's spot, kept apart from the dial's
     }
 
     static string FilePath => Path.Combine(Log.Folder, "settings.json");
@@ -31,6 +33,8 @@ public static class AppSettings
     public static string Theme => Data.Theme;
     public static string MyTheme => Data.MyTheme;
     public static bool StreamController => Data.StreamController;
+    public static string Look => Data.Look;
+    public static WindowPlace SimpleWindow => Data.SimpleWindow;
 
     public static bool IsHidden(string id) => Data.Hidden.Any(d => d.Id == id);
 
@@ -123,9 +127,21 @@ public static class AppSettings
         if (Save()) Log.Write("settings: stream controller " + (on ? "on" : "off"));
     }
 
+    public static void SetLook(string look)
+    {
+        Data.Look = look;
+        if (Save()) Log.Write("settings: look " + (look ?? "DIAL"));
+    }
+
     public static void SetWindow(WindowPlace w)
     {
         Data.Window = w;
+        Save();
+    }
+
+    public static void SetSimpleWindow(WindowPlace w)
+    {
+        Data.SimpleWindow = w;
         Save();
     }
 

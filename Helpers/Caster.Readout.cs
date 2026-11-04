@@ -32,6 +32,8 @@ public sealed partial class Caster
             var g = _rec.TakeGrabCounts();
             double cpu = _rec.TakeCpuPercent();
             DroppedFrames += g.Late;
+            RecentMissed = g.Late;
+            ScreenFps = g.NewPictures / 10.0;
             CpuLoad = cpu;
             var cast = _castStartUtc;
             string rate = _rec.EncoderRate;

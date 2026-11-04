@@ -1,10 +1,13 @@
 <Window x:Class="PCCast2TV.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:PCCast2TV"
         Title="PC Cast2TV" Background="#03070B"
         SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
         PreviewMouseRightButtonUp="Window_RightClick">
 
+    <!-- Two looks, one shown at a time (picked in Settings): the dial, or the simple picker -->
+    <Grid>
     <Viewbox x:Name="Root" Stretch="Uniform">
         <Canvas x:Name="Design" Width="910" Height="428" Background="#03070B">
 
@@ -143,4 +146,6 @@
             </StackPanel>
         </Canvas>
     </Viewbox>
+    <local:SimpleLook x:Name="Simple" Visibility="Collapsed" />
+    </Grid>
 </Window>
