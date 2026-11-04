@@ -51,22 +51,18 @@
         </StackPanel>
         </StackPanel>
 
-        <!-- Across the bottom, under both sides: the version and GitHub on the left, the log folder on the right -->
+        <!-- Across the bottom, under both sides, centered: the version and GitHub, then the log folder -->
         <Border Style="{StaticResource Divider}" Margin="2,16,2,0" />
-        <Grid Margin="0,14,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,14,0" />
-                <Button Width="150" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
-                    <TextBlock FontSize="14" Text="GITHUB PAGE" />
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="0,0,14,0" Text="REPORTING A PROBLEM?" />
-                <Button Width="150" Height="30" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
-                    <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
-                </Button>
-            </StackPanel>
-        </Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
+            <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="0,0,14,0" />
+            <Button Width="150" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
+                <TextBlock FontSize="14" Text="GITHUB PAGE" />
+            </Button>
+            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="56,0,14,0" Text="REPORTING A PROBLEM?" />
+            <Button Width="150" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
+                <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
+            </Button>
+        </StackPanel>
         </StackPanel>
     </Border>
 </Window>
