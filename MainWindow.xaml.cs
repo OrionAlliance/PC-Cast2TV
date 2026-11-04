@@ -34,6 +34,10 @@ public partial class MainWindow : Window
         _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over
         _caster.Notice += (title, body) => NoticeWindow.Tell(this, title, WindowLook.Words(body));
         _caster.NeedsRokuApp += roku => RokuAppWindow.Tell(this, roku, stop => _caster.WaitForRokuAppAsync(roku, stop));
+        _caster.RokuBlocked += async (roku, title, body) =>
+        {
+            if (NoticeWindow.Ask(this, title, body, "CHECK AGAIN", () => _caster.StillBlockedAsync(roku))) await _caster.UnblockedAsync(roku);
+        };
         Loaded += async (_, _) => await _caster.ConnectAsync(); // the app goes online by itself when it opens
         ContentRendered += async (_, _) => await CheckForUpdateAsync();
         ThemeColors.Changed += OnThemeChanged;

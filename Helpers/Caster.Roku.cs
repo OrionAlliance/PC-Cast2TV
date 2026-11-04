@@ -31,10 +31,26 @@ public sealed partial class Caster
         }
     }
 
-    // The popup for a Roku that shuts us out: where its setting is, and what to pick.
-    void TellBlocked(Device d, string mode) => Notice?.Invoke($"{d.Name.ToUpperInvariant()} IS SET TO {mode}",
+    // A Roku that shuts us out: the window shows where its setting is, and CHECK AGAIN asks it again (title, then what to do).
+    public event Action<Device, string, string> RokuBlocked;
+
+    void TellBlocked(Device d, string mode) => RokuBlocked?.Invoke(d, $"{d.Name.ToUpperInvariant()} IS SET TO {mode}",
         $"Its \"Control by mobile apps\" setting is on {mode}, which blocks PC Cast2TV.\n\n" +
-        $"On the {(d.Kind == DeviceKind.RokuTv ? "TV" : "Roku")}, go to Settings > System > Advanced system settings > Control by mobile apps and pick Enabled. Then click CAST again.");
+        $"On the {TvOrRoku(d)}, go to Settings > System > Advanced system settings > Control by mobile apps and pick Enabled. Then click CHECK AGAIN.");
+
+    static string TvOrRoku(Device d) => d.Kind == DeviceKind.RokuTv ? "TV" : "Roku";
+
+    // CHECK AGAIN: null once the Roku lets us in, else the line saying it still doesn't.
+    public async Task<string> StillBlockedAsync(Device d) =>
+        await RokuPlayer.BlockingModeAsync(d) is { } mode ? $"It's still set to {mode}. Pick Enabled on the {TvOrRoku(d)}, then click CHECK AGAIN." : null;
+
+    // Let in after CHECK AGAIN: ready again, then the usual check for our app (its popup if it's missing).
+    public async Task UnblockedAsync(Device d)
+    {
+        Log.Write($"roku: {d.LogName} lets us in now");
+        Note(Ready);
+        if (Phase == Phase.Online && Picked?.Id == d.Id) await CheckRokuAppAsync(d);
+    }
 
     // While the popup is open, asks the Roku each second until our app shows up, then says so and closes it; closing it first stops this.
     public async Task WaitForRokuAppAsync(Device d, CancellationToken stop)

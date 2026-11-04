@@ -8,10 +8,17 @@
         <StackPanel Width="440">
             <TextBlock x:Name="TitleText" Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" TextWrapping="Wrap" />
             <TextBlock x:Name="BodyText" Margin="0,14,0,0" Style="{StaticResource Sentence}" FontSize="18" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" />
-            <Button Width="150" Margin="0,22,0,0" HorizontalAlignment="Right" Style="{StaticResource Pill}" Background="{DynamicResource Main}"
-                    IsDefault="True" IsCancel="True">
-                <TextBlock Text="OK" />
-            </Button>
+            <!-- After a check that didn't pass: what it found -->
+            <TextBlock x:Name="ResultText" Margin="0,14,0,0" Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Second}" TextWrapping="Wrap" Visibility="Collapsed" />
+            <!-- OK alone, or CLOSE beside a button that checks again -->
+            <StackPanel Orientation="Horizontal" Margin="0,22,0,0" HorizontalAlignment="Right">
+                <Button x:Name="CloseBtn" Width="150" Margin="0,0,14,0" Style="{StaticResource OutlinePill}" Visibility="Collapsed">
+                    <TextBlock Text="CLOSE" />
+                </Button>
+                <Button x:Name="MainBtn" Width="150" Style="{StaticResource Pill}" Background="{DynamicResource Main}" IsDefault="True" IsCancel="True" Click="Main_Click">
+                    <TextBlock x:Name="MainLabel" Text="OK" />
+                </Button>
+            </StackPanel>
         </StackPanel>
     </Border>
 </Window>
