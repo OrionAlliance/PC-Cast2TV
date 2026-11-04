@@ -4,6 +4,16 @@
         Title="PC Cast2TV" Background="#03070B" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False" UseLayoutRounding="True">
 
+    <Window.Resources>
+        <!-- A thin line between sections, in the theme's dark shade -->
+        <Style x:Key="Divider" TargetType="Border">
+            <Setter Property="Height" Value="2" />
+            <Setter Property="CornerRadius" Value="1" />
+            <Setter Property="Margin" Value="2,10,2,0" />
+            <Setter Property="Background" Value="{DynamicResource Dim}" />
+        </Style>
+    </Window.Resources>
+
     <Border Padding="28,24,28,24">
         <StackPanel Orientation="Horizontal">
         <StackPanel Width="380">
@@ -13,28 +23,17 @@
             <UniformGrid x:Name="Swatches" Columns="4" Rows="2" />
             <!-- On the same 4 columns: RANDOM rolls a new color, SAVE keeps it as MY COLOR (just one; a new save replaces it), CLOSE -->
             <UniformGrid x:Name="Own" Columns="4" Margin="0,4,0,0" />
+            <Border Style="{StaticResource Divider}" />
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="WINDOW LOOK" />
             <UniformGrid x:Name="LookPills" Columns="4" />
+            <Border Style="{StaticResource Divider}" />
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,6" Text="STREAM CONTROLLER" />
             <TextBlock Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" Margin="4,0,4,10"
                        Text="Watches how well your TV keeps up, and lowers or raises the cast's data rate to keep the picture smooth. For TVs with Chromecast built in. Works right away, even during a cast." />
             <UniformGrid x:Name="ControllerPills" Columns="4" />
-            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="ABOUT" />
-            <Grid>
-                <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" />
-                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
-                    <TextBlock FontSize="14" Text="GITHUB PAGE" />
-                </Button>
-            </Grid>
-            <Grid Margin="0,8,0,0">
-                <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" Text="REPORTING A PROBLEM?" />
-                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
-                    <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
-                </Button>
-            </Grid>
         </StackPanel>
 
-        <!-- The Roku remote: a line in the theme color from the note to the OK button -->
+        <!-- The Roku remote (a line in the theme color from the note to the OK button), then ABOUT under it -->
         <StackPanel Margin="36,0,0,0">
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,48,0,10" Text="ROKU REMOTE" />
             <Grid Width="444" Height="430">
@@ -47,6 +46,20 @@
                     <Line X1="250" Y1="234" X2="133" Y2="234" Stroke="{DynamicResource Main}" StrokeThickness="2" />
                     <Ellipse Canvas.Left="91" Canvas.Top="213" Width="42" Height="42" Stroke="{DynamicResource Main}" StrokeThickness="2" />
                 </Canvas>
+            </Grid>
+            <Border Style="{StaticResource Divider}" Margin="0,14,0,0" />
+            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="ABOUT" />
+            <Grid>
+                <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" />
+                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
+                    <TextBlock FontSize="14" Text="GITHUB PAGE" />
+                </Button>
+            </Grid>
+            <Grid Margin="0,8,0,0">
+                <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" Text="REPORTING A PROBLEM?" />
+                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
+                    <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
+                </Button>
             </Grid>
         </StackPanel>
         </StackPanel>
