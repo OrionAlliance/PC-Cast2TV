@@ -15,6 +15,7 @@
     </Window.Resources>
 
     <Border Padding="28,24,28,24">
+        <StackPanel>
         <StackPanel Orientation="Horizontal">
         <StackPanel Width="380">
             <TextBlock Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" Text="SETTINGS" />
@@ -33,7 +34,7 @@
             <UniformGrid x:Name="ControllerPills" Columns="4" />
         </StackPanel>
 
-        <!-- The Roku remote (a line in the theme color from the note to the OK button), then ABOUT under it -->
+        <!-- The Roku remote: a line in the theme color from the note to the OK button -->
         <StackPanel Margin="36,0,0,0">
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,48,0,10" Text="ROKU REMOTE" />
             <Grid Width="444" Height="430">
@@ -47,21 +48,25 @@
                     <Ellipse Canvas.Left="91" Canvas.Top="213" Width="42" Height="42" Stroke="{DynamicResource Main}" StrokeThickness="2" />
                 </Canvas>
             </Grid>
-            <Border Style="{StaticResource Divider}" Margin="0,14,0,0" />
-            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="ABOUT" />
-            <Grid>
-                <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" />
-                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
+        </StackPanel>
+        </StackPanel>
+
+        <!-- Across the bottom, under both sides: the version and GitHub on the left, the log folder on the right -->
+        <Border Style="{StaticResource Divider}" Margin="2,16,2,0" />
+        <Grid Margin="0,14,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,14,0" />
+                <Button Width="150" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
                     <TextBlock FontSize="14" Text="GITHUB PAGE" />
                 </Button>
-            </Grid>
-            <Grid Margin="0,8,0,0">
-                <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="4,0,0,0" Text="REPORTING A PROBLEM?" />
-                <Button Width="150" Height="30" HorizontalAlignment="Right" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="0,0,14,0" Text="REPORTING A PROBLEM?" />
+                <Button Width="150" Height="30" Margin="0,0,4,0" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
                     <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
                 </Button>
-            </Grid>
-        </StackPanel>
+            </StackPanel>
+        </Grid>
         </StackPanel>
     </Border>
 </Window>
