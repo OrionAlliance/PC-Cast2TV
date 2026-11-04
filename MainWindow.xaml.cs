@@ -86,6 +86,7 @@ public partial class MainWindow : Window
         _shutdown = _caster.ShutdownAsync();
         await _shutdown;
         Log.Write("app: closed");
+        if (_updateDownloaded) FinishUpdate();
         // Queued: closing again from inside this closing event is refused.
         _ = Dispatcher.InvokeAsync(Close);
     }

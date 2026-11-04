@@ -7,6 +7,7 @@ namespace PCCast2TV;
 public partial class MainWindow
 {
     AppUpdater.Update _pendingUpdate;
+    bool _updateDownloaded; // the new exe waits next to this one until closing is done
 
     // The "updated" line goes up the moment the window does, before the cleanup and GitHub's answer.
     async Task CheckForUpdateAsync()
@@ -23,7 +24,15 @@ public partial class MainWindow
         var update = _pendingUpdate;
         _pendingUpdate = null;
         if (!UpdateWindow.Offer(this, update)) return;
-        if (AppUpdater.StartNewCopy()) Close(); // closing disconnects as usual
-        else NoticeWindow.Tell(this, "UPDATED", "The new version is in place. Close PC Cast2TV and open it again to use it.");
+        _updateDownloaded = true;
+        Close(); // closing disconnects as usual, then FinishUpdate
+    }
+
+    // The very end of closing after UPDATE: this copy is done with its own exe, so the new one takes its place and starts.
+    void FinishUpdate()
+    {
+        string why = AppUpdater.SwapIn();
+        if (why != null) NoticeWindow.Tell(this, "COULDN'T UPDATE", why + "\nNothing changed. Open PC Cast2TV again to keep using this version.");
+        else if (!AppUpdater.StartNewCopy()) NoticeWindow.Tell(this, "UPDATED", "The new version is in place. Open PC Cast2TV again to use it.");
     }
 }

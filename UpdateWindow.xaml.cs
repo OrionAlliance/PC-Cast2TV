@@ -9,8 +9,8 @@ public partial class UpdateWindow : Window
     readonly AppUpdater.Update _update;
     bool _busy;
 
-    // True once the new exe is in place; the main window then restarts on it.
-    public bool SwappedIn { get; private set; }
+    // True once the new exe is downloaded; the main window then closes, swaps it in and starts it.
+    public bool Downloaded { get; private set; }
 
     UpdateWindow(AppUpdater.Update update)
     {
@@ -22,12 +22,12 @@ public partial class UpdateWindow : Window
         Closing += (_, e) => e.Cancel = _busy; // nothing closes it mid-download
     }
 
-    // True when the new version is in place and this copy should restart on it.
+    // True when the new version is downloaded and this copy should restart on it.
     public static bool Offer(Window owner, AppUpdater.Update update)
     {
         var w = new UpdateWindow(update) { Owner = owner };
         w.ShowDialog();
-        return w.SwappedIn;
+        return w.Downloaded;
     }
 
     async void Update_Click(object sender, RoutedEventArgs e)
@@ -36,11 +36,11 @@ public partial class UpdateWindow : Window
         ButtonRow.Visibility = Visibility.Collapsed;
         StatusText.Visibility = Progress.Visibility = Visibility.Visible;
         StatusText.Text = "DOWNLOADING...";
-        string why = await AppUpdater.InstallAsync(_update, new Progress<string>(s => StatusText.Text = s));
+        string why = await AppUpdater.DownloadAsync(_update, new Progress<string>(s => StatusText.Text = s));
         _busy = false;
         if (why == null)
         {
-            SwappedIn = true;
+            Downloaded = true;
             Close();
             return;
         }

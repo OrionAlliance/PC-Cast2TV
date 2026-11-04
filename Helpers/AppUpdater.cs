@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 
 namespace PCCast2TV.Helpers;
@@ -70,15 +72,13 @@ public static class AppUpdater
         }
     }
 
-    // UPDATE: downloads the new exe and swaps it in; null once it's in place, else why not (this copy is left as it was).
-    public static async Task<string> InstallAsync(Update u, IProgress<string> progress)
+    // UPDATE: downloads the new exe next to this one; null once it's there, else why not (this copy is left as it was).
+    public static async Task<string> DownloadAsync(Update u, IProgress<string> progress)
     {
         Log.Write($"update: UPDATE pressed (v{u.Installed} to v{u.Latest})");
         try
         {
-            string downloaded = await DownloadAsync(u, progress);
-            progress.Report("INSTALLING...");
-            Swap(downloaded);
+            await SaveNewExeAsync(u, progress);
             return null;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UnauthorizedAccessException)
@@ -88,10 +88,12 @@ public static class AppUpdater
         }
     }
 
+    static string NewExe => ExePath + ".new";
+
     // Downloads next to the exe as "<name>.exe.new", so the swap is a rename in the same folder.
-    static async Task<string> DownloadAsync(Update u, IProgress<string> progress)
+    static async Task SaveNewExeAsync(Update u, IProgress<string> progress)
     {
-        string target = ExePath + ".new";
+        string target = NewExe;
         long totalMb = Math.Max(1, u.Size / 1_048_576);
         try
         {
@@ -118,7 +120,6 @@ public static class AppUpdater
             using (var f = File.OpenRead(target))
                 if (f.ReadByte() != 'M' || f.ReadByte() != 'Z') throw new IOException("The download isn't a Windows program.");
             Log.Write($"update: downloaded v{u.Latest} ({got:N0} bytes)");
-            return target;
         }
         catch
         {
@@ -127,36 +128,63 @@ public static class AppUpdater
         }
     }
 
-    // A running exe can be renamed but not overwritten: it becomes .old (deleted on the next start) and the download takes its name.
-    static void Swap(string downloaded)
+    // Last step of closing (this copy reads parts of itself from its exe until then): the exe becomes .old, the download takes its name; null once in, else why not.
+    public static string SwapIn()
     {
         string exe = ExePath, old = exe + ".old";
-        if (File.Exists(old)) File.Delete(old);
-        File.Move(exe, old);
-        try { File.Move(downloaded, exe); }
-        catch
+        try
         {
-            File.Move(old, exe); // put the working copy back
-            throw;
+            if (File.Exists(old)) File.Delete(old);
+            File.Move(exe, old);
+            try { File.Move(NewExe, exe); }
+            catch
+            {
+                File.Move(old, exe); // put the working copy back
+                throw;
+            }
+            Log.Write("update: the new exe is in place");
+            return null;
         }
-        Log.Write("update: the new exe is in place");
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Write($"update: couldn't swap in the new version: {ex.GetType().Name}: {ex.Message}");
+            return ex.Message;
+        }
     }
 
-    // After UPDATE: starts the new version (it waits for this one to close); false when Windows wouldn't start it.
+    // After the swap, straight through Windows (Process.Start would need parts of this copy's exe, now the new one); false when Windows wouldn't start it.
     public static bool StartNewCopy()
     {
         Log.Write("update: starting the new version and closing this one");
-        try
+        string exe = ExePath;
+        var si = new StartupInfo { cb = Marshal.SizeOf<StartupInfo>() };
+        if (!CreateProcessW(exe, new StringBuilder($"\"{exe}\" {AfterUpdate}"), IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, Path.GetDirectoryName(exe), ref si, out var pi))
         {
-            Process.Start(new ProcessStartInfo(ExePath, AfterUpdate) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(ExePath) });
-            return true;
-        }
-        catch (System.ComponentModel.Win32Exception ex)
-        {
-            Log.Write($"update: couldn't start the new version: {ex.Message}");
+            Log.Write($"update: couldn't start the new version (Windows error {Marshal.GetLastWin32Error()})");
             return false;
         }
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return true;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct StartupInfo
+    {
+        public int cb;
+        public IntPtr lpReserved, lpDesktop, lpTitle;
+        public int dwX, dwY, dwXSize, dwYSize, dwXCountChars, dwYCountChars, dwFillAttribute, dwFlags;
+        public short wShowWindow, cbReserved2;
+        public IntPtr lpReserved2, hStdInput, hStdOutput, hStdError;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct ProcessInfo { public IntPtr hProcess, hThread; public int dwProcessId, dwThreadId; }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool CreateProcessW(string app, StringBuilder cmdLine, IntPtr procAttr, IntPtr threadAttr, bool inherit, int flags, IntPtr env, string dir, ref StartupInfo si, out ProcessInfo pi);
+
+    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
 
     // True right after an update, while the previous version is still left behind.
     public static bool JustUpdated() => File.Exists(ExePath + ".old");
