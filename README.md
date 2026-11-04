@@ -37,11 +37,17 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
 - **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
 - **A stream controller** for TVs with Chromecast built in, in Settings and off to start. If the picture stutters, turn it on: it watches how well your TV keeps up and lowers or raises the data rate to keep the picture smooth. It works right away, even during a cast.
-- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also holds the stream controller, shows what the OK button on your Roku remote does, shows your version, links back to this page, and opens the folder with your debug log.
+- **Two looks,** picked in Settings: the dial (at the top of this page), with every number in view, or the simple look: find your TV, click it, click Cast. The simple look's **DETAILS** page shows each step of the cast (the video, this app, the network, the TV) and where a stutter would come from.
+- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also holds the window look and the stream controller, shows what the OK button on your Roku remote does, shows your version, links back to this page, and opens the folder with your debug log.
 
 <p align="center">
-  <img src="Screenshots/settings.png" width="760" alt="The Settings window: theme colors, stream controller, the Roku remote's OK button, version, GitHub page and OPEN LOG FOLDER" /><br>
-  <i>Settings: pick a theme color, turn the stream controller on or off, see what the Roku remote's OK button does, check your version, or open your debug log.</i>
+  <img src="Screenshots/simple-look.png" width="620" alt="The simple look: FIND: TV / ROKU first, each device as a card, and one big button" /><br>
+  <i>The simple look: find, pick, cast. DETAILS shows each step of the cast.</i>
+</p>
+
+<p align="center">
+  <img src="Screenshots/settings.png" width="760" alt="The Settings window: theme colors, window look, stream controller, the Roku remote's OK button, version, GitHub page and OPEN LOG FOLDER" /><br>
+  <i>Settings: pick a theme color and a window look, turn the stream controller on or off, see what the Roku remote's OK button does, check your version, or open your debug log.</i>
 </p>
 
 ## Requirements
@@ -55,7 +61,7 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 1. Download **`PC-Cast2TV.exe`** from the [Releases](../../releases) page. That's the only official download. Copies posted anywhere else aren't from me, so don't run them.
 2. Put it in its own folder (it keeps its `Settings` folder next to it) and run it. **Windows will show a blue "Windows protected your PC" warning.** That's SmartScreen reacting to an unsigned open-source app with no download reputation yet, not a threat detection. Click **More info → Run anyway**. (Don't take my word for what the app does. The entire source code is this repository.)
 3. It connects to your home network by itself. The first time you open it, Windows asks once to let your TVs and Roku reach the app. That's a firewall rule for this app only, on private networks only.
-4. Click **DETECT DEVICE(S)** to find your TVs and Roku, click the one you want, and click **Cast**.
+4. Click **DETECT DEVICE(S)** (**FIND: TV / ROKU** in the simple look) to find your TVs and Roku, click the one you want, and click **Cast**.
 
 ## Roku: one free app, and PC Cast2TV adds it for you
 
@@ -69,6 +75,8 @@ A Roku plays your PC through **PC Cast2TV for Roku**, our own free app in the Ro
 1. Click your Roku in PC Cast2TV's list.
 2. If the PC Cast2TV app isn't on your Roku yet, PC Cast2TV pops up and shows you. Click **ADD PC CAST2TV** and its page opens on your TV.
 3. Press **OK** on your Roku remote. PC Cast2TV sees it arrive, the popup closes by itself, and you're ready to click **Cast**.
+
+If your Roku's **Control by mobile apps** setting is on **Limited** (newer Rokus come that way), PC Cast2TV pops up and shows where to switch it to **Enabled**, and **CHECK AGAIN** makes sure it took.
 
 You can also add it yourself: search the Roku Channel Store for **PC Cast2TV**, or add it with the code **PCCast2TV** at [my.roku.com/account/add/PCCast2TV](https://my.roku.com/account/add/PCCast2TV).
 
@@ -103,13 +111,13 @@ A Roku plays the cast in one-second pieces and keeps a few of them in hand, so a
 A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, which shows as a stutter. So while you cast, the app runs your screen at 60 Hz, and it puts your screen back the way it was when the cast ends.
 
 **It says the TV isn't answering.**
-Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, click **DETECT DEVICE(S)** to find it again.
+Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, click **DETECT DEVICE(S)** (**FIND: TV / ROKU** in the simple look) to find it again.
 
 **My Roku won't start the cast, or ADD PC CAST2TV didn't open anything.**
 PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and pick **Enabled**. Newer Rokus come set to **Limited**, which blocks PC Cast2TV; when that's the case, the app shows a popup with these same steps.
 
 **Can I hide a device I don't use?**
-Right-click it in the list and click **HIDE FROM THE LIST**. It stays saved, DETECT DEVICE(S) leaves it off too, and right-clicking DETECT DEVICE(S) brings it back.
+Right-click it in the list (or its card in the simple look) and click **HIDE FROM THE LIST**. It stays saved, finding devices leaves it off too, and right-clicking **DETECT DEVICE(S)** (or **FIND: TV / ROKU**) brings it back.
 
 ## Your data stays yours
 
