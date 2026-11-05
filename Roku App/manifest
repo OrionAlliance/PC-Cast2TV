@@ -1,7 +1,7 @@
 title=PC Cast2TV
 major_version=0
 minor_version=1
-build_version=27
+build_version=28
 mm_icon_focus_hd=pkg:/images/icon_hd.png
 mm_icon_focus_fhd=pkg:/images/icon_fhd.png
 splash_screen_fhd=pkg:/images/splash_fhd.png
