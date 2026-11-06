@@ -26,6 +26,7 @@ public sealed class ScreenRecorder : IDisposable
     public EncoderChoice Running { get; private set; } // the encoder actually in use: the processor's if the card's wouldn't start
     public event Action Died;                    // the screen grab or the encoder stopped on its own
     public event Action<byte[], int> LiveChunk;  // live stream bytes as they come out (buffer is reused)
+    public event Action ProtectedVideo;          // Windows blacked out DRM protected video on the screen
 
     public long EncodedBytes => (_ts?.Bytes ?? 0) + Interlocked.Read(ref _mirrorBytes);
 
@@ -101,6 +102,7 @@ public sealed class ScreenRecorder : IDisposable
             _video.Died += OnDied;
             _grab.Died += OnDied;
             _grab.FirstPicture += () => _sound?.StartClock();
+            _grab.ProtectedVideo += () => ProtectedVideo?.Invoke();
             if (HasSound) _sound.Start((d, n) => _aac.Add(d, n));
             _video.Start();
             _grab.Start();

@@ -32,7 +32,11 @@ public partial class MainWindow : Window
         BuildSignalRing();
         _caster.Changed += Draw;
         _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over
-        _caster.Notice += (title, body) => NoticeWindow.Tell(this, title, WindowLook.Words(body));
+        _caster.Notice += (title, body) =>
+        {
+            if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal; // a popup mid-cast must not open behind a minimized window
+            NoticeWindow.Tell(this, title, WindowLook.Words(body));
+        };
         _caster.NeedsRokuApp += roku => RokuAppWindow.Tell(this, roku, stop => _caster.WaitForRokuAppAsync(roku, stop));
         _caster.RokuBlocked += async (roku, title, body) =>
         {

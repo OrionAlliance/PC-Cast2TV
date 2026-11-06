@@ -59,6 +59,12 @@ public sealed partial class ScreenGrabber
         bool got = false;
         if (r.Success)
         {
+            if (info.ProtectedContentMaskedOut && !_toldProtected)
+            {
+                _toldProtected = true;
+                Log.Write("grab: Windows blacked out DRM protected video on the screen (the TV shows black there)");
+                ProtectedVideo?.Invoke();
+            }
             try
             {
                 if (first || (info.LastPresentTime != 0 && info.AccumulatedFrames != 0))

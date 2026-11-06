@@ -46,6 +46,7 @@ public sealed partial class ScreenGrabber : IDisposable
     readonly int _screenW, _screenH;
     Thread _clock;
     bool _dupBroken, _ended, _unsent; // _unsent: the screen copy holds an update no picture has yet
+    bool _toldProtected; // DRM video was reported once this cast
     long _nextReopen; // when the screen copy may next be reopened (Environment.TickCount64)
 
     // Counts for the 10-second timing line.
@@ -57,6 +58,7 @@ public sealed partial class ScreenGrabber : IDisposable
     public int Width { get; }
     public int Height { get; }
     public event Action FirstPicture; // the sound clock starts with it
+    public event Action ProtectedVideo; // Windows blacked out DRM protected video; once a cast, on the clock's thread
     public event Action Died;         // the clock stopped on its own (no first picture, or the card failed)
 
     // The card that drives the main screen (the one at 0,0) and the screen itself.

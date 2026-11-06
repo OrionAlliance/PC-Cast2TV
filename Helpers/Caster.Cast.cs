@@ -112,6 +112,7 @@ public sealed partial class Caster
         var rec = new ScreenRecorder();
         _server.BeginCast(d.Ip, rec);
         rec.Died += () => _ui.Post(_ => OnRecorderDied(), null);
+        rec.ProtectedVideo += () => _ui.Post(_ => OnProtectedVideo(), null);
         if (!d.TakesHls) rec.LiveChunk += _server.PushLive;
         // A Chromecast's mirroring is capped at what it tells the TV; Roku and DLNA casts aren't.
         try { await Task.Run(() => rec.Start(Encoder, d.TakesHls ? OutputKind.Hls : OutputKind.LiveTs, d.Kind == DeviceKind.Cast ? MirrorSender.MaxBitRate : 0)); }
@@ -272,5 +273,14 @@ public sealed partial class Caster
     void OnRecorderDied()
     {
         if (Phase == Phase.Casting) _ = StopCastAsync("SCREEN CAPTURE STOPPED · SEE LOG", error: true);
+    }
+
+    // Windows blacked out a DRM protected video; told once a cast, only while that cast is still on.
+    void OnProtectedVideo()
+    {
+        if (Phase is not (Phase.Starting or Phase.Casting)) return;
+        Notice?.Invoke("DRM PROTECTED VIDEO", "This video is DRM protected (like Netflix, Disney+ or Prime Video), so Windows blacks it out for every " +
+            "screen-casting app. That's why your TV shows a black box where it plays. The rest of your screen casts normally.\n\n" +
+            "To watch it on your TV, use that service's own app on your TV or Roku.");
     }
 }
