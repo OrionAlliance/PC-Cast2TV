@@ -38,7 +38,7 @@
         <StackPanel Margin="36,0,0,0">
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,48,0,10" Text="ROKU REMOTE" />
             <Grid Width="444" Height="430">
-                <Image Source="Images/roku-remote.png" Width="230" Height="430" HorizontalAlignment="Left" VerticalAlignment="Top"
+                <Image Source="/Images/roku-remote.png" Width="230" Height="430" HorizontalAlignment="Left" VerticalAlignment="Top"
                        RenderOptions.BitmapScalingMode="HighQuality" />
                 <TextBlock x:Name="OkNote" Width="186" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="258,148,0,0"
                            Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
