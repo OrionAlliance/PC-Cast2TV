@@ -16,7 +16,7 @@
 ---
 
 <p align="center">
-  <img src="Screenshots/main-window.png" width="760" alt="PC Cast2TV" />
+  <img src="Screenshots/main-window.png" width="760" alt="PC Cast2TV casting to a Roku, with the MONITOR SELECTION tab at the top" />
 </p>
 
 ## Why this exists
@@ -25,7 +25,7 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 
 ## What it does
 
-- **Casts your main screen and your PC's sound** at up to 1080p and 60 frames a second. Bigger screens are scaled down to fit.
+- **Casts your screen and your PC's sound** at up to 1080p and 60 frames a second. Bigger screens are scaled down to fit.
 - **Uses your graphics card's video encoder** (NVIDIA, AMD or Intel), so casting barely touches your processor. If the card's encoder won't start, the processor takes over at 30 frames a second.
 - **Casts to:**
   - **Rokus:** Roku streaming sticks and boxes, and Roku TVs, through our own free PC Cast2TV app from the Roku Channel Store (the app helps you add it).
@@ -38,16 +38,16 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
 - **A stream controller** for TVs with Chromecast built in, in Settings and off to start. If the picture stutters, turn it on: it watches how well your TV keeps up and lowers or raises the data rate to keep the picture smooth. It works right away, even during a cast.
 - **Two looks,** picked in Settings: the dial (at the top of this page), with every number in view, or the simple look: find your TV, click it, click Cast. The simple look's **DETAILS** page shows each step of the cast (the video, this app, the network, the TV) and where a stutter would come from.
-- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also holds the window look and the stream controller, shows what the OK button on your Roku remote does, shows your version, links back to this page, and opens the folder with your debug log.
+- **MONITOR SELECTION,** for PCs with two or more monitors: a tab at the top of the app drops down with each monitor by name. Click one to cast it, or tick **SET AS DEFAULT** under it to cast it every time. With a single monitor, the tab doesn't show at all.
+- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also holds the window look and the stream controller, shows what the OK button on your Roku remote does, shows your version, links back to this page and its **PATCH NOTES**, and opens the folder with your debug log.
 
 <p align="center">
-  <img src="Screenshots/simple-look.png" width="620" alt="The simple look: FIND: TV / ROKU first, each device as a card, and one big button" /><br>
-  <i>The simple look: find, pick, cast. DETAILS shows each step of the cast.</i>
-</p>
-
-<p align="center">
-  <img src="Screenshots/settings.png" width="760" alt="The Settings window: theme colors, window look, stream controller, the Roku remote's OK button, version, GitHub page and OPEN LOG FOLDER" /><br>
-  <i>Settings: pick a theme color and a window look, turn the stream controller on or off, see what the Roku remote's OK button does, check your version, or open your debug log.</i>
+  <a href="Screenshots/simple-look.png"><img src="Screenshots/simple-look.png" height="150" alt="The simple look: FIND: TV / ROKU first, each device as a card, and one big button" /></a>
+  &nbsp;
+  <a href="Screenshots/monitor-selection.png"><img src="Screenshots/monitor-selection.png" height="150" alt="MONITOR SELECTION open: each monitor by name, with SET AS DEFAULT under it" /></a>
+  &nbsp;
+  <a href="Screenshots/settings.png"><img src="Screenshots/settings.png" height="150" alt="The Settings window: theme colors, window look, stream controller, the Roku remote's OK button, version, GitHub page, OPEN LOG FOLDER and PATCH NOTES" /></a><br>
+  <i>The simple look · MONITOR SELECTION (two or more monitors) · Settings. Click any picture to see it full size.</i>
 </p>
 
 ## Requirements
@@ -99,6 +99,7 @@ Not tested yet:
 - **A PC on Wi-Fi.** (The Rokus on Wi-Fi work fine.)
 - **DLNA smart TVs.** The app supports them, but none have been tested.
 - **Other Rokus** (Express, Streaming Stick) and **Chromecast dongles or Google TV boxes.**
+- **Two real monitors.** MONITOR SELECTION was tested with a virtual second monitor, not yet with two real ones, or with a monitor plugged into a different graphics card than the other.
 
 If it works, or doesn't, on your setup, please open an [Issue](../../issues) with your `debug.log`. That's how this list gets shorter.
 
