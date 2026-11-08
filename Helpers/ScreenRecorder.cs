@@ -65,12 +65,12 @@ public sealed class ScreenRecorder : IDisposable
     }
 
     // Run off the window's thread (Windows' media parts need it); maxBitRate 0: no cap. Throws, saying why, if the encoder won't start.
-    public void Start(EncoderChoice enc, OutputKind kind, int maxBitRate)
+    public void Start(EncoderChoice enc, OutputKind kind, int maxBitRate, string screen)
     {
         try
         {
             VideoEncoder.EnsureStarted();
-            _grab = new ScreenGrabber(enc.Fps);
+            _grab = new ScreenGrabber(enc.Fps, screen);
             _video = new VideoEncoder(_grab, enc.Fps, maxBitRate, OnVideo);
             if (enc.OnCard && !_video.Open(enc.Vendor, true))
             {
@@ -79,7 +79,7 @@ public sealed class ScreenRecorder : IDisposable
                 _video.Dispose();
                 _grab.Dispose();
                 enc = EncoderPicker.Processor();
-                _grab = new ScreenGrabber(enc.Fps);
+                _grab = new ScreenGrabber(enc.Fps, screen);
                 _video = new VideoEncoder(_grab, enc.Fps, maxBitRate, OnVideo);
             }
             if (!enc.OnCard && !_video.Open(null, false)) throw new InvalidOperationException("no H.264 encoder would start");

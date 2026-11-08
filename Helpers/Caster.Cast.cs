@@ -95,14 +95,15 @@ public sealed partial class Caster
             if (!added) { FailCast("FIREWALL BLOCKS TVS · CAST AGAIN TO ASK WINDOWS"); return; }
         }
         if (Phase != Phase.Starting) return;
+        if (await ScreenForCastAsync() is not { } screen) return;
 
         // A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, so it runs at 60 while casting.
-        int hz = ScreenInfo.Hz;
+        int hz = ScreenInfo.Hz(screen.Device);
         if (ScreenInfo.LinesUpWithTv(hz)) Log.Write($"screen: {hz} Hz, lines up with the TV");
         else
         {
             Set(Phase.Starting, "SETTING THE SCREEN TO 60 HZ...");
-            Log.Write("screen: " + await Task.Run(ScreenInfo.SwitchTo60));
+            Log.Write("screen: " + await Task.Run(() => ScreenInfo.SwitchTo60(screen.Device)));
             if (Phase != Phase.Starting) { ScreenInfo.PutRateBack(); return; }
         }
 
@@ -115,7 +116,7 @@ public sealed partial class Caster
         rec.ProtectedVideo += () => _ui.Post(_ => OnProtectedVideo(), null);
         if (!d.TakesHls) rec.LiveChunk += _server.PushLive;
         // A Chromecast's mirroring is capped at what it tells the TV; Roku and DLNA casts aren't.
-        try { await Task.Run(() => rec.Start(Encoder, d.TakesHls ? OutputKind.Hls : OutputKind.LiveTs, d.Kind == DeviceKind.Cast ? MirrorSender.MaxBitRate : 0)); }
+        try { await Task.Run(() => rec.Start(Encoder, d.TakesHls ? OutputKind.Hls : OutputKind.LiveTs, d.Kind == DeviceKind.Cast ? MirrorSender.MaxBitRate : 0, screen.Device)); }
         catch (InvalidOperationException ex)
         {
             rec.Dispose();

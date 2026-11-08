@@ -54,8 +54,8 @@ public sealed partial class Caster
     {
         get
         {
-            var (w, h) = ScreenInfo.Size;
-            return ScreenInfo.SentSize(w, h).Height;
+            var s = CastScreen;
+            return s == null ? 1080 : ScreenInfo.SentSize(s.Width, s.Height).Height;
         }
     }
     public string VideoLabel => Encoder == null ? $"{SentHeight}P" : $"{SentHeight}P · {Encoder.Fps}";
@@ -65,6 +65,7 @@ public sealed partial class Caster
         // The row starts with the devices earlier Detects found; the window has the app go online once it's open.
         Devices = Row();
         Picked = Devices.FirstOrDefault(d => d.Id == Default?.Id);
+        WatchScreens();
         NetworkChange.NetworkAddressChanged += (_, _) => _ui.Post(_ => RefreshNetwork(), null);
         _server.RemoteButton = name => _ui.Post(_ => OnRemoteButton(name), null);
         _server.TvReport = n => _ui.Post(_ => OnTvReport(n), null);
@@ -130,7 +131,7 @@ public sealed partial class Caster
     {
         if (Phase != Phase.Offline) return;
         Set(Phase.Connecting, "CONNECTING...");
-        Encoder = await EncoderPicker.PickAsync(); // the card driving the main screen when the app opens
+        Encoder = await EncoderPicker.PickAsync(CastScreen?.Device); // the card driving the cast monitor when the app opens
         if (Phase != Phase.Connecting) return; // the app closed meanwhile
         if (Encoder == null)
         {

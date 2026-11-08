@@ -27,6 +27,8 @@ public partial class SettingsWindow : Window
 
     void Donate_Click(object sender, RoutedEventArgs e) => WebPage.Open(WebPage.Donate, "the Ko-fi page");
 
+    void PatchNotes_Click(object sender, RoutedEventArgs e) => WebPage.Open(WebPage.PatchNotes, "the patch notes");
+
     void LogFolder_Click(object sender, RoutedEventArgs e) => Log.ShowInFolder();
 
     void OnThemeChanged()

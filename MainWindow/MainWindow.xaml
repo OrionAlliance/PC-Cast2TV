@@ -147,5 +147,7 @@
         </Canvas>
     </Viewbox>
     <local:SimpleLook x:Name="Simple" Visibility="Collapsed" />
+    <!-- Over both looks, only on PCs with 2 or more monitors -->
+    <local:MonitorSelection x:Name="Monitors" />
     </Grid>
 </Window>

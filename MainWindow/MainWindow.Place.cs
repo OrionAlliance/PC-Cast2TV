@@ -9,7 +9,7 @@ public partial class MainWindow
 {
     bool RestorePlace()
     {
-        var p = WindowSpot.Saved(Design.Width, Design.Height);
+        var p = WindowSpot.Saved(Design.Width, DesignHeight);
         if (p == null) return false;
         SizeToContent = SizeToContent.Manual;
         WindowStartupLocation = WindowStartupLocation.Manual;
@@ -24,9 +24,9 @@ public partial class MainWindow
     // Opens at the design size (smaller on a small screen), then resizes freely with everything scaled.
     void OpenAtDesignSize()
     {
-        double fit = WindowSpot.DesignScale(Design.Width, Design.Height);
+        double fit = WindowSpot.DesignScale(Design.Width, DesignHeight);
         Root.Width = Design.Width * fit;
-        Root.Height = Design.Height * fit;
+        Root.Height = DesignHeight * fit;
         ContentRendered += (_, _) =>
         {
             if (WindowLook.Simple) return; // switched before it finished opening; the simple look sizes itself
@@ -71,7 +71,7 @@ public partial class MainWindow
         Simple.Visibility = Visibility.Collapsed;
         Root.Visibility = Visibility.Visible;
         ResizeMode = ResizeMode.CanResize;
-        if (WindowSpot.Saved(Design.Width, Design.Height) is { } p)
+        if (WindowSpot.Saved(Design.Width, DesignHeight) is { } p)
         {
             SizeToContent = SizeToContent.Manual;
             Width = p.Width;
@@ -79,9 +79,9 @@ public partial class MainWindow
             Root.Width = Root.Height = double.NaN;
             return;
         }
-        double fit = WindowSpot.DesignScale(Design.Width, Design.Height);
+        double fit = WindowSpot.DesignScale(Design.Width, DesignHeight);
         Root.Width = Design.Width * fit;
-        Root.Height = Design.Height * fit;
+        Root.Height = DesignHeight * fit;
         SizeToContent = SizeToContent.WidthAndHeight;
         _ = Dispatcher.InvokeAsync(() =>
         {
@@ -90,6 +90,19 @@ public partial class MainWindow
             Root.Width = Root.Height = double.NaN;
         }, DispatcherPriority.Background);
     }
+
+    // With 2 or more monitors, MONITOR SELECTION's tab gets its own strip at the top: the dial's top row and the simple look sit below it.
+    void FitStrip()
+    {
+        double strip = _caster.Screens.Count > 1 ? TabStrip : 0;
+        if (Design.Margin.Top == strip) return;
+        Design.Margin = Simple.Margin = new Thickness(0, strip, 0, 0);
+    }
+
+    const double TabStrip = 8;
+
+    // The dial's design with the strip, so its saved size and its opening size both include it.
+    double DesignHeight => Design.Height + Design.Margin.Top;
 
     void SavePlace() => SaveSpot(WindowLook.Simple);
 
@@ -101,6 +114,6 @@ public partial class MainWindow
             return;
         }
         var r = WindowState == WindowState.Normal ? new Rect(Left, Top, ActualWidth, ActualHeight) : RestoreBounds;
-        WindowSpot.Keep(r, WindowState == WindowState.Maximized, Design.Width, Design.Height);
+        WindowSpot.Keep(r, WindowState == WindowState.Maximized, Design.Width, DesignHeight);
     }
 }

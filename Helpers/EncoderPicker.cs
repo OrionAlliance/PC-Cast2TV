@@ -1,19 +1,19 @@
 namespace PCCast2TV.Helpers;
 
-// Vendor is the main screen's card ("VEN_10DE" style), so the cast uses the encoder on that same card.
+// Vendor is the cast monitor's card ("VEN_10DE" style), so the cast uses the encoder on that same card.
 public sealed record EncoderChoice(string Label, bool OnCard, string Vendor)
 {
     // Card encoders keep up at 60 frames a second; the processor gets 30 so it never falls behind.
     public int Fps => OnCard ? 60 : 30;
 }
 
-// Finds the H.264 encoder Windows has for the card that drives the main screen; the processor only when there's none.
+// Finds the H.264 encoder Windows has for the card that drives a monitor; the processor only when there's none.
 public static class EncoderPicker
 {
-    // Null when Windows' media parts are missing (Windows N without its Media Feature Pack) or no screen is found.
-    public static Task<EncoderChoice> PickAsync() => Task.Run(() =>
+    // Null when Windows' media parts are missing (Windows N without its Media Feature Pack) or no screen is found; device null = the main screen.
+    public static Task<EncoderChoice> PickAsync(string device) => Task.Run(() =>
     {
-        try { return Pick(); }
+        try { return Pick(device); }
         catch (Exception ex) when (ex is SharpGen.Runtime.SharpGenException or InvalidOperationException or DllNotFoundException)
         {
             Log.Write("encoder: none found: " + ex.Message);
@@ -21,10 +21,10 @@ public static class EncoderPicker
         }
     });
 
-    static EncoderChoice Pick()
+    static EncoderChoice Pick(string device)
     {
         VideoEncoder.EnsureStarted();
-        var (adapter, output) = ScreenGrabber.MainScreen();
+        var (adapter, output) = ScreenGrabber.Screen(device);
         uint id = adapter.Description1.VendorId;
         string card = adapter.Description1.Description;
         adapter.Dispose();

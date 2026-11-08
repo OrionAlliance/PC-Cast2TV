@@ -1,0 +1,26 @@
+<UserControl x:Class="PCCast2TV.MonitorSelection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             VerticalAlignment="Top" HorizontalAlignment="Center" Visibility="Collapsed">
+    <!-- MONITOR SELECTION: a tab on the window's top edge; its slider drops down with a card per monitor (only with 2 or more) -->
+    <StackPanel x:Name="Drawer">
+        <StackPanel.RenderTransform>
+            <TranslateTransform x:Name="Slide" Y="-400" />
+        </StackPanel.RenderTransform>
+        <Border x:Name="Slider" Background="{DynamicResource Ink}" BorderBrush="{DynamicResource Dim}" BorderThickness="1.5,0,1.5,1.5"
+                CornerRadius="0,0,16,16" Padding="8,14,8,10">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="18" ShadowDepth="0" Opacity="0.6" />
+            </Border.Effect>
+            <StackPanel x:Name="Cards" Orientation="Horizontal" />
+        </Border>
+        <Border x:Name="Tab" HorizontalAlignment="Center" Background="{DynamicResource Ink}" BorderBrush="{DynamicResource Dim}" BorderThickness="1.5,0,1.5,1.5"
+                CornerRadius="0,0,10,10" Padding="14,3,12,5" Cursor="Hand" MouseLeftButtonUp="Tab_Click" ToolTipService.ShowOnDisabled="True">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="TabText" Style="{StaticResource Label}" FontSize="12" Foreground="{DynamicResource Second}"
+                           Text="MONITOR SELECTION" VerticalAlignment="Center" />
+                <Path x:Name="Arrow" Data="M0,0 L8,0 L4,5 Z" Fill="{DynamicResource Second}" Margin="8,1,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

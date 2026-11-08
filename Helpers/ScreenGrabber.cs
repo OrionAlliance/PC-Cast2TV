@@ -61,8 +61,8 @@ public sealed partial class ScreenGrabber : IDisposable
     public event Action ProtectedVideo; // Windows blacked out DRM protected video; once a cast, on the clock's thread
     public event Action Died;         // the clock stopped on its own (no first picture, or the card failed)
 
-    // The card that drives the main screen (the one at 0,0) and the screen itself.
-    public static (IDXGIAdapter1 Adapter, IDXGIOutput Output) MainScreen()
+    // A monitor (by Windows' name for it, like \\.\DISPLAY2) and the card that drives it; null = the main screen, the one at 0,0.
+    public static (IDXGIAdapter1 Adapter, IDXGIOutput Output) Screen(string device)
     {
         DXGI.CreateDXGIFactory1(out IDXGIFactory1 factory).CheckError();
         using (factory)
@@ -70,22 +70,24 @@ public sealed partial class ScreenGrabber : IDisposable
             {
                 for (uint o = 0; ad.EnumOutputs(o, out var output).Success; o++)
                 {
-                    var r = output.Description.DesktopCoordinates;
-                    if (output.Description.AttachedToDesktop && r.Left == 0 && r.Top == 0) return (ad, output);
+                    var d = output.Description;
+                    var r = d.DesktopCoordinates;
+                    bool wanted = device == null ? r.Left == 0 && r.Top == 0 : string.Equals(d.DeviceName, device, StringComparison.OrdinalIgnoreCase);
+                    if (d.AttachedToDesktop && wanted) return (ad, output);
                     output.Dispose();
                 }
                 ad.Dispose();
             }
-        throw new InvalidOperationException("no main screen found");
+        throw new InvalidOperationException(device == null ? "no main screen found" : "the monitor isn't connected anymore");
     }
 
-    // Sets everything up on the card that drives the main screen; throws InvalidOperationException with the reason.
-    public ScreenGrabber(int fps)
+    // Sets everything up on the card that drives the monitor; throws InvalidOperationException with the reason.
+    public ScreenGrabber(int fps, string screen)
     {
         _fps = fps;
         try
         {
-            var (adapter, output) = MainScreen();
+            var (adapter, output) = Screen(screen);
             using (adapter)
             using (output)
             {

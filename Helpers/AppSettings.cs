@@ -6,7 +6,7 @@ namespace PCCast2TV.Helpers;
 // DesignWidth and DesignHeight are the layout the size was saved for, so a size from an older layout isn't reused.
 public sealed record WindowPlace(double Left, double Top, double Width, double Height, bool Maximized, double DesignWidth = 0, double DesignHeight = 0);
 
-// Saved devices, the bookmark, hidden devices, the window's spot and look, the theme and the controller switch, in Settings\settings.json.
+// Saved devices, the bookmark, hidden devices, the window's spot and look, the theme, the controller switch and the default monitor, in Settings\settings.json.
 public static class AppSettings
 {
     sealed class Saved
@@ -20,6 +20,7 @@ public static class AppSettings
         public bool StreamController { get; set; } // off unless turned on in Settings
         public string Look { get; set; } // "SIMPLE" for the simple look; none = the dial
         public WindowPlace SimpleWindow { get; set; } // the simple look's spot, kept apart from the dial's
+        public string Screen { get; set; } // the default monitor's lasting key (PcScreen.Key); none = the main screen
     }
 
     static string FilePath => Path.Combine(Log.Folder, "settings.json");
@@ -35,6 +36,7 @@ public static class AppSettings
     public static bool StreamController => Data.StreamController;
     public static string Look => Data.Look;
     public static WindowPlace SimpleWindow => Data.SimpleWindow;
+    public static string Screen => Data.Screen;
 
     public static bool IsHidden(string id) => Data.Hidden.Any(d => d.Id == id);
 
@@ -131,6 +133,12 @@ public static class AppSettings
     {
         Data.Look = look;
         if (Save()) Log.Write("settings: look " + (look ?? "DIAL"));
+    }
+
+    public static void SetScreen(string key, string name)
+    {
+        Data.Screen = key;
+        if (Save()) Log.Write(key == null ? "settings: default monitor cleared" : "settings: default monitor is " + name);
     }
 
     public static void SetWindow(WindowPlace w)

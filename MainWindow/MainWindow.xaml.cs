@@ -48,6 +48,8 @@ public partial class MainWindow : Window
         Glow(ThemeColors.Current.Main);
         SourceInitialized += (_, _) => DarkTitleBar.Apply(this);
         Simple.Attach(_caster);
+        Monitors.Attach(_caster);
+        FitStrip(); // before the window takes its size, so it opens with room for the tab
         WindowLook.Changed += ApplyLook;
         if (WindowLook.Simple) OpenSimple();
         else if (!RestorePlace()) OpenAtDesignSize();
@@ -62,6 +64,7 @@ public partial class MainWindow : Window
         Glow(ThemeColors.Current.Main);
         _rowKey = null; // the device list is rebuilt in the new colors
         Simple.Repaint();
+        Monitors.Repaint();
         Draw();
     }
 
@@ -99,6 +102,8 @@ public partial class MainWindow : Window
     // Only the look on screen is drawn; switching looks draws the other at once.
     void Draw()
     {
+        FitStrip(); // a monitor plugged in or unplugged while the app runs
+        Monitors.Draw();
         if (WindowLook.Simple)
         {
             Simple.Draw();

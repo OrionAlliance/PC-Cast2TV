@@ -98,12 +98,14 @@ public partial class SimpleLook
         Show(_steps[1], Now(appWatch), "THIS APP", tv == null ? "IDLE" : c.DroppedFrames.ToString("N0", inv) + " MISSED",
              c.RecentMissed == 0 ? "every picture sent" : $"{c.RecentMissed} late in 10 s");
 
-        // The network: how much of what was made the TV took.
+        // The network: how much of what was made the TV took; a Roku's burst fetching wobbles that, so for a Roku it counts only with a stall it reported.
         var m = c.Meter;
-        bool netWatch = live && !m.Measuring && m.Bars <= 3;
+        bool rokuKeepsUp = tv?.IsRoku == true && c.RecentStalls == 0;
+        bool netWatch = live && !m.Measuring && m.Bars <= 3 && !rokuKeepsUp;
         bool wifi = c.PcLink == "WI-FI" || c.LinkOf(tv) == "WI-FI";
         Show(_steps[2], Now(netWatch), wifi ? "WI-FI" : "NETWORK", live ? m.SignalLabel : "IDLE",
-             !live || m.Measuring ? "how much the TV gets" : m.Bars >= 4 ? "the TV gets it all" : m.Bars == 3 ? "the TV gets most of it" : "the TV is missing some");
+             !live || m.Measuring ? "how much the TV gets" : rokuKeepsUp ? "the Roku keeps up"
+             : m.Bars >= 4 ? "the TV gets it all" : m.Bars == 3 ? "the TV gets most of it" : "the TV is missing some");
 
         // The TV: a Roku reports its stalls and how far behind live it plays; other TVs just play.
         bool tvWatch = c.RecentStalls > 0;
