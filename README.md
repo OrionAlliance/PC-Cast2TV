@@ -42,11 +42,10 @@ I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, wi
 - **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also holds the window look and the stream controller, shows what the OK button on your Roku remote does, shows your version, links back to this page and its **PATCH NOTES**, and opens the folder with your debug log.
 
 <p align="center">
-  <a href="Screenshots/simple-look.png"><img src="Screenshots/simple-look.png" height="150" alt="The simple look: FIND: TV / ROKU first, each device as a card, and one big button" /></a>
+  <a href="Screenshots/simple-look.png"><img src="Screenshots/simple-look.png" width="50%" alt="The simple look: FIND: TV / ROKU first, each device as a card, and one big button" /></a>
   &nbsp;
-  <a href="Screenshots/monitor-selection.png"><img src="Screenshots/monitor-selection.png" height="150" alt="MONITOR SELECTION open: each monitor by name, with SET AS DEFAULT under it" /></a>
-  &nbsp;
-  <a href="Screenshots/settings.png"><img src="Screenshots/settings.png" height="150" alt="The Settings window: theme colors, window look, stream controller, the Roku remote's OK button, version, GitHub page, OPEN LOG FOLDER and PATCH NOTES" /></a><br>
+  <a href="Screenshots/monitor-selection.png"><img src="Screenshots/monitor-selection.png" width="46%" alt="MONITOR SELECTION open: each monitor by name, with SET AS DEFAULT under it" /></a><br>
+  <a href="Screenshots/settings.png"><img src="Screenshots/settings.png" width="34%" alt="The Settings window: theme colors, window look, stream controller, the Roku remote's OK button, version, GitHub page, OPEN LOG FOLDER and PATCH NOTES" /></a><br>
   <i>The simple look · MONITOR SELECTION (two or more monitors) · Settings. Click any picture to see it full size.</i>
 </p>
 
