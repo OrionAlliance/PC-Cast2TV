@@ -1,8 +1,8 @@
 <h1 align="center">PC Cast2TV</h1>
 
 <p align="center">
-  <b>Cast your Windows PC's screen and sound to your TV or Roku, over your home network.</b><br>
-  <b>Roku, Chromecast and smart TVs. Open it, pick your device, click Cast. That's the app.</b>
+  <b>Cast your Windows PC's screen and sound to your TV or Roku.</b><br>
+  <b>Open it, pick your TV, click Cast. That's the app.</b>
 </p>
 
 <p align="center">
@@ -21,111 +21,92 @@
 
 ## Why this exists
 
-I wanted my PC screen to show on my TV. The whole screen, with sound, smooth, without running an HDMI cable across the room or buying another gadget. The ways I tried either lagged, stuttered, or needed extra hardware. So with the help of Claude AI, I built exactly what I wanted: one small app, one button, and the TV shows what my PC shows. Hopefully it's what you've wanted, too.
+I wanted my PC screen on my TV, with sound, smooth, and without an HDMI cable across the room or another gadget. Everything I tried lagged, stuttered or needed extra hardware. So with the help of Claude AI, I built what I wanted: one small app, one button, and the TV shows what my PC shows. Hopefully it's what you've wanted, too.
 
 ## What it does
 
-- **Casts your screen and your PC's sound** at up to 1080p and 60 frames a second. Bigger screens are scaled down to fit.
-- **Uses your graphics card's video encoder** (NVIDIA, AMD or Intel), so casting barely touches your processor. If the card's encoder won't start, the processor takes over at 30 frames a second.
-- **Casts to:**
-  - **Rokus:** Roku streaming sticks and boxes, and Roku TVs, through our own free PC Cast2TV app from the Roku Channel Store (the app helps you add it).
-  - **TVs with Chromecast built in:** many VIZIO, Sony, TCL and Hisense TVs, plus Chromecast dongles and Google TV boxes. They get your screen live through the TV's own screen mirroring, the same way Chrome casts a screen. No extra app needed.
-  - **Other smart TVs** that can play video from your home network (DLNA).
-
-  Not sure about yours? Just click **DETECT DEVICE(S)**. If your TV shows up in the list, the app can cast to it.
-- **One portable exe.** No installer, no extra programs, nothing running in the background. Its settings live in a `Settings` folder next to the app.
-- **Keeps itself up to date.** When a new version is out, the app offers it when you open it. One click and it updates and restarts itself. It never interrupts a cast.
-- **A health readout** while you cast: dropped frames, CPU load and GPU load. The numbers stay up after the cast so you can see how it went.
-- **A stream controller** for TVs with Chromecast built in, in Settings and off to start. If the picture stutters, turn it on: it watches how well your TV keeps up and lowers or raises the data rate to keep the picture smooth. It works right away, even during a cast.
-- **Two looks,** picked in Settings: the dial (at the top of this page), with every number in view, or the simple look: find your TV, click it, click Cast. The simple look's **DETAILS** page shows each step of the cast (the video, this app, the network, the TV) and where a stutter would come from.
-- **MONITOR SELECTION,** for PCs with two or more monitors: a tab at the top of the app drops down with each monitor by name. Click one to cast it, or tick **SET AS DEFAULT** under it to cast it every time. With a single monitor, the tab doesn't show at all.
-- **8 color themes,** plus Random and your own color, from the ⚙ cog. Settings also holds the window look and the stream controller, shows what the OK button on your Roku remote does, shows your version, links back to this page and its **PATCH NOTES**, and opens the folder with your debug log.
+- **Casts your screen and sound** at up to 1080p and 60 frames a second.
+- **Uses your graphics card** (NVIDIA, AMD or Intel), so your processor stays free.
+- **Casts to Rokus** (through our free Roku app), **TVs with Chromecast built in**, and **smart TVs with DLNA**. Not sure about yours? Click **DETECT DEVICE(S)**. If it shows up, it works.
+- **One portable exe.** No installer, nothing running in the background.
+- **Updates itself** when you open it, never during a cast.
+- **MONITOR SELECTION** for two or more monitors: pick the one to cast, or tick **SET AS DEFAULT**. With one monitor, you won't see it.
+- **Two looks:** the dial (above) or the simple look. The simple look's **DETAILS** page shows where a stutter comes from.
+- **Settings** (the ⚙ cog): 8 color themes, a stream controller for Chromecast TVs, **PATCH NOTES** and your debug log.
 
 <p align="center">
   <a href="Screenshots/simple-look.png"><img src="Screenshots/simple-look.png" width="50%" alt="The simple look: FIND: TV / ROKU first, each device as a card, and one big button" /></a>
   &nbsp;
   <a href="Screenshots/monitor-selection.png"><img src="Screenshots/monitor-selection.png" width="46%" alt="MONITOR SELECTION open: each monitor by name, with SET AS DEFAULT under it" /></a><br>
   <a href="Screenshots/settings.png"><img src="Screenshots/settings.png" width="34%" alt="The Settings window: theme colors, window look, stream controller, the Roku remote's OK button, version, GitHub page, OPEN LOG FOLDER and PATCH NOTES" /></a><br>
-  <i>The simple look · MONITOR SELECTION (two or more monitors) · Settings. Click any picture to see it full size.</i>
+  <i>The simple look · MONITOR SELECTION · Settings. Click any picture to see it full size.</i>
 </p>
 
-## Requirements
+## What you need
 
-- **Works on Windows 10 and Windows 11** (64-bit). It looks best on Windows 11, where the title bar picks up your theme color and the window gets rounded corners.
-- **The PC and the TV on the same home network.** Windows has to call that network Private, not Public. The app tells you if it doesn't.
-- **Running a VPN?** If you're having connection issues, you may need to turn on its "Allow LAN" setting (some VPNs call it "Local network sharing") so the PC can reach the TV.
+- **Windows 10 or 11** (64-bit).
+- **Your PC and TV on the same home network,** set to Private in Windows. The app tells you if it isn't.
+- **Using a VPN?** Turn on its "Allow LAN" setting.
 
 ## Installing
 
-1. Download **`PC-Cast2TV.exe`** from the [Releases](../../releases) page. That's the only official download. Copies posted anywhere else aren't from me, so don't run them.
-2. Put it in its own folder (it keeps its `Settings` folder next to it) and run it. **Windows will show a blue "Windows protected your PC" warning.** That's SmartScreen reacting to an unsigned open-source app with no download reputation yet, not a threat detection. Click **More info → Run anyway**. (Don't take my word for what the app does. The entire source code is this repository.)
-3. It connects to your home network by itself. The first time you open it, Windows asks once to let your TVs and Roku reach the app. That's a firewall rule for this app only, on private networks only.
-4. Click **DETECT DEVICE(S)** (**FIND: TV / ROKU** in the simple look) to find your TVs and Roku, click the one you want, and click **Cast**.
+1. Download **`PC-Cast2TV.exe`** from [Releases](../../releases). That's the only official download.
+2. Put it in its own folder and run it. Windows shows a blue **"Windows protected your PC"** warning because the app is new, not because it found a threat. Click **More info → Run anyway**. (All the code is right here.)
+3. The first time, Windows asks once to let your TV reach the app. Click **Yes**.
+4. Click **DETECT DEVICE(S)**, click your TV, then click **Cast**.
 
-## Roku: one free app, and PC Cast2TV adds it for you
-
-A Roku plays your PC through **PC Cast2TV for Roku**, our own free app in the Roku Channel Store. You don't have to go looking for it:
+## Roku
 
 <p align="center">
-  <img src="Images/pc-cast2tv-roku.png" width="290" alt="The PC Cast2TV Roku app icon" /><br>
-  <i>PC Cast2TV on your Roku's home screen.</i>
+  <img src="Images/pc-cast2tv-roku.png" width="290" alt="The PC Cast2TV Roku app icon" />
 </p>
 
-1. Click your Roku in PC Cast2TV's list.
-2. If the PC Cast2TV app isn't on your Roku yet, PC Cast2TV pops up and shows you. Click **ADD PC CAST2TV** and its page opens on your TV.
-3. Press **OK** on your Roku remote. PC Cast2TV sees it arrive, the popup closes by itself, and you're ready to click **Cast**.
+A Roku plays your PC through **PC Cast2TV for Roku**, our free app in the Roku Channel Store.
 
-If your Roku's **Control by mobile apps** setting is on **Limited** (newer Rokus come that way), PC Cast2TV pops up and shows where to switch it to **Enabled**, and **CHECK AGAIN** makes sure it took.
+1. Click your Roku in PC Cast2TV.
+2. Don't have the Roku app yet? Click **ADD PC CAST2TV** and its page opens on your TV.
+3. Press **OK** on your Roku remote. That's it, you're ready to cast.
 
-You can also add it yourself: search the Roku Channel Store for **PC Cast2TV**, or add it with the code **PCCast2TV** at [my.roku.com/account/add/PCCast2TV](https://my.roku.com/account/add/PCCast2TV).
+You can also search the Roku Channel Store for **PC Cast2TV**.
 
-**The remote, while you cast:** when a video is playing on your PC, press **OK** on the Roku remote to pause or play it, so you can step away without walking back to the PC. Press **Back** to end the cast.
+Newer Rokus set **Control by mobile apps** to **Limited**. If yours is, the app shows you where to switch it to **Enabled**.
 
-The Roku app's code is in the [Roku App](Roku%20App) folder of this repository.
+**While casting:** press **OK** on the remote to pause or play the video on your PC. Press **Back** to end the cast.
 
-## What it's been tested on
+The Roku app's code is in the [Roku App](Roku%20App) folder.
 
-So far it has run on:
+## Tested on
 
-- Desktop PCs on Windows 10 and Windows 11, wired to the network, with AMD Radeon and NVIDIA RTX graphics cards.
-- Rokus on Wi-Fi (Roku OS 15.3) through the PC Cast2TV Roku app: a Roku Ultra and a TCL Roku TV.
-- A VIZIO TV with Chromecast built in, wired.
+- Windows 10 and 11 desktops, wired, with AMD Radeon and NVIDIA RTX cards.
+- A Roku Ultra and a TCL Roku TV, on Wi-Fi.
+- A VIZIO TV with Chromecast built in.
 
-Not tested yet:
-
-- **Laptops,** especially ones with two graphics chips.
-- **Intel graphics** (the app supports Intel's video encoder, but no Intel card has been tested).
-- **A PC on Wi-Fi.** (The Rokus on Wi-Fi work fine.)
-- **DLNA smart TVs.** The app supports them, but none have been tested.
-- **Other Rokus** (Express, Streaming Stick) and **Chromecast dongles or Google TV boxes.**
-- **Two real monitors.** MONITOR SELECTION was tested with a virtual second monitor, not yet with two real ones, or with a monitor plugged into a different graphics card than the other.
-
-If it works, or doesn't, on your setup, please open an [Issue](../../issues) with your `debug.log`. That's how this list gets shorter.
+**Not tested yet:** laptops, Intel graphics, a PC on Wi-Fi, DLNA TVs, other Rokus, Chromecast dongles, and two real monitors. Tried it on one of these? Open an [Issue](../../issues) with your `debug.log`, works or not.
 
 ## FAQ
 
-**Why is the TV a few seconds behind my PC?**
-A Roku plays the cast in one-second pieces and keeps a few of them in hand, so a Wi-Fi hiccup never freezes the picture. That's a few seconds behind, and it's the trade for a smooth picture. A TV with Chromecast built in gets your screen live instead, about half a second behind.
+**Why is the TV a few seconds behind?**
+A Roku keeps a few seconds of video in hand, so a Wi-Fi hiccup never freezes the picture. A Chromecast TV is about half a second behind.
 
 **Why did my screen switch to 60 Hz?**
-A 75 or 144 Hz screen copied 60 times a second can't land evenly on a 60 Hz TV, which shows as a stutter. So while you cast, the app runs your screen at 60 Hz, and it puts your screen back the way it was when the cast ends.
+So the cast lines up with your 60 Hz TV without stutters. It switches back when the cast ends.
 
 **It says the TV isn't answering.**
-Make sure the TV (or the Roku) is on and on the same home network as the PC. If you run a VPN, turn on its "Allow LAN" setting. If the TV moved to a new address, click **DETECT DEVICE(S)** (**FIND: TV / ROKU** in the simple look) to find it again.
+Make sure the TV is on and on the same network as your PC, then click **DETECT DEVICE(S)** again.
 
-**My Roku won't start the cast, or ADD PC CAST2TV didn't open anything.**
-PC Cast2TV talks to a Roku the same way Roku's own phone app does. On the Roku, open **Settings > System > Advanced system settings > Control by mobile apps** and pick **Enabled**. Newer Rokus come set to **Limited**, which blocks PC Cast2TV; when that's the case, the app shows a popup with these same steps.
+**My Roku won't start the cast.**
+On the Roku, go to **Settings > System > Advanced system settings > Control by mobile apps** and pick **Enabled**.
 
-**Can I hide a device I don't use?**
-Right-click it in the list (or its card in the simple look) and click **HIDE FROM THE LIST**. It stays saved, finding devices leaves it off too, and right-clicking **DETECT DEVICE(S)** (or **FIND: TV / ROKU**) brings it back.
+**Can I hide a device?**
+Right-click it and click **HIDE FROM THE LIST**. Right-click **DETECT DEVICE(S)** to bring it back.
 
 ## Your data stays yours
 
-This app collects **nothing** and sends **nothing** about you: no telemetry, no analytics, no accounts. It talks to your TVs on your home network, and its only internet use is asking this repository whether a newer version is out (and downloading it if you say so). That request sends nothing about you or your PC.
+No telemetry, no analytics, no accounts. The app talks only to your TVs at home, and checks this page for a new version. That check sends nothing about you.
 
 ## Found a bug?
 
-Open an [Issue](../../issues) and include your `debug.log`: click the cog, then OPEN LOG FOLDER, and drag the file into your post. It records what the app was doing, how each cast went, and your TV's model and software version. It contains no personal information: user names and folder paths are swapped for short tags. Read it yourself first if you like.
+Open an [Issue](../../issues) and add your `debug.log` (click the cog, then **OPEN LOG FOLDER**). It shows what the app did, with user names and folder paths taken out.
 
 ---
 
