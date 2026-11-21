@@ -9,13 +9,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>PCCast2TV</RootNamespace>
     <AssemblyName>PC Cast2TV</AssemblyName>
-    <Version>0.4.14</Version>
+    <Version>0.4.15</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <!-- Packs .NET inside the exe compressed: 136 MB down to 63, and it still opens about as fast -->
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <!-- The PC's folder path stays out of the exe: build paths read as a neutral name -->
     <PathMap>$(MSBuildProjectDirectory)=PCCast2TV</PathMap>
@@ -23,17 +22,20 @@
 
   <ItemGroup>
     <None Remove="Roku App\**" />
+    <!-- Builds holds test copies, design mockups and test tools: none of it goes into the app -->
+    <Page Remove="Builds\**" />
+    <Compile Remove="Builds\**" />
+    <None Remove="Builds\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Our Roku app's icon for the Roku popup, as the Roku shows it -->
     <Resource Include="Images\pc-cast2tv-roku.png" />
-    <!-- The Roku remote in Settings, showing what the OK button does -->
     <Resource Include="Images\roku-remote.png" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio.Wasapi" Version="3.3.0" />
+    <PackageReference Include="System.Management" Version="10.0.15" /> <!-- Windows Security Center: the security software line in the log -->
     <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
     <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
     <PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />

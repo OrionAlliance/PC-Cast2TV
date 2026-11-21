@@ -7,7 +7,6 @@ public sealed partial class CastPlayer
 {
     static string Type(JsonElement m) => Text(m, "type");
 
-    // A text field of a TV message; null when the message or the field isn't the shape it should be.
     static string Text(JsonElement m, string name) =>
         m.ValueKind == JsonValueKind.Object && m.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
 

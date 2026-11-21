@@ -19,6 +19,8 @@ public partial class App : Application
         TaskScheduler.UnobservedTaskException += (_, a) => Log.Write("unobserved task error: " + a.Exception);
         Log.Write($"app: start, version {typeof(App).Assembly.GetName().Version}");
         Log.Write("pc: " + PcInfo.Describe());
+        Log.Write("pc: " + PcInfo.Power());
+        _ = Task.Run(() => Log.Write("pc: security: " + PcInfo.Security())); // Windows can take a moment to answer: off the window's way
         ThemeColors.Apply(AppSettings.Theme); // before the window opens, so it never flashes the default colors
         base.OnStartup(e);
         new MainWindow().Show();

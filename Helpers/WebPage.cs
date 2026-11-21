@@ -6,7 +6,7 @@ namespace PCCast2TV.Helpers;
 public static class WebPage
 {
     public const string Donate = "https://ko-fi.com/orionailliance";
-    public const string PatchNotes = "https://github.com/OrionAlliance/PC-Cast2TV/releases"; // every version and what changed
+    public const string PatchNotes = "https://github.com/OrionAlliance/PC-Cast2TV/releases";
 
     public static void Open(string url, string what)
     {

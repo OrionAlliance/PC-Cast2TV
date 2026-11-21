@@ -3,8 +3,6 @@ namespace PCCast2TV.Helpers;
 // The device list's own parts: hiding (right-click a device), bringing back (right-click Detect), and the bookmark.
 public sealed partial class Caster
 {
-    // ---- Hide (right-click a device) and bring back (right-click Detect) ----
-
     // Hidden devices: off the list, still saved, so they can come back.
     public List<Device> SetAside => AppSettings.Hidden.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
 

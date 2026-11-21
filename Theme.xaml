@@ -18,7 +18,7 @@
     <!-- Settings cog, filled: 8 teeth around a round hole -->
     <Geometry x:Key="IcoCog">F0 M20.11,9.83 L23.05,10.15 L23.05,13.85 L20.11,14.17 L19.27,16.20 L21.12,18.50 L18.50,21.12 L16.20,19.27 L14.17,20.11 L13.85,23.05 L10.15,23.05 L9.83,20.11 L7.80,19.27 L5.50,21.12 L2.88,18.50 L4.73,16.20 L3.89,14.17 L0.95,13.85 L0.95,10.15 L3.89,9.83 L4.73,7.80 L2.88,5.50 L5.50,2.88 L7.80,4.73 L9.83,3.89 L10.15,0.95 L13.85,0.95 L14.17,3.89 L16.20,4.73 L18.50,2.88 L21.12,5.50 L19.27,7.80 Z M15.6,12 A3.6,3.6 0 1 0 8.4,12 A3.6,3.6 0 1 0 15.6,12 Z</Geometry>
 
-    <!-- The simple look's icons, drawn as lines on a 24 x 24 grid -->
+    <!-- Icons drawn as lines on a 24 x 24 grid: the simple look's, and the heart on Settings' DONATE button -->
     <Geometry x:Key="IcoSearch">M17,10.5 A6.5,6.5 0 1 1 4,10.5 A6.5,6.5 0 1 1 17,10.5 Z M15.3,15.3 L20.5,20.5</Geometry>
     <Geometry x:Key="IcoTv">M3,5 H21 V17 H3 Z M8,20.5 H16</Geometry>
     <Geometry x:Key="IcoPlay">M8,5 L19,12 L8,19 Z</Geometry>

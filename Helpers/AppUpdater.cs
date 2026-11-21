@@ -13,8 +13,6 @@ public static class AppUpdater
     public const string Repo = "OrionAlliance/PC-Cast2TV", Page = "https://github.com/" + Repo;
     public const string AfterUpdate = "--after-update"; // the new version's start, so it waits for the old one to close
 
-    // The app's GitHub page in the default browser (Settings > ABOUT).
-    public static void OpenPage() => WebPage.Open(Page, "the GitHub page");
 
     public sealed record Update(Version Installed, Version Latest, string DownloadUrl, long Size);
 
@@ -181,10 +179,9 @@ public static class AppUpdater
 
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
 
-    // True right after an update, while the previous version is still left behind.
     public static bool JustUpdated() => File.Exists(ExePath + ".old");
 
-    // Deletes the old version and any half download, retrying for 10 s while an old copy (before 0.3.99) is still closing.
+    // Deletes the old version and any half download, retrying for 10 s while an old copy is still closing.
     static async Task CleanUpAsync()
     {
         string exe = ExePath;

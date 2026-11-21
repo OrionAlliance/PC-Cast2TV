@@ -8,7 +8,8 @@ namespace PCCast2TV.Helpers;
 public static class TvInfo
 {
     const string ModelUnknown = "model unknown until the next Detect";
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(3), MaxResponseContentBufferSize = 1_000_000 };
+    static readonly HttpClient Http = new(new HttpClientHandler { AllowAutoRedirect = false }) // a device's answer can't send the app anywhere else
+        { Timeout = TimeSpan.FromSeconds(3), MaxResponseContentBufferSize = 1_000_000 };
 
     public static async Task LogAsync(Device d)
     {

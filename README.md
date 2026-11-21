@@ -27,7 +27,7 @@ I wanted my PC screen on my TV, with sound, smooth, and without an HDMI cable ac
 
 - **Casts your screen and sound** at up to 1080p and 60 frames a second.
 - **Uses your graphics card** (NVIDIA, AMD or Intel), so your processor stays free.
-- **Casts to Rokus** (through our free Roku app), **TVs with Chromecast built in**, and **smart TVs with DLNA**. Not sure about yours? Click **DETECT DEVICE(S)**. If it shows up, it works.
+- **Casts to Rokus** (through our free Roku app), **TVs with Chromecast built in**, and **smart TVs with DLNA**. Not sure about yours? Click **DETECT DEVICE(S)**. If it shows up, give it a cast.
 - **One portable exe.** No installer, nothing running in the background.
 - **Updates itself** when you open it, never during a cast.
 - **MONITOR SELECTION** for two or more monitors: pick the one to cast, or tick **SET AS DEFAULT**. With one monitor, you won't see it.
@@ -81,7 +81,7 @@ The Roku app's code is in the [Roku App](Roku%20App) folder.
 - A Roku Ultra and a TCL Roku TV, on Wi-Fi.
 - A VIZIO TV with Chromecast built in.
 
-**Not tested yet:** laptops, Intel graphics, a PC on Wi-Fi, DLNA TVs, other Rokus, Chromecast dongles, and two real monitors. Tried it on one of these? Open an [Issue](../../issues) with your `debug.log`, works or not.
+**Not tested yet:** laptops, Intel graphics, a PC on Wi-Fi, DLNA TVs, other Rokus, Chromecast dongles, and two real monitors. Tried it on one of these? Post a comment in the [Testing and Feedback](../../issues/1) post with your `debug.log`, works or not.
 
 ## FAQ
 

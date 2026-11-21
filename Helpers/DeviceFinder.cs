@@ -13,7 +13,7 @@ public enum DeviceKind { Roku, RokuTv, Dlna, Cast }
 
 // A device the app can cast to: Id is its own serial or UDN (it survives a new address), Model what Detect heard, for the log.
 public sealed record Device(string Id, string Name, DeviceKind Kind, string Ip, string ControlUrl = null, string ServiceType = null, int Port = 0,
-                            string Model = null)
+                            string Model = null, string ConnectionUrl = null, string ConnectionType = null) // Connection: a DLNA TV's list of what it plays
 {
     // Worked out from Kind, so they stay out of settings.json.
     [JsonIgnore] public bool IsRoku => Kind is DeviceKind.Roku or DeviceKind.RokuTv;
@@ -30,7 +30,8 @@ public static class DeviceFinder
 {
     const string RokuSt = "roku:ecp";
     const string RendererSt = "urn:schemas-upnp-org:device:MediaRenderer:1";
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(3), MaxResponseContentBufferSize = 1_000_000 };
+    static readonly HttpClient Http = new(new HttpClientHandler { AllowAutoRedirect = false }) // a device's answer can't send the app anywhere else
+        { Timeout = TimeSpan.FromSeconds(3), MaxResponseContentBufferSize = 1_000_000 };
 
     public static async Task<List<Device>> DetectAsync(IReadOnlyList<Device> saved)
     {
@@ -151,8 +152,13 @@ public static class DeviceFinder
         }
         var name = Child(device, "friendlyName") ?? Child(device, "modelName") ?? "TV";
         var udn = Child(device, "UDN") ?? ip;
+        var cm = device.Descendants().Where(e => e.Name.LocalName == "service")
+            .FirstOrDefault(s => (Child(s, "serviceType") ?? "").Contains(":ConnectionManager:", StringComparison.OrdinalIgnoreCase));
+        var cmUrl = cm == null ? null : new Uri(baseUri, Child(cm, "controlURL") ?? "");
+        if (cmUrl != null && (cmUrl.Host != ip || cmUrl.Scheme != Uri.UriSchemeHttp)) cmUrl = null; // only ever asked on the TV itself
         return new Device("dlna:" + udn, name, DeviceKind.Dlna, ip, control.ToString(), Child(service, "serviceType"),
-                          Model: TvInfo.ModelText(Child(device, "manufacturer"), Child(device, "modelName"), Child(device, "modelNumber")));
+                          Model: TvInfo.ModelText(Child(device, "manufacturer"), Child(device, "modelName"), Child(device, "modelNumber")),
+                          ConnectionUrl: cmUrl?.ToString(), ConnectionType: cmUrl == null ? null : Child(cm, "serviceType"));
     }
 
     static string Child(XElement e, string name) =>

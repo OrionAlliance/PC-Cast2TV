@@ -11,14 +11,26 @@ public sealed partial class Caster
         Raise();
     }
 
-    // Once a second while online: feed the readout, and end the cast if the TV went quiet.
+    // The once-a-second readout runs only during a cast: there's nothing to read otherwise.
+    void StartTicking()
+    {
+        _ticks = 0;
+        _tick ??= new Timer(_ => _ui.Post(_ => Tick(), null), null, 1000, 1000);
+    }
+
+    void StopTicking()
+    {
+        _tick?.Dispose();
+        _tick = null;
+    }
+
     void Tick()
     {
         if (Phase != Phase.Casting) return;
         bool mirrored = _castPlayer?.Mirrored == true;
         Meter.Tick(_rec.EncodedBytes, SentBytes);
         var now = DateTime.UtcNow;
-        if (++_ticks % 10 == 0) // the readout, written down every 10 seconds so a cast can be judged from the log
+        if (++_ticks % 10 == 0)
         {
             Log.Write($"cast: made {Meter.EncodedLine[^1]:0.0} Mbps, sent {Meter.Now:0.0}, signal {Meter.SignalLabel}");
             if (mirrored) Log.Write(_castPlayer.TakeMirrorReport());

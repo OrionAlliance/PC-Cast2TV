@@ -3,10 +3,11 @@ using Vortice.DXGI;
 
 namespace PCCast2TV.Helpers;
 
-// One monitor on the desktop: Windows' name for it (\\.\DISPLAY2), a lasting key for the saved default, its own name, size and card.
-public sealed record PcScreen(string Device, string Key, string Name, int Width, int Height, bool Main, string Card)
+// One monitor on the desktop: Windows' name for it (\\.\DISPLAY2), a lasting key for the saved default, its own name, size, card and HDR.
+public sealed record PcScreen(string Device, string Key, string Name, int Width, int Height, bool Main, string Card, bool Hdr = false)
 {
     public string LogName => $"{Name} {Width}x{Height}" + (Main ? " (main)" : "");
+    public string HdrNote => Hdr ? "HDR on" : "HDR off";
 }
 
 // The monitors on the desktop, left to right, each named the way it names itself (the names Windows Settings shows).
@@ -30,7 +31,7 @@ public static class PcScreens
                                 var r = d.DesktopCoordinates;
                                 names.TryGetValue(d.DeviceName, out var n);
                                 found.Add((r.Left, new PcScreen(d.DeviceName, n.Key ?? d.DeviceName, n.Name, r.Right - r.Left, r.Bottom - r.Top,
-                                    r.Left == 0 && r.Top == 0, adapter.Description1.Description)));
+                                    r.Left == 0 && r.Top == 0, adapter.Description1.Description, HdrOn(output))));
                             }
         }
         catch (SharpGen.Runtime.SharpGenException ex) { Log.Write("screens: could not list them: " + ex.Message); }
@@ -44,6 +45,13 @@ public static class PcScreens
             list[i] = list[i] with { Name = name };
         }
         return list;
+    }
+
+    // HDR is on when Windows drives the monitor in the HDR color space (older Windows without the newer output: off).
+    static bool HdrOn(IDXGIOutput output)
+    {
+        using var six = output.QueryInterfaceOrNull<IDXGIOutput6>();
+        return six?.Description1.ColorSpace == ColorSpaceType.RgbFullG2084NoneP2020;
     }
 
     // Windows' display paths: each monitor's own name and its lasting device path, by Windows' name for it.

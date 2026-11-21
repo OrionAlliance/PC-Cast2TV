@@ -7,17 +7,14 @@ public static class RemoteKeys
 {
     const uint KeyboardInput = 1, ExtendedKey = 0x1, KeyUp = 0x2;
 
-    static readonly Dictionary<string, ushort> Keys = new()
-    {
-        ["playpause"] = 0xB3, // media play/pause
-    };
+    const ushort PlayPause = 0xB3; // media play/pause
 
-    public static bool Knows(string name) => Keys.ContainsKey(name);
+    public static bool Knows(string name) => name == "playpause";
 
     public static void Press(string name)
     {
-        if (!Keys.TryGetValue(name, out var vk)) return;
-        var down = new INPUT { type = KeyboardInput, u = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = ExtendedKey } } };
+        if (!Knows(name)) return;
+        var down = new INPUT { type = KeyboardInput, u = new InputUnion { ki = new KEYBDINPUT { wVk = PlayPause, dwFlags = ExtendedKey } } };
         var up = down;
         up.u.ki.dwFlags |= KeyUp;
         uint sent = SendInput(2, new[] { down, up }, Marshal.SizeOf<INPUT>());

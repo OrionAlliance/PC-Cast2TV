@@ -98,7 +98,7 @@ public partial class SimpleLook : UserControl
             text.Children.Add(now);
         }
         else text.Children.Add(Text(DeviceLine(d), 12, Res("DimText")));
-        var card = Card(Icon("IcoTv", lit ? Res("Main") : Res("DimText"), 26), text, Bookmark(d, isDefault), lit);
+        var card = Card(Icon("IcoTv", lit ? Res("Main") : Res("DimText"), 26), text, DeviceText.Bookmark(c, d, isDefault, Res("Main"), Res("DimText"), 16), lit);
         card.ToolTip = "Right-click to hide this device";
         card.MouseLeftButtonUp += (_, _) => c.Pick(d);
         card.MouseRightButtonUp += (_, e) =>
@@ -107,22 +107,6 @@ public partial class SimpleLook : UserControl
             if (c.Idle && DeviceActionWindow.Ask(Owner, d)) c.Hide(d);
         };
         return card;
-    }
-
-    Button Bookmark(Device d, bool isDefault)
-    {
-        var icon = new Path
-        {
-            Data = (Geometry)FindResource("IcoBookmark"), Stroke = isDefault ? Res("Main") : Res("DimText"), Fill = isDefault ? Res("Main") : null, StrokeThickness = 1.8,
-            StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
-        };
-        var mark = new Button
-        {
-            Style = (Style)FindResource("Bare"), VerticalAlignment = VerticalAlignment.Center, ToolTip = isDefault ? "Default device (click to clear)" : "Make this the default",
-            Content = new Viewbox { Width = 16, Height = 16, Child = new Canvas { Width = 24, Height = 24, Children = { icon } } },
-        };
-        mark.Click += (_, _) => _caster.ToggleDefault(d);
-        return mark;
     }
 
     // A card: icon, two lines of text, maybe a bookmark; the lit one has a ring in the theme color and a soft glow.
@@ -141,7 +125,7 @@ public partial class SimpleLook : UserControl
             Grid.SetColumn(mark, 2);
             g.Children.Add(mark);
         }
-        Brush rest = lit ? Tint(0.08) : find ? Brushes.Transparent : Tint(0.03), hover = Tint(lit ? 0.14 : 0.09);
+        Brush rest = lit ? ThemeColors.Tint(0.08) : find ? Brushes.Transparent : ThemeColors.Tint(0.03), hover = ThemeColors.Tint(lit ? 0.14 : 0.09);
         var card = new Border
         {
             Width = 224, Height = 64, CornerRadius = new CornerRadius(14), Margin = new Thickness(6), Padding = new Thickness(16, 0, 6, 0),
@@ -190,9 +174,6 @@ public partial class SimpleLook : UserControl
     }
 
     static string Minutes(TimeSpan t) => $"{(int)t.TotalMinutes} MIN";
-
-    // The theme's main color, see-through.
-    static Brush Tint(double opacity) => (Brush)new SolidColorBrush(ThemeColors.Current.Main) { Opacity = opacity }.GetAsFrozen();
 
     TextBlock Text(string text, double size, Brush fg) =>
         new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis };

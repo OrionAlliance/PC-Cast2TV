@@ -104,7 +104,6 @@ public partial class MainWindow
     // The dial's design with the strip, so its saved size and its opening size both include it.
     double DesignHeight => Design.Height + Design.Margin.Top;
 
-    void SavePlace() => SaveSpot(WindowLook.Simple);
 
     void SaveSpot(bool simple)
     {
@@ -114,6 +113,6 @@ public partial class MainWindow
             return;
         }
         var r = WindowState == WindowState.Normal ? new Rect(Left, Top, ActualWidth, ActualHeight) : RestoreBounds;
-        WindowSpot.Keep(r, WindowState == WindowState.Maximized, Design.Width, DesignHeight);
+        AppSettings.SetWindow(new WindowPlace(r.Left, r.Top, r.Width, r.Height, WindowState == WindowState.Maximized, Design.Width, DesignHeight));
     }
 }

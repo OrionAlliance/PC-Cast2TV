@@ -13,7 +13,6 @@ public sealed class PreciseTimer : IDisposable
         return t != IntPtr.Zero ? t : CreateWaitableTimerExW(IntPtr.Zero, null, 0, 0x1F0003);
     }
 
-    // Sleeps this many seconds, never past limitMs.
     public void Wait(double seconds, uint limitMs)
     {
         long until = -(long)(seconds * 10_000_000);

@@ -50,14 +50,7 @@ public sealed partial class Caster
 
     public bool IsOnline => Phase is not (Phase.Offline or Phase.Connecting);
     public bool Idle => Phase is Phase.Offline or Phase.Online; // nothing connecting, detecting or casting
-    int SentHeight
-    {
-        get
-        {
-            var s = CastScreen;
-            return s == null ? 1080 : ScreenInfo.SentSize(s.Width, s.Height).Height;
-        }
-    }
+    int SentHeight => CastScreen is { } s ? ScreenInfo.SentSize(s.Width, s.Height).Height : 1080;
     public string VideoLabel => Encoder == null ? $"{SentHeight}P" : $"{SentHeight}P · {Encoder.Fps}";
 
     public Caster()
@@ -69,6 +62,13 @@ public sealed partial class Caster
         NetworkChange.NetworkAddressChanged += (_, _) => _ui.Post(_ => RefreshNetwork(), null);
         _server.RemoteButton = name => _ui.Post(_ => OnRemoteButton(name), null);
         _server.TvReport = n => _ui.Post(_ => OnTvReport(n), null);
+        _server.LiveClosed = () => _ui.Post(_ => OnLiveClosed(), null);
+    }
+
+    // A DLNA TV let go of the stream while the cast still runs (not our END CAST): its own word on why goes in the log.
+    void OnLiveClosed()
+    {
+        if (Phase == Phase.Casting && CastingTo is { Kind: DeviceKind.Dlna } d) _ = DlnaPlayer.LogWhyItStoppedAsync(d);
     }
 
     void OnTvReport(RokuReport.Numbers n)
@@ -106,7 +106,6 @@ public sealed partial class Caster
         Raise();
     }
 
-    // This PC's side of the link to the device in use; nothing while offline.
     void SetNetwork(bool online) => PcLink = online ? HomeNetwork.Link((CastingTo ?? Picked)?.Ip) : null;
 
     // A device's connection in its own words (WI-FI or WIRED); LinkAsked is false until it's asked, and one that doesn't say is null.
@@ -141,6 +140,7 @@ public sealed partial class Caster
 
         // TVs can only fetch the video if Windows lets them in; ask once per PC for the app's own rule.
         bool firewallOk = await Task.Run(FirewallRule.Exists);
+        if (Phase != Phase.Connecting) return; // the app closed meanwhile
         if (!firewallOk)
         {
             Set(Phase.Connecting, "ASKING WINDOWS TO LET TVS IN...");
@@ -156,7 +156,6 @@ public sealed partial class Caster
             Set(Phase.Offline, "NO FREE NETWORK PORT");
             return;
         }
-        _tick = new Timer(_ => _ui.Post(_ => Tick(), null), null, 1000, 1000);
         SetNetwork(true);
         Log.Write("connect: online on " + (PcLink ?? "NO NETWORK"));
         Set(Phase.Online, !firewallOk ? "FIREWALL BLOCKS TVS · CAST TO ASK WINDOWS AGAIN"
@@ -190,8 +189,7 @@ public sealed partial class Caster
     async Task DisconnectAsync()
     {
         if (Phase == Phase.Casting) await StopCastAsync(null);
-        _tick?.Dispose();
-        _tick = null;
+        StopTicking();
         _server.Stop();
         SetNetwork(false);
         _answering.Clear();
@@ -215,7 +213,7 @@ public sealed partial class Caster
         {
             // Mid-check: drop everything; the steps still waiting see the phase change and stop.
             Phase = Phase.Offline;
-            _tick?.Dispose();
+            StopTicking();
             CleanupCast();
             _server.Stop();
         }

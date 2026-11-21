@@ -43,7 +43,7 @@ public sealed partial class VideoEncoder
         if (_maxBitRate > 0)
         {
             if (!Set(RateControlMode, 1) || !Set(MeanBitRate, (uint)_maxBitRate) || !Set(MaxBitRate, (uint)_maxBitRate)) skipped.Add("bitrate cap"); // peak held to the cap
-            if (!Set(MinQp, Qp)) skipped.Add("quality floor"); // never sharper than quality mode, so calm scenes stay as small as before
+            if (!Set(MinQp, Qp)) skipped.Add("quality floor"); // never sharper than quality mode, so calm scenes stay small
         }
         else if (!Set(RateControlMode, 3) || !SetQp(Qp)) skipped.Add("quality mode"); // constant quality
         if (!Set(GopSize, _maxBitRate > 0 ? int.MaxValue : (uint)_fps)) skipped.Add("keyframe spacing"); // Roku and DLNA: one each second; Chromecast: only when asked for (Chrome's way)

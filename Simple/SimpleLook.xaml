@@ -56,7 +56,7 @@
         </Grid>
 
         <!-- Page 2: the cast's steps, the same size as page 1 -->
-        <Grid x:Name="Steps" Margin="28,18,28,20" Width="{Binding ActualWidth, ElementName=Picker}" Height="{Binding ActualHeight, ElementName=Picker}">
+        <Grid Margin="28,18,28,20" Width="{Binding ActualWidth, ElementName=Picker}" Height="{Binding ActualHeight, ElementName=Picker}">
             <Grid.RenderTransform><TranslateTransform x:Name="StepsShift" X="4000" /></Grid.RenderTransform>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

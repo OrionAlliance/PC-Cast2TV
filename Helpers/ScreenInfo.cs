@@ -16,7 +16,6 @@ public static class ScreenInfo
         return ((int)Math.Round(w * fit) & ~1, (int)Math.Round(h * fit) & ~1);
     }
 
-    // How many times a second the monitor redraws.
     public static int Hz(string device) => Current(device, out var dm) ? dm.dmDisplayFrequency : 0;
 
     // TVs show 60 frames a second, so only a 60, 120 or 240 Hz screen lines up with them evenly.

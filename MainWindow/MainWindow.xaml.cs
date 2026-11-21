@@ -28,9 +28,10 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Title = $"PC Cast2TV  v{AppUpdater.Installed}"; // title bar and taskbar, like Fan Control
+        Title = $"PC Cast2TV  v{AppUpdater.Installed}";
         BuildSignalRing();
         _caster.Changed += Draw;
+        StateChanged += (_, _) => { if (WindowState != WindowState.Minimized) Draw(); }; // back from the taskbar: drawn as it is now
         _caster.Changed += () => { if (_pendingUpdate != null) Dispatcher.BeginInvoke(OfferUpdate); }; // a waiting update shows once the cast is over
         _caster.Notice += (title, body) =>
         {
@@ -42,7 +43,7 @@ public partial class MainWindow : Window
         {
             if (NoticeWindow.Ask(this, title, body, "CHECK AGAIN", () => _caster.StillBlockedAsync(roku))) await _caster.UnblockedAsync(roku);
         };
-        Loaded += async (_, _) => await _caster.ConnectAsync(); // the app goes online by itself when it opens
+        Loaded += async (_, _) => await _caster.ConnectAsync();
         ContentRendered += async (_, _) => await CheckForUpdateAsync();
         ThemeColors.Changed += OnThemeChanged;
         Glow(ThemeColors.Current.Main);
@@ -90,7 +91,7 @@ public partial class MainWindow : Window
         if (_shutdown?.IsCompleted == true) return; // shut down: the close queued below goes straight through
         e.Cancel = true;
         if (_shutdown != null) return; // clicked again while closing: the first close finishes the job
-        SavePlace();
+        SaveSpot(WindowLook.Simple);
         _shutdown = _caster.ShutdownAsync();
         await _shutdown;
         Log.Write("app: closed");
@@ -102,6 +103,7 @@ public partial class MainWindow : Window
     // Only the look on screen is drawn; switching looks draws the other at once.
     void Draw()
     {
+        if (WindowState == WindowState.Minimized) return;
         FitStrip(); // a monitor plugged in or unplugged while the app runs
         Monitors.Draw();
         if (WindowLook.Simple)
@@ -208,22 +210,12 @@ public partial class MainWindow : Window
         text.Children.Add(link);
         g.Children.Add(text);
 
-        var icon = new Path
-        {
-            Data = (Geometry)FindResource("IcoBookmark"), Stroke = isDefault ? Main : Second, Fill = isDefault ? Main : null, StrokeThickness = 1.8,
-            StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
-        };
-        var mark = new Button
-        {
-            Style = (Style)FindResource("Bare"), Margin = new Thickness(8, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center,
-            Content = new Viewbox { Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center, Child = new Canvas { Width = 24, Height = 24, Children = { icon } } },
-            ToolTip = isDefault ? "Default device (click to clear)" : "Make this the default",
-        };
-        mark.Click += (_, _) => _caster.ToggleDefault(d);
+        var mark = DeviceText.Bookmark(_caster, d, isDefault, Main, Second, 18);
+        mark.Margin = new Thickness(8, 0, 6, 0);
         Grid.SetColumn(mark, 1);
         g.Children.Add(mark);
 
-        Brush rest = picked ? Tint(0.09) : Brushes.Transparent, hover = Tint(0.18);
+        Brush rest = picked ? ThemeColors.Tint(0.09) : Brushes.Transparent, hover = ThemeColors.Tint(0.18);
         var row = new Border
         {
             Width = 246, CornerRadius = new CornerRadius(8), Padding = new Thickness(4, 4, 0, 5), Margin = new Thickness(0, 0, 0, 6),
@@ -232,13 +224,10 @@ public partial class MainWindow : Window
         row.MouseEnter += (_, _) => row.Background = hover;
         row.MouseLeave += (_, _) => row.Background = rest;
         row.MouseLeftButtonUp += (_, _) => _caster.Pick(d);
-        row.MouseRightButtonUp += (_, e) => { e.Handled = true; if (_caster.Idle && DeviceActionWindow.Ask(this, d)) _caster.Hide(d); }; // hide it from the list
+        row.MouseRightButtonUp += (_, e) => { e.Handled = true; if (_caster.Idle && DeviceActionWindow.Ask(this, d)) _caster.Hide(d); };
         row.ToolTip = "Right-click to hide this device";
         return row;
     }
-
-    // The theme's main color, see-through.
-    static Brush Tint(double opacity) => (Brush)new SolidColorBrush(ThemeColors.Current.Main) { Opacity = opacity }.GetAsFrozen();
 
     TextBlock Label(string text, double size, Brush fg) =>
         new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis };

@@ -40,7 +40,7 @@
             <Grid Width="444" Height="430">
                 <Image Source="/Images/roku-remote.png" Width="230" Height="430" HorizontalAlignment="Left" VerticalAlignment="Top"
                        RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock x:Name="OkNote" Width="186" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="258,148,0,0"
+                <TextBlock Width="186" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="258,148,0,0"
                            Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap"
                            Text="Pressing the OK button on the remote during video playback, will pause the video. This will allow you to grab a snack or something to drink. Press the OK button again to resume video playback." />
                 <Canvas IsHitTestVisible="False">

@@ -12,7 +12,8 @@ public static class RokuPlayer
     const string DevSlot = "dev";
     const string OurName = "PC Cast2TV"; // our app's name on the Roku's app list, however it was installed
     const string StoreId = "890239";     // our app's number in the Roku Channel Store
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(4), MaxResponseContentBufferSize = 1_000_000 };
+    static readonly HttpClient Http = new(new HttpClientHandler { AllowAutoRedirect = false }) // a device's answer can't send the app anywhere else
+        { Timeout = TimeSpan.FromSeconds(4), MaxResponseContentBufferSize = 1_000_000 };
     static readonly ConcurrentDictionary<string, string> OurIds = new(); // our app's id on each Roku, from its last app list
 
     // Whether our app is on the Roku, from its app list (the dev slot copy wins). Null when the list can't be read.
@@ -86,12 +87,12 @@ public static class RokuPlayer
     // Our app takes the link in url and sends buttons back; null once playing, else what went wrong.
     public static async Task<string> PlayAsync(Device d, string url, Func<int> piecesServed)
     {
-        const string failed = "DID NOT START PLAYING", label = "our app";
+        const string failed = "DID NOT START PLAYING";
         string link = Uri.EscapeDataString(url);
         try
         {
             using var r = await Http.PostAsync($"http://{d.Ip}:8060/launch/{IdOf(d)}?url={link}", null);
-            Log.Write($"roku: {label} asked to play, answer {(int)r.StatusCode}");
+            Log.Write($"roku: our app asked to play, answer {(int)r.StatusCode}");
             if (!r.IsSuccessStatusCode) return failed;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
@@ -107,14 +108,14 @@ public static class RokuPlayer
             await Task.Delay(500);
             var (state, error, why) = await MediaStateAsync(d);
             unread = why ?? unread;
-            if (error) { Log.Write($"roku: {label} reported a player error"); return failed; }
+            if (error) { Log.Write($"roku: our app reported a player error"); return failed; }
             if (state == "play" || piecesServed() - startPieces >= 3)
             {
-                Log.Write($"roku: {label} playing (state {Log.Outside(state)}, pieces {piecesServed() - startPieces})");
+                Log.Write($"roku: our app playing (state {Log.Outside(state)}, pieces {piecesServed() - startPieces})");
                 return null;
             }
         }
-        Log.Write($"roku: {label} never started (pieces {piecesServed() - startPieces}" + (unread == null ? ")" : $", its player state couldn't be read: {unread})"));
+        Log.Write($"roku: our app never started (pieces {piecesServed() - startPieces}" + (unread == null ? ")" : $", its player state couldn't be read: {unread})"));
         return failed;
     }
 

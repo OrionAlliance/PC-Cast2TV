@@ -3,8 +3,6 @@ namespace PCCast2TV.Helpers;
 // Casting: the checks that start a cast, ending it, and the Roku remote's buttons.
 public sealed partial class Caster
 {
-    // ---- Cast ----
-
     // A VPN can stay on: the cast only crosses the house, so the VPN just has to let the house network through.
     const string AllowLan = "Open the VPN's settings and turn on \"Allow LAN connections\" (some VPNs call it \"Local network sharing\"), then try again.";
 
@@ -175,6 +173,7 @@ public sealed partial class Caster
         bool sound = _rec.HasSound && player?.TvTookSound != false;
         Log.Write("cast: playing" + (!_rec.HasSound ? ", no sound device" : sound ? "" : ", the TV took no sound"));
         Set(Phase.Casting, $"CASTING TO {name}" + (sound ? "" : " · NO SOUND"));
+        StartTicking();
     }
 
     // What has gone to the TV: a mirrored cast counts its own, the rest go through the server.
@@ -245,6 +244,7 @@ public sealed partial class Caster
         _castPlayer?.Dispose();
         _castPlayer = null;
         CastingTo = null;
+        StopTicking();
     }
 
     // A Roku remote button from our Roku app: Back ends the cast, OK and Play press the PC's play/pause key.

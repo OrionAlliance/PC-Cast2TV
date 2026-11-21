@@ -11,7 +11,6 @@ namespace PCCast2TV.Helpers;
 public sealed partial class CastServer
 {
     public const int FirstPort = 8765, LastPort = 8784;
-    const string DlnaFeatures = "DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000";
     // A Chromecast's player is a web page, so it only takes video from a server that says any page may read it.
     const string Cors = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET, HEAD, OPTIONS\r\nAccess-Control-Allow-Headers: *\r\n";
 
@@ -48,8 +47,8 @@ public sealed partial class CastServer
     public Action<string> RemoteButton { get; set; }
     // The Roku app's 10-second player numbers, for the details page; called off the window's thread.
     public Action<RokuReport.Numbers> TvReport { get; set; }
+    public Action LiveClosed { get; set; } // a DLNA TV let go of the live stream
 
-    // Listens on every adapter.
     public void Start()
     {
         for (int port = FirstPort; port <= LastPort && _listener == null; port++)
@@ -80,7 +79,6 @@ public sealed partial class CastServer
         Log.Write("server: stopped");
     }
 
-    // Opens the door for one device for the length of a cast.
     public void BeginCast(string deviceIp, ScreenRecorder source)
     {
         _source = source;
@@ -185,18 +183,13 @@ public sealed partial class CastServer
         if (r.Method == "OPTIONS") // a web player asking first whether it may read the video
             return await SendAsync(s, "204 No Content", "text/plain", null, r.KeepAlive, ct);
         if (r.Method != "GET" && !head) return await SendAsync(s, "405 Method Not Allowed", "text/plain", null, false, ct);
-        if (r.Path == "/live/" + ScreenRecorder.MasterName)
+        bool master = r.Path == "/live/" + ScreenRecorder.MasterName;
+        if (master || r.Path == "/live/" + ScreenRecorder.PlaylistName)
         {
-            var text = _source?.Master;
-            if (Interlocked.Exchange(ref _saidMaster, 1) == 0) Log.Write($"server: {ip} asked for the master list ({(text == null ? "not ready" : "sent")})");
-            return await SendAsync(s, text == null ? "404 Not Found" : "200 OK", "application/vnd.apple.mpegurl",
-                text == null ? null : Encoding.UTF8.GetBytes(text), r.KeepAlive, ct, head);
-        }
-        if (r.Path == "/live/" + ScreenRecorder.PlaylistName)
-        {
-            var text = _source?.Playlist;
-            if (!head) Interlocked.Increment(ref _playlistAsks);
-            if (Interlocked.Exchange(ref _saidPlaylist, 1) == 0) Log.Write($"server: {ip} asked for the playlist ({(text == null ? "not ready" : "sent")})");
+            var text = master ? _source?.Master : _source?.Playlist;
+            if (!master && !head) Interlocked.Increment(ref _playlistAsks);
+            if (Interlocked.Exchange(ref master ? ref _saidMaster : ref _saidPlaylist, 1) == 0)
+                Log.Write($"server: {ip} asked for the {(master ? "master list" : "playlist")} ({(text == null ? "not ready" : "sent")})");
             return await SendAsync(s, text == null ? "404 Not Found" : "200 OK", "application/vnd.apple.mpegurl",
                 text == null ? null : Encoding.UTF8.GetBytes(text), r.KeepAlive, ct, head);
         }
@@ -246,11 +239,11 @@ public sealed partial class CastServer
         return keep;
     }
 
-    // One endless MPEG-TS stream for DLNA TVs, with the DLNA headers TVs look for.
+    // One endless MPEG-TS stream for DLNA TVs, with the DLNA headers TVs look for (live: no seeking, no length).
     async Task<bool> StreamLiveAsync(NetworkStream s, bool head, CancellationToken ct)
     {
-        var h = "HTTP/1.1 200 OK\r\nContent-Type: video/mpeg\r\ntransferMode.dlna.org: Streaming\r\n" +
-                $"contentFeatures.dlna.org: {DlnaFeatures}\r\nCache-Control: no-cache\r\n" + Cors + "Connection: close\r\n\r\n";
+        var h = "HTTP/1.1 200 OK\r\nContent-Type: video/mpeg\r\ntransferMode.dlna.org: Streaming\r\nrealTimeInfo.dlna.org: DLNA.ORG_TLAG=*\r\n" +
+                $"contentFeatures.dlna.org: {DlnaPlayer.Features}\r\nAccept-Ranges: none\r\nCache-Control: no-cache\r\n" + Cors + "Connection: close\r\n\r\n";
         await s.WriteAsync(Encoding.ASCII.GetBytes(h), ct);
         if (head) return false;
         var tv = new LiveTv();
@@ -270,6 +263,7 @@ public sealed partial class CastServer
         {
             lock (_liveGate) _live.Remove(tv);
             Log.Write("server: TV closed the live stream");
+            LiveClosed?.Invoke();
         }
         return false;
     }

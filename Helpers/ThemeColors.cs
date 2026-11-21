@@ -102,7 +102,7 @@ public static class ThemeColors
     // A pill clicked in settings: the colors change at once and are kept for next time.
     public static void Pick(string key)
     {
-        if (key == (Current.Roll ?? Current.Name)) return; // already the theme in use
+        if (key == (Current.Roll ?? Current.Name)) return;
         Apply(key);
         AppSettings.SetTheme(key);
     }
@@ -129,6 +129,8 @@ public static class ThemeColors
     {
         if (UnsavedRoll is string roll) AppSettings.SetMyTheme(roll);
     }
+
+    public static Brush Tint(double opacity) => (Brush)new SolidColorBrush(Current.Main) { Opacity = opacity }.GetAsFrozen();
 
     static SolidColorBrush Brush(Color c) => (SolidColorBrush)new SolidColorBrush(c).GetAsFrozen();
 

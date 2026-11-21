@@ -118,7 +118,7 @@ public partial class MonitorSelection : UserControl
         g.Children.Add(icon);
         Grid.SetColumn(text, 1);
         g.Children.Add(text);
-        Brush rest = Tint(lit ? 0.08 : 0.03), hover = Tint(lit ? 0.14 : 0.09);
+        Brush rest = ThemeColors.Tint(lit ? 0.08 : 0.03), hover = ThemeColors.Tint(lit ? 0.14 : 0.09);
         var card = new Border
         {
             Width = 210, Height = 64, CornerRadius = new CornerRadius(14), Padding = new Thickness(16, 0, 10, 0),
@@ -135,7 +135,7 @@ public partial class MonitorSelection : UserControl
         return card;
     }
 
-    // Ticked, this monitor is cast every time and the slider stays down when the app opens; unticking clears it.
+    // Ticked, this monitor is cast every time and the slider stays closed when the app opens; unticking clears it.
     FrameworkElement DefaultBox(PcScreen s, bool on)
     {
         var box = new Border
@@ -160,9 +160,6 @@ public partial class MonitorSelection : UserControl
     }
 
     Brush Res(string key) => (Brush)FindResource(key);
-
-    // The theme's main color, see-through.
-    static Brush Tint(double opacity) => (Brush)new SolidColorBrush(ThemeColors.Current.Main) { Opacity = opacity }.GetAsFrozen();
 
     TextBlock Text(string text, double size, Brush fg) =>
         new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };

@@ -10,7 +10,6 @@ public static class FirewallRule
     const string Name = "PC Cast2TV";
 
     static string Exe => Environment.ProcessPath;
-    // Windows' own netsh, by its full path.
     static string NetshExe => Path.Combine(Environment.SystemDirectory, "netsh.exe");
 
     // Reading rules needs no admin rights. A rule counts only if it points at this copy of the app.

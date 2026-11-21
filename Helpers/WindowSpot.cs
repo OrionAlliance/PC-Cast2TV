@@ -23,7 +23,6 @@ public static class WindowSpot
         return p;
     }
 
-    // Inside the screens attached now.
     public static bool OnScreens(Rect r)
     {
         var screens = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
@@ -39,6 +38,4 @@ public static class WindowSpot
         return Math.Min(1, Math.Min((area.Width - 40) / designWidth, (area.Height - 80) / designHeight));
     }
 
-    public static void Keep(Rect r, bool maximized, double designWidth, double designHeight) =>
-        AppSettings.SetWindow(new WindowPlace(r.Left, r.Top, r.Width, r.Height, maximized, designWidth, designHeight));
 }

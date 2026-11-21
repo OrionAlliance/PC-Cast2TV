@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              VerticalAlignment="Top" HorizontalAlignment="Center" Visibility="Collapsed">
     <!-- MONITOR SELECTION: a tab on the window's top edge; its slider drops down with a card per monitor (only with 2 or more) -->
-    <StackPanel x:Name="Drawer">
+    <StackPanel>
         <StackPanel.RenderTransform>
             <TranslateTransform x:Name="Slide" Y="-400" />
         </StackPanel.RenderTransform>

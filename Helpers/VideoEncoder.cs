@@ -50,7 +50,7 @@ public sealed partial class VideoEncoder : IDisposable
         if (maxBitRate > 0) _adjust = new EncoderRateAdjuster(fps);
     }
 
-    // The names of the card encoders Windows has, best first, for the card that drives the main screen.
+    // The names of the card encoders Windows has, best first, for the card that drives the monitor being cast.
     public static List<string> CardEncoders(string vendor)
     {
         using var found = Find(EnumHardware);
@@ -101,7 +101,6 @@ public sealed partial class VideoEncoder : IDisposable
         return false;
     }
 
-    // The next picture fed comes out as a keyframe.
     public void ForceKey() => _keyWanted = true;
 
     // Pieces need a keyframe every second; a mirrored TV gets one only when it asks, Chrome's way.

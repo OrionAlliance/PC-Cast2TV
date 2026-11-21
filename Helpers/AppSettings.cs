@@ -17,7 +17,7 @@ public static class AppSettings
         public WindowPlace Window { get; set; }
         public string Theme { get; set; } // a ThemeColors key (one of the 8, or a RANDOM roll); none = CYAN
         public string MyTheme { get; set; } // the one RANDOM roll kept with SAVE, as a ThemeColors key
-        public bool StreamController { get; set; } // off unless turned on in Settings
+        public bool StreamController { get; set; }
         public string Look { get; set; } // "SIMPLE" for the simple look; none = the dial
         public WindowPlace SimpleWindow { get; set; } // the simple look's spot, kept apart from the dial's
         public string Screen { get; set; } // the default monitor's lasting key (PcScreen.Key); none = the main screen
@@ -94,7 +94,6 @@ public static class AppSettings
         if (Save()) Log.Write(d == null ? "settings: default cleared" : "settings: default is " + d.LogName);
     }
 
-    // The checked devices become the hidden set; anything unchecked comes back.
     public static void SetHidden(IEnumerable<Device> devices)
     {
         Data.Hidden = devices.ToList();
@@ -116,7 +115,6 @@ public static class AppSettings
         if (Save()) Log.Write("settings: theme " + name);
     }
 
-    // Only one: saving another roll replaces it.
     public static void SetMyTheme(string key)
     {
         Data.MyTheme = key;

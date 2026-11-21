@@ -24,7 +24,6 @@ public partial class DevicePickerWindow : Window
         SourceInitialized += (_, _) => DarkTitleBar.Apply(this);
     }
 
-    // Right-click Detect (or FIND in the simple look): the hidden devices, ticked; anything unticked comes back.
     public static void ShowHidden(Window owner, Caster caster)
     {
         var aside = caster.SetAside;
@@ -33,15 +32,8 @@ public partial class DevicePickerWindow : Window
             NoticeWindow.Tell(owner, "NOTHING HIDDEN", "No devices are hidden. Right-click a device in the list to hide it.");
             return;
         }
-        var keep = Ask(owner, aside);
-        if (keep != null) caster.BringBack(keep);
-    }
-
-    // The checked devices, or null when Cancel or the X closed it.
-    public static List<Device> Ask(Window owner, IReadOnlyList<Device> devices)
-    {
-        var w = new DevicePickerWindow(devices) { Owner = owner };
-        return w.ShowDialog() == true ? w._rows.Where(r => r.Box.IsChecked == true).Select(r => r.Device).ToList() : null;
+        var w = new DevicePickerWindow(aside) { Owner = owner };
+        if (w.ShowDialog() == true) caster.BringBack(w._rows.Where(r => r.Box.IsChecked == true).Select(r => r.Device).ToList()); // Cancel or the X: nothing comes back
     }
 
     void Ok_Click(object sender, RoutedEventArgs e) => DialogResult = true;

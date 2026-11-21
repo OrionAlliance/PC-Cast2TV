@@ -23,7 +23,7 @@ public partial class SettingsWindow : Window
 
     public static void Open(Window owner) => new SettingsWindow { Owner = owner }.ShowDialog();
 
-    void GitHub_Click(object sender, RoutedEventArgs e) => AppUpdater.OpenPage();
+    void GitHub_Click(object sender, RoutedEventArgs e) => WebPage.Open(AppUpdater.Page, "the GitHub page");
 
     void Donate_Click(object sender, RoutedEventArgs e) => WebPage.Open(WebPage.Donate, "the Ko-fi page");
 
@@ -39,30 +39,23 @@ public partial class SettingsWindow : Window
         BuildController();
     }
 
-    // DIAL and SIMPLE for the main window: the one in use is filled, with a ring and a tick; the window swaps at once.
-    void BuildLook()
+    // DIAL and SIMPLE for the main window (it swaps at once); OFF and ON for the stream controller.
+    void BuildLook() => BuildPair(LookPills, "DIAL", "SIMPLE", WindowLook.Simple, SetLook);
+    void BuildController() => BuildPair(ControllerPills, "OFF", "ON", AppSettings.StreamController, SetController);
+
+    // Two pills for a yes/no choice: the one in use is filled, with a ring and a tick.
+    void BuildPair(Panel pills, string no, string yes, bool on, Action<bool> set)
     {
         var now = ThemeColors.Current;
-        bool simple = WindowLook.Simple;
-        LookPills.Children.Clear();
-        LookPills.Children.Add(Swatch("DIAL", simple ? null : new SolidColorBrush(now.Main), simple ? null : now.Soft, () => SetLook(false)));
-        LookPills.Children.Add(Swatch("SIMPLE", simple ? new SolidColorBrush(now.Main) : null, simple ? now.Soft : null, () => SetLook(true)));
+        pills.Children.Clear();
+        pills.Children.Add(Swatch(no, on ? null : new SolidColorBrush(now.Main), on ? null : now.Soft, () => set(false)));
+        pills.Children.Add(Swatch(yes, on ? new SolidColorBrush(now.Main) : null, on ? now.Soft : null, () => set(true)));
     }
 
     void SetLook(bool simple)
     {
         WindowLook.Pick(simple);
         BuildLook();
-    }
-
-    // OFF and ON for the stream controller: the one in use is filled, with a ring and a tick.
-    void BuildController()
-    {
-        var now = ThemeColors.Current;
-        bool on = AppSettings.StreamController;
-        ControllerPills.Children.Clear();
-        ControllerPills.Children.Add(Swatch("OFF", on ? null : new SolidColorBrush(now.Main), on ? null : now.Soft, () => SetController(false)));
-        ControllerPills.Children.Add(Swatch("ON", on ? new SolidColorBrush(now.Main) : null, on ? now.Soft : null, () => SetController(true)));
     }
 
     void SetController(bool on)

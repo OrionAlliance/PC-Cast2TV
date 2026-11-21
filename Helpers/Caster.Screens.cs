@@ -26,10 +26,10 @@ public sealed partial class Caster
     void RefreshScreens()
     {
         var now = PcScreens.All();
-        bool changed = !now.Select(s => s.Key + s.LogName).SequenceEqual(Screens.Select(s => s.Key + s.LogName));
+        bool changed = !now.Select(s => s.Key + s.LogName + s.Hdr).SequenceEqual(Screens.Select(s => s.Key + s.LogName + s.Hdr));
         Screens = now;
         if (!changed) return;
-        Log.Write($"screens: {now.Count}: " + string.Join(", ", now.Select(s => $"{s.LogName} on {s.Card}")));
+        Log.Write($"screens: {now.Count}: " + string.Join(", ", now.Select(s => $"{s.LogName} on {s.Card}, {s.HdrNote}")));
         if (AppSettings.Screen != null && DefaultScreen == null) Log.Write("screens: the default monitor isn't connected, the main screen stands in");
         Raise();
     }
@@ -57,7 +57,7 @@ public sealed partial class Caster
     {
         var screen = CastScreen;
         if (screen == null) { FailCast("NO SCREEN FOUND"); return null; }
-        Log.Write("cast: copying " + screen.LogName);
+        Log.Write($"cast: copying {screen.LogName}, {screen.HdrNote}");
         var encoder = await EncoderPicker.PickAsync(screen.Device);
         if (Phase != Phase.Starting) return null;
         if (encoder == null) { FailCast("NO VIDEO ENCODER · SEE LOG"); return null; }

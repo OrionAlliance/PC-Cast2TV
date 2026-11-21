@@ -9,7 +9,6 @@ public partial class UpdateWindow : Window
     readonly AppUpdater.Update _update;
     bool _busy;
 
-    // True once the new exe is downloaded; the main window then closes, swaps it in and starts it.
     public bool Downloaded { get; private set; }
 
     UpdateWindow(AppUpdater.Update update)
