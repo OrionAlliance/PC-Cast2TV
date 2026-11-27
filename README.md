@@ -3,6 +3,7 @@
 <p align="center">
   <b>Cast your Windows PC's screen and sound to your TV or Roku.</b><br>
   <b>Open it, pick your TV, click Cast. That's the app.</b><br>
+  <br>
   <b>** APP NOT RECOMMENDED FOR GAMING DUE TO CASTING DELAY **</b>
 </p>
 
