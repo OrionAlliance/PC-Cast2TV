@@ -7,7 +7,7 @@ public static class RemoteKeys
 {
     const uint KeyboardInput = 1, ExtendedKey = 0x1, KeyUp = 0x2;
 
-    const ushort PlayPause = 0xB3; // media play/pause
+    const ushort PlayPause = 0xB3;
 
     public static bool Knows(string name) => name == "playpause";
 

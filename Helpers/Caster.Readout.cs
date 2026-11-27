@@ -11,7 +11,7 @@ public sealed partial class Caster
         Raise();
     }
 
-    // The once-a-second readout runs only during a cast: there's nothing to read otherwise.
+    // Runs only during a cast.
     void StartTicking()
     {
         _ticks = 0;

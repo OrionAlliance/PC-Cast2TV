@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace PCCast2TV.Helpers;
 
-// A web page in the default browser (Settings > GITHUB PAGE, PATCH NOTES and DONATE).
+// A web page in the default browser (Settings > PATCH NOTES and DONATE, and REPORT A PROBLEM in a copy that can't send).
 public static class WebPage
 {
     public const string Donate = "https://ko-fi.com/orionailliance";

@@ -45,7 +45,7 @@ public sealed partial class ScreenGrabber : IDisposable
     readonly CancellationTokenSource _stop = new();
     readonly int _screenW, _screenH;
     Thread _clock;
-    bool _dupBroken, _ended, _unsent; // _unsent: the screen copy holds an update no picture has yet
+    bool _dupBroken, _ended, _unsent; // _unsent: the next picture would differ from the last one sent (a screen update, or the pointer with SHOW CURSOR on)
     bool _toldProtected; // DRM video was reported once this cast
     long _nextReopen; // when the screen copy may next be reopened (Environment.TickCount64)
 
@@ -118,6 +118,7 @@ public sealed partial class ScreenGrabber : IDisposable
                 _free.Push(pic);
             }
             var mode = _dup.Description.ModeDescription;
+            SetUpDrawing();
             BuildInput(mode.Width, mode.Height);
         }
         catch (SharpGen.Runtime.SharpGenException ex)
@@ -212,6 +213,7 @@ public sealed partial class ScreenGrabber : IDisposable
     {
         Stop();
         foreach (var p in _all) { p.View?.Dispose(); p.Tex.Dispose(); }
+        DisposePointer();
         _input?.Dispose();
         _vp?.Dispose();
         _vpEnum?.Dispose();

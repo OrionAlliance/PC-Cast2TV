@@ -123,7 +123,7 @@ public sealed class ScreenRecorder : IDisposable
     {
         var m = _mirror;
         if (m == null || _piecesToo) _ts.AddAudio(frame, pts);
-        if (m == null) return;
+        if (m == null || !m.HasSound) return; // a TV that turned the sound down isn't sent it, so it isn't counted either
         Interlocked.Add(ref _mirrorBytes, frame.Length);
         m.AddAudio(frame, pts);
     }

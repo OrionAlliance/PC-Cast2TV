@@ -1,0 +1,131 @@
+<Window x:Class="PCCast2TV.ReportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PC Cast2TV" Background="#03070B" Width="560" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" UseLayoutRounding="True">
+
+    <Window.Resources>
+        <Style x:Key="Heading" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Foreground" Value="{DynamicResource Second}" />
+            <Setter Property="Margin" Value="0,16,0,8" />
+        </Style>
+        <Style x:Key="Note" TargetType="TextBlock" BasedOn="{StaticResource Sentence}">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource Enc}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="4,6,4,0" />
+        </Style>
+        <!-- A typing box: a faint fill and a ring in the theme's dark shade -->
+        <Style x:Key="Field" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Dim}" />
+            <Setter Property="Background" Value="#0AFFFFFF" />
+        </Style>
+        <Style x:Key="Box" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="Bahnschrift" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Foreground" Value="{DynamicResource Soft}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Main}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource Main}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="Tick" TargetType="Path">
+            <Setter Property="Data" Value="M4,11 L9,16 L18,6" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="StrokeThickness" Value="2.4" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="Kind" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="CornerRadius" Value="19" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+    </Window.Resources>
+
+    <Border Padding="28,20,28,24">
+        <StackPanel>
+            <TextBlock Style="{StaticResource Label}" FontSize="24" Foreground="{DynamicResource Main}" Text="REPORT A BUG / GIVE FEEDBACK" />
+            <StackPanel Orientation="Horizontal" Margin="-2,16,0,0">
+                <Border x:Name="BugRing" Style="{StaticResource Kind}">
+                    <Button x:Name="BugPill" Width="140" Height="30" Click="Bug_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontSize="14" Text="BUG REPORT" VerticalAlignment="Center" />
+                            <Path x:Name="BugTick" Style="{StaticResource Tick}" Width="10" Height="8" Margin="5,0,0,0" Stroke="{DynamicResource Ink}" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border x:Name="FeedbackRing" Style="{StaticResource Kind}">
+                    <Button x:Name="FeedbackPill" Width="130" Height="30" Click="Feedback_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontSize="14" Text="FEEDBACK" VerticalAlignment="Center" />
+                            <Path x:Name="FeedbackTick" Style="{StaticResource Tick}" Width="10" Height="8" Margin="5,0,0,0" Stroke="{DynamicResource Ink}" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+            </StackPanel>
+            <Border Style="{StaticResource Divider}" />
+
+            <TextBlock Style="{StaticResource Heading}"><Run Text="EMAIL ADDRESS" /><Run Text=" *" Foreground="#F2665E" /></TextBlock>
+            <Border Style="{StaticResource Field}" Height="38">
+                <Grid>
+                    <TextBlock x:Name="EmailHint" Style="{StaticResource Sentence}" FontSize="15" Foreground="{DynamicResource DimText}" Margin="14,0,14,0"
+                               VerticalAlignment="Center" IsHitTestVisible="False" Text="name@example.com" />
+                    <TextBox x:Name="Email" Style="{StaticResource Box}" MaxLength="200" TextChanged="Typed" />
+                </Grid>
+            </Border>
+            <TextBlock Style="{StaticResource Note}" Text="So the developer can write back to you." />
+
+            <TextBlock Style="{StaticResource Heading}"><Run x:Name="WhatTitle" /><Run Text=" *" Foreground="#F2665E" /></TextBlock>
+            <TextBlock x:Name="WhatHelp" Style="{StaticResource Sentence}" FontSize="15" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" Margin="4,0,4,8" />
+            <Border Style="{StaticResource Field}" Height="112">
+                <TextBox x:Name="What" Style="{StaticResource Box}" Padding="10,8" AcceptsReturn="True" TextWrapping="Wrap" MaxLength="4000"
+                         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Hidden" TextChanged="Typed" />
+            </Border>
+            <Border Style="{StaticResource Divider}" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                <Button x:Name="LogButton" Style="{StaticResource OutlinePill}" Height="30" Click="AddLog_Click">
+                    <TextBlock x:Name="LogButtonText" FontSize="14" />
+                </Button>
+                <TextBlock x:Name="LogStar" Style="{StaticResource Label}" Text="*" Foreground="#F2665E" FontSize="16" VerticalAlignment="Center" Margin="6,0,0,0" />
+                <StackPanel x:Name="LogAdded" Orientation="Horizontal" Visibility="Collapsed">
+                    <Path Style="{StaticResource Tick}" Width="13" Height="11" Margin="14,0,6,0" Stroke="{DynamicResource Main}" />
+                    <TextBlock Style="{StaticResource Sentence}" FontSize="15" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Text="debug.log" />
+                    <Button Style="{StaticResource OutlinePill}" Width="24" Height="24" Margin="10,0,0,0" ToolTip="Take the log off" Click="RemoveLog_Click">
+                        <TextBlock Text="&#x2715;" FontFamily="Segoe UI Symbol" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Style="{StaticResource Note}" Text="Shows what the app did, with user names and folder paths taken out." />
+
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                <Button Style="{StaticResource OutlinePill}" Width="210" Height="30" Click="AddPicture_Click">
+                    <TextBlock FontSize="14" Text="ADD SCREENSHOT (OPTIONAL)" />
+                </Button>
+                <StackPanel x:Name="PictureAdded" Orientation="Horizontal" Visibility="Collapsed">
+                    <Path Style="{StaticResource Tick}" Width="13" Height="11" Margin="14,0,6,0" Stroke="{DynamicResource Main}" />
+                    <TextBlock x:Name="PictureName" Style="{StaticResource Sentence}" FontSize="15" Foreground="{DynamicResource Soft}" VerticalAlignment="Center"
+                               MaxWidth="180" TextTrimming="CharacterEllipsis" />
+                    <Button Style="{StaticResource OutlinePill}" Width="24" Height="24" Margin="10,0,0,0" ToolTip="Take the picture off" Click="RemovePicture_Click">
+                        <TextBlock Text="&#x2715;" FontFamily="Segoe UI Symbol" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Style="{StaticResource Note}" Text="Shows what you saw on the PC or the TV." />
+
+            <Button x:Name="SendButton" Style="{StaticResource Pill}" Height="44" Margin="0,22,0,0" Background="{DynamicResource Main}" Click="Send_Click">
+                <TextBlock x:Name="SendText" FontSize="19" />
+            </Button>
+            <TextBlock x:Name="SendNote" Style="{StaticResource Note}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,10,0,0" />
+        </StackPanel>
+    </Border>
+</Window>

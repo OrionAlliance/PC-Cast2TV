@@ -136,7 +136,7 @@ public sealed partial class CastPlayer : IDisposable
                     }
                 }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { } // the cast ended, so the watch ends with it
     }
 
     // Logs each change in the TV player's state, and any report where its spot didn't keep pace with the clock.
@@ -241,7 +241,7 @@ public sealed partial class CastPlayer : IDisposable
                 while (_inbox.Reader.TryRead(out var m))
                     if (m.Ns == ns && match(m.Msg)) return m.Msg;
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { } // no answer in time: null says so
         return null;
     }
 

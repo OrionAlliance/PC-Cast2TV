@@ -4,16 +4,6 @@
         Title="PC Cast2TV" Background="#03070B" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False" UseLayoutRounding="True">
 
-    <Window.Resources>
-        <!-- A thin line between sections, in the theme's dark shade -->
-        <Style x:Key="Divider" TargetType="Border">
-            <Setter Property="Height" Value="2" />
-            <Setter Property="CornerRadius" Value="1" />
-            <Setter Property="Margin" Value="2,10,2,0" />
-            <Setter Property="Background" Value="{DynamicResource Dim}" />
-        </Style>
-    </Window.Resources>
-
     <Border Padding="28,24,28,24">
         <StackPanel>
         <StackPanel Orientation="Horizontal">
@@ -24,10 +14,19 @@
             <UniformGrid x:Name="Swatches" Columns="4" Rows="2" />
             <!-- On the same 4 columns: RANDOM rolls a new color, SAVE keeps it as MY COLOR (just one; a new save replaces it), CLOSE -->
             <UniformGrid x:Name="Own" Columns="4" Margin="0,4,0,0" />
-            <Border Style="{StaticResource Divider}" />
-            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="WINDOW LOOK" />
-            <UniformGrid x:Name="LookPills" Columns="4" />
-            <Border Style="{StaticResource Divider}" />
+            <Border Style="{StaticResource Divider}" Margin="2,10,2,0" />
+            <!-- Two columns, each pair stacked: WINDOW LOOK under the first color column, SHOW CURSOR under the third -->
+            <UniformGrid Columns="2">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="WINDOW LOOK" />
+                    <UniformGrid x:Name="LookPills" Columns="1" Width="95" HorizontalAlignment="Left" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,10" Text="SHOW CURSOR" />
+                    <UniformGrid x:Name="CursorPills" Columns="1" Width="95" HorizontalAlignment="Left" />
+                </StackPanel>
+            </UniformGrid>
+            <Border Style="{StaticResource Divider}" Margin="2,10,2,0" />
             <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Second}" Margin="0,18,0,6" Text="STREAM CONTROLLER" />
             <TextBlock Style="{StaticResource Sentence}" FontSize="16" Foreground="{DynamicResource Soft}" TextWrapping="Wrap" Margin="4,0,4,10"
                        Text="Watches how well your TV keeps up, and lowers or raises the cast's data rate to keep the picture smooth. For TVs with Chromecast built in. Works right away, even during a cast." />
@@ -51,21 +50,18 @@
         </StackPanel>
         </StackPanel>
 
-        <!-- Across the bottom, under both sides, centered: the version and GitHub, the log folder, PATCH NOTES, then DONATE -->
-        <Border Style="{StaticResource Divider}" Margin="2,16,2,0" />
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
-            <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="0,0,14,0" />
-            <Button Width="136" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens the app's page on GitHub in your browser" Click="GitHub_Click">
-                <TextBlock FontSize="14" Text="GITHUB PAGE" />
+        <!-- Across the bottom: REPORT A PROBLEM on the left, PATCH NOTES and the version on the right, DONATE centered between them -->
+        <Border Style="{StaticResource Divider}" />
+        <Grid Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Width="156" Height="30" Margin="6,0,0,0" Style="{StaticResource OutlinePill}" ToolTip="Send the developer a bug report or feedback, right from the app" Click="Report_Click">
+                <TextBlock FontSize="14" Text="REPORT A PROBLEM" />
             </Button>
-            <TextBlock Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="30,0,14,0" Text="REPORTING A PROBLEM?" />
-            <Button Width="140" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens the folder with debug.log in it, so you can add it to an issue or feedback on GitHub" Click="LogFolder_Click">
-                <TextBlock FontSize="14" Text="OPEN LOG FOLDER" />
-            </Button>
-            <Button Width="126" Height="30" Margin="30,0,0,0" Style="{StaticResource OutlinePill}" ToolTip="Opens every version and what changed in it, on GitHub, in your browser" Click="PatchNotes_Click">
-                <TextBlock FontSize="14" Text="PATCH NOTES" />
-            </Button>
-            <Button Width="112" Height="30" Margin="12,0,0,0" Style="{StaticResource OutlinePill}" ToolTip="Opens PC Cast2TV's Ko-fi page in your browser" Click="Donate_Click">
+            <Button Grid.Column="1" Width="112" Height="30" HorizontalAlignment="Center" Style="{StaticResource OutlinePill}" ToolTip="Opens PC Cast2TV's Ko-fi page in your browser" Click="Donate_Click">
                 <StackPanel Orientation="Horizontal">
                     <Viewbox Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center">
                         <Canvas Width="24" Height="24"><Path Style="{StaticResource PillIcon}" Data="{StaticResource IcoHeart}" /></Canvas>
@@ -73,7 +69,13 @@
                     <TextBlock FontSize="14" Text="DONATE" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
-        </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Width="126" Height="30" Style="{StaticResource OutlinePill}" ToolTip="Opens every version and what changed in it, on GitHub, in your browser" Click="PatchNotes_Click">
+                    <TextBlock FontSize="14" Text="PATCH NOTES" />
+                </Button>
+                <TextBlock x:Name="VersionText" Style="{StaticResource Label}" FontSize="16" Foreground="{DynamicResource Soft}" VerticalAlignment="Center" Margin="16,0,4,0" />
+            </StackPanel>
+        </Grid>
         </StackPanel>
     </Border>
 </Window>

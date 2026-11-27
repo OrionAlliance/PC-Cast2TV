@@ -70,8 +70,8 @@ public partial class SimpleLook : UserControl
         var c = _caster;
         bool can = c.Phase == Phase.Online;
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(Text(c.Phase == Phase.Detecting ? "FINDING..." : "FIND:", 13, Res("Second")));
-        text.Children.Add(Text("TV / ROKU", 20, can ? Res("Soft") : Res("DimText")));
+        text.Children.Add(DeviceText.Label(c.Phase == Phase.Detecting ? "FINDING..." : "FIND:", 13, Res("Second")));
+        text.Children.Add(DeviceText.Label("TV / ROKU", 20, can ? Res("Soft") : Res("DimText")));
         var card = Card(Icon("IcoSearch", can ? Res("Second") : Res("DimText"), 26), text, null, lit: false, find: true);
         card.Cursor = can ? Cursors.Hand : Cursors.Arrow;
         card.ToolTip = "Click to find your TVs and Rokus. Right-click to show hidden devices";
@@ -89,15 +89,15 @@ public partial class SimpleLook : UserControl
     {
         var c = _caster;
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(Text(d.Name.ToUpperInvariant(), 20, lit ? Res("Soft") : Res("Second")));
+        text.Children.Add(DeviceText.Label(d.Name.ToUpperInvariant(), 20, lit ? Res("Soft") : Res("Second")));
         if (c.Phase == Phase.Casting && c.CastingTo?.Id == d.Id)
         {
             var now = new StackPanel { Orientation = Orientation.Horizontal };
             now.Children.Add(new Ellipse { Width = 7, Height = 7, Fill = Res("Main"), Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center });
-            now.Children.Add(Text("CASTING NOW", 12, Res("Main")));
+            now.Children.Add(DeviceText.Label("CASTING NOW", 12, Res("Main")));
             text.Children.Add(now);
         }
-        else text.Children.Add(Text(DeviceLine(d), 12, Res("DimText")));
+        else text.Children.Add(DeviceText.Label(DeviceLine(d), 12, Res("DimText")));
         var card = Card(Icon("IcoTv", lit ? Res("Main") : Res("DimText"), 26), text, DeviceText.Bookmark(c, d, isDefault, Res("Main"), Res("DimText"), 16), lit);
         card.ToolTip = "Right-click to hide this device";
         card.MouseLeftButtonUp += (_, _) => c.Pick(d);
@@ -175,18 +175,9 @@ public partial class SimpleLook : UserControl
 
     static string Minutes(TimeSpan t) => $"{(int)t.TotalMinutes} MIN";
 
-    TextBlock Text(string text, double size, Brush fg) =>
-        new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis };
-
     FrameworkElement Icon(string key, Brush stroke, double size) => new Viewbox
     {
         Width = size, Height = size, VerticalAlignment = VerticalAlignment.Center,
-        Child = new Canvas { Width = 24, Height = 24, Children = { Line(key, stroke) } },
-    };
-
-    Path Line(string key, Brush stroke) => new()
-    {
-        Data = (Geometry)FindResource(key), Stroke = stroke, StrokeThickness = 1.9,
-        StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
+        Child = new Canvas { Width = 24, Height = 24, Children = { DeviceText.Line(key, stroke, 1.9) } },
     };
 }

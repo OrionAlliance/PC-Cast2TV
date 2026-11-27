@@ -6,7 +6,7 @@ namespace PCCast2TV.Helpers;
 // DesignWidth and DesignHeight are the layout the size was saved for, so a size from an older layout isn't reused.
 public sealed record WindowPlace(double Left, double Top, double Width, double Height, bool Maximized, double DesignWidth = 0, double DesignHeight = 0);
 
-// Saved devices, the bookmark, hidden devices, the window's spot and look, the theme, the controller switch and the default monitor, in Settings\settings.json.
+// Saved devices, the bookmark, hidden devices, the window's spot and look, the theme, the controller and cursor switches and the default monitor, in Settings\settings.json.
 public static class AppSettings
 {
     sealed class Saved
@@ -18,6 +18,7 @@ public static class AppSettings
         public string Theme { get; set; } // a ThemeColors key (one of the 8, or a RANDOM roll); none = CYAN
         public string MyTheme { get; set; } // the one RANDOM roll kept with SAVE, as a ThemeColors key
         public bool StreamController { get; set; }
+        public bool ShowCursor { get; set; } // the PC's mouse pointer drawn into the cast
         public string Look { get; set; } // "SIMPLE" for the simple look; none = the dial
         public WindowPlace SimpleWindow { get; set; } // the simple look's spot, kept apart from the dial's
         public string Screen { get; set; } // the default monitor's lasting key (PcScreen.Key); none = the main screen
@@ -34,6 +35,7 @@ public static class AppSettings
     public static string Theme => Data.Theme;
     public static string MyTheme => Data.MyTheme;
     public static bool StreamController => Data.StreamController;
+    public static bool ShowCursor => Data.ShowCursor;
     public static string Look => Data.Look;
     public static WindowPlace SimpleWindow => Data.SimpleWindow;
     public static string Screen => Data.Screen;
@@ -125,6 +127,12 @@ public static class AppSettings
     {
         Data.StreamController = on;
         if (Save()) Log.Write("settings: stream controller " + (on ? "on" : "off"));
+    }
+
+    public static void SetShowCursor(bool on)
+    {
+        Data.ShowCursor = on;
+        if (Save()) Log.Write("settings: show cursor " + (on ? "on" : "off"));
     }
 
     public static void SetLook(string look)

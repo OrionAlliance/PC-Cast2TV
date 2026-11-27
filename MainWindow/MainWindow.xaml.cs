@@ -203,8 +203,8 @@ public partial class MainWindow : Window
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(Label($"{d.Name.ToUpperInvariant()} · {d.KindLabel}", 20, Soft));
-        var link = Label("", 15, Second);
+        text.Children.Add(DeviceText.Label($"{d.Name.ToUpperInvariant()} · {d.KindLabel}", 20, Soft));
+        var link = DeviceText.Label("", 15, Second);
         link.Inlines.Add(new Run(DeviceText.Link(_caster, d)) { Foreground = _caster.LinkOf(d) != null ? Second : DimText });
         link.Inlines.Add(new Run(" · " + d.Ip + DeviceText.Player(_caster, d)));
         text.Children.Add(link);
@@ -228,7 +228,4 @@ public partial class MainWindow : Window
         row.ToolTip = "Right-click to hide this device";
         return row;
     }
-
-    TextBlock Label(string text, double size, Brush fg) =>
-        new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis };
 }

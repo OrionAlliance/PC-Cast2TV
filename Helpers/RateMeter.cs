@@ -49,7 +49,7 @@ public sealed class RateMeter
         Bars = Measuring || made == 0 || lately == 0 ? 0 : ratio >= 0.9 ? 5 : ratio >= 0.75 ? 4 : ratio >= 0.6 ? 3 : ratio >= 0.4 ? 2 : 1;
     }
 
-    // True for the first second of a cast, before there is anything to compare.
+    // True for the first two seconds of a cast, before there is anything to compare.
     public bool Measuring { get; private set; }
 
     public string SignalLabel => Measuring ? "CHECKING" : Bars switch { 5 => "STRONG", 4 => "GOOD", 3 => "FAIR", 2 => "WEAK", 1 => "POOR", _ => "NO SIGNAL" };

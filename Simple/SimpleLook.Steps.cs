@@ -54,7 +54,7 @@ public partial class SimpleLook
         string[] icons = { "IcoVideo", "IcoLaptop", "IcoWifi", "IcoTv" };
         for (int i = 0; i < _steps.Length; i++)
         {
-            var icon = new Path { Data = (Geometry)FindResource(icons[i]), StrokeThickness = 1.9, StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round };
+            var icon = DeviceText.Line(icons[i], null, 1.9);
             var ring = new Border
             {
                 Width = 72, Height = 72, CornerRadius = new CornerRadius(36), BorderThickness = new Thickness(3), Background = Res("Ink"), HorizontalAlignment = HorizontalAlignment.Center,

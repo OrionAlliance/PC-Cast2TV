@@ -6,17 +6,25 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// How a device's connection and player read in both looks' lists.
+// How a device's connection and player read in both looks' lists, and the label and line-icon builders the windows share.
 static class DeviceText
 {
+    // A label in the condensed theme font, cut short with an ellipsis when it doesn't fit.
+    public static TextBlock Label(string text, double size, Brush fg) =>
+        new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)Application.Current.FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis };
+
+    // One of Theme.xaml's 24 x 24 line icons, with round ends and joins.
+    public static Path Line(string key, Brush stroke, double thickness) => new()
+    {
+        Data = (Geometry)Application.Current.FindResource(key), Stroke = stroke, StrokeThickness = thickness,
+        StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
+    };
+
     // The bookmark beside a device in both looks: filled for the default; a click sets or clears it.
     public static Button Bookmark(Caster c, Device d, bool isDefault, Brush on, Brush off, double size)
     {
-        var icon = new Path
-        {
-            Data = (Geometry)Application.Current.FindResource("IcoBookmark"), Stroke = isDefault ? on : off, Fill = isDefault ? on : null, StrokeThickness = 1.8,
-            StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
-        };
+        var icon = Line("IcoBookmark", isDefault ? on : off, 1.8);
+        icon.Fill = isDefault ? on : null;
         var mark = new Button
         {
             Style = (Style)Application.Current.FindResource("Bare"), VerticalAlignment = VerticalAlignment.Center,

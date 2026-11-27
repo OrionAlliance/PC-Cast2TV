@@ -25,6 +25,7 @@ public sealed partial class ScreenGrabber
         });
         _vp = _video.CreateVideoProcessor(_vpEnum, 0);
         _input = _video.CreateVideoProcessorInputView(_copy, _vpEnum, new VideoProcessorInputViewDescription { ViewDimension = VideoProcessorInputViewDimension.Texture2D });
+        BuildPointerInput(w, h);
         foreach (var p in _all)
         {
             p.View?.Dispose();
@@ -51,10 +52,11 @@ public sealed partial class ScreenGrabber
         Log.Write($"grab: screen picture {w}x{h}" + (_dupTurn > ModeRotation.Identity ? $" turned {_dupTurn}" : "") + $", fills {dw}x{dh} of {Width}x{Height}");
     }
 
-    // The newest picture in video color, null when nothing new came (or only the mouse moved); the first one is taken as is.
+    // The newest picture in video color, null when nothing new came (a moved mouse counts only with SHOW CURSOR on); the first one is taken as is.
     Picture TakeNewest(uint waitMs, bool first = false)
     {
         if (_dupBroken && !Reopen()) return null;
+        NoteCursorSetting();
         var r = _dup.AcquireNextFrame(waitMs, out OutduplFrameInfo info, out IDXGIResource res);
         bool got = false;
         if (r.Success)
@@ -67,6 +69,7 @@ public sealed partial class ScreenGrabber
             }
             try
             {
+                TrackPointer(info);
                 if (first || (info.LastPresentTime != 0 && info.AccumulatedFrames != 0))
                 {
                     lock (_countGate) _screenUpdates += (int)info.AccumulatedFrames;
@@ -99,7 +102,7 @@ public sealed partial class ScreenGrabber
             p = _free.Pop();
             p.Refs = 1;
         }
-        _vctx.VideoProcessorBlt(_vp, p.View, 0, 1, new[] { new VideoProcessorStream { Enable = true, InputSurface = _input } }).CheckError();
+        _vctx.VideoProcessorBlt(_vp, p.View, 0, 1, new[] { new VideoProcessorStream { Enable = true, InputSurface = PickInput() } }).CheckError();
         _unsent = false;
         return p;
     }

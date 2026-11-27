@@ -9,7 +9,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>PCCast2TV</RootNamespace>
     <AssemblyName>PC Cast2TV</AssemblyName>
-    <Version>0.4.15</Version>
+    <Version>0.4.16</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
@@ -31,11 +31,15 @@
   <ItemGroup>
     <Resource Include="Images\pc-cast2tv-roku.png" />
     <Resource Include="Images\roku-remote.png" />
+    <!-- REPORT A PROBLEM's address: a file only on the developer's PC (git skips Private), built into the exe when it's there -->
+    <EmbeddedResource Include="Private\report-address.txt" LogicalName="report-address" Condition="Exists('Private\report-address.txt')" />
+    <None Remove="Private\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio.Wasapi" Version="3.3.0" />
-    <PackageReference Include="System.Management" Version="10.0.15" /> <!-- Windows Security Center: the security software line in the log -->
+    <PackageReference Include="System.Management" Version="11.0.0" /> <!-- Windows Security Center: the security software line in the log -->
+    <PackageReference Include="Vortice.Direct2D1" Version="3.8.3" />
     <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
     <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
     <PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />

@@ -21,7 +21,6 @@ public partial class MonitorSelection : UserControl
     public MonitorSelection()
     {
         InitializeComponent();
-        // Closed, the slider sits just above the window's top edge and only the tab shows.
         Slider.SizeChanged += (_, _) =>
         {
             if (_open) return;
@@ -110,7 +109,7 @@ public partial class MonitorSelection : UserControl
         var icon = new Viewbox
         {
             Width = 26, Height = 26, Margin = new Thickness(0, 0, 14, 0), VerticalAlignment = VerticalAlignment.Center,
-            Child = new Canvas { Width = 24, Height = 24, Children = { Line("IcoPc", lit ? Res("Main") : Res("DimText")) } },
+            Child = new Canvas { Width = 24, Height = 24, Children = { DeviceText.Line("IcoPc", lit ? Res("Main") : Res("DimText"), 1.8) } },
         };
         var g = new Grid();
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -163,10 +162,4 @@ public partial class MonitorSelection : UserControl
 
     TextBlock Text(string text, double size, Brush fg) =>
         new() { Text = text, FontSize = size, Foreground = fg, Style = (Style)FindResource("Label"), TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
-
-    Path Line(string key, Brush stroke) => new()
-    {
-        Data = (Geometry)FindResource(key), Stroke = stroke, StrokeThickness = 1.8,
-        StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
-    };
 }

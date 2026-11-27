@@ -11,7 +11,7 @@ public static class Log
     const int MaxLine = 8000;
     static readonly object Gate = new();
     public static string Folder => Path.Combine(AppContext.BaseDirectory, "Settings");
-    static string FilePath => Path.Combine(Folder, "debug.log");
+    public static string FilePath => Path.Combine(Folder, "debug.log");
 
     public static void Write(string line)
     {
@@ -27,14 +27,6 @@ public static class Log
             catch (IOException) { } // a log that can't be written must never take the cast down with it
             catch (UnauthorizedAccessException) { }
         }
-    }
-
-    // OPEN LOG FOLDER: the folder in File Explorer with debug.log picked, ready to drag into a GitHub post.
-    public static void ShowInFolder()
-    {
-        string explorer = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
-        try { Process.Start(explorer, File.Exists(FilePath) ? $"/select,\"{FilePath}\"" : $"\"{Folder}\"").Dispose(); }
-        catch (System.ComponentModel.Win32Exception ex) { Write("app: couldn't open the log folder: " + ex.Message); }
     }
 
     // Text a device sent (its model, what its player says), cut to a short run of plain letters, digits and punctuation.

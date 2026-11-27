@@ -10,7 +10,7 @@
     <SolidColorBrush x:Key="Dim" Color="#0E2C3A" />
     <SolidColorBrush x:Key="DimText" Color="#34505E" />
     <SolidColorBrush x:Key="Ink" Color="#03070B" />
-    <local:PillRadius x:Key="PillRadius" /> <!-- pill ends that stay round at any height -->
+    <local:PillRadius x:Key="PillRadius" />
 
     <Geometry x:Key="IcoPc">M3,4 H21 V16 H3 Z M12,16 V19.5 M7.5,20 H16.5</Geometry>
     <Geometry x:Key="IcoBookmark">M6,3 H18 V21 L12,16.5 L6,21 Z</Geometry>
@@ -27,6 +27,14 @@
     <Geometry x:Key="IcoLaptop">M5,6 H19 V15 H5 Z M2.5,18.5 H21.5</Geometry>
     <Geometry x:Key="IcoHeart">M12,20.5 C12,20.5 3,14.8 3,8.8 A4.6,4.6 0 0 1 12,7 A4.6,4.6 0 0 1 21,8.8 C21,14.8 12,20.5 12,20.5 Z</Geometry>
     <Geometry x:Key="IcoWifi">M2.5,9.5 Q12,1.5 21.5,9.5 M5.8,13 Q12,7.6 18.2,13 M9,16.4 Q12,13.9 15,16.4 M11,19.5 A1,1 0 1 0 13,19.5 A1,1 0 1 0 11,19.5 Z</Geometry>
+
+    <!-- A thin line between sections; Settings sets a smaller gap above some of them -->
+    <Style x:Key="Divider" TargetType="Border">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="CornerRadius" Value="1" />
+        <Setter Property="Margin" Value="2,16,2,0" />
+        <Setter Property="Background" Value="{DynamicResource Dim}" />
+    </Style>
 
     <Style x:Key="Label" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Bahnschrift" />

@@ -6,7 +6,7 @@ using PCCast2TV.Helpers;
 
 namespace PCCast2TV;
 
-// The cog's window, display only: theme pills go to ThemeColors (RANDOM rolls, SAVE keeps MY COLOR), the controller's to AppSettings.
+// The cog's window, display only: theme pills go to ThemeColors (RANDOM rolls, SAVE keeps MY COLOR), WINDOW LOOK to WindowLook, the controller and SHOW CURSOR to AppSettings, REPORT A PROBLEM to its own window.
 public partial class SettingsWindow : Window
 {
     SettingsWindow()
@@ -18,18 +18,17 @@ public partial class SettingsWindow : Window
         BuildSwatches();
         BuildLook();
         BuildController();
+        BuildCursor();
         VersionText.Text = $"VERSION {AppUpdater.Installed}";
     }
 
     public static void Open(Window owner) => new SettingsWindow { Owner = owner }.ShowDialog();
 
-    void GitHub_Click(object sender, RoutedEventArgs e) => WebPage.Open(AppUpdater.Page, "the GitHub page");
-
     void Donate_Click(object sender, RoutedEventArgs e) => WebPage.Open(WebPage.Donate, "the Ko-fi page");
 
     void PatchNotes_Click(object sender, RoutedEventArgs e) => WebPage.Open(WebPage.PatchNotes, "the patch notes");
 
-    void LogFolder_Click(object sender, RoutedEventArgs e) => Log.ShowInFolder();
+    void Report_Click(object sender, RoutedEventArgs e) => ReportWindow.Open(this);
 
     void OnThemeChanged()
     {
@@ -37,31 +36,27 @@ public partial class SettingsWindow : Window
         BuildSwatches(); // the ring and tick move to the new pick
         BuildLook();
         BuildController();
+        BuildCursor();
     }
 
-    // DIAL and SIMPLE for the main window (it swaps at once); OFF and ON for the stream controller.
-    void BuildLook() => BuildPair(LookPills, "DIAL", "SIMPLE", WindowLook.Simple, SetLook);
-    void BuildController() => BuildPair(ControllerPills, "OFF", "ON", AppSettings.StreamController, SetController);
+    // DIAL and SIMPLE for the main window (it swaps at once); OFF and ON for the stream controller and SHOW CURSOR (the cast picks both up right away).
+    void BuildLook() => BuildPair(LookPills, "DIAL", "SIMPLE", WindowLook.Simple, WindowLook.Pick, BuildLook);
+    void BuildController() => BuildPair(ControllerPills, "OFF", "ON", AppSettings.StreamController, AppSettings.SetStreamController, BuildController);
+    void BuildCursor() => BuildPair(CursorPills, "OFF", "ON", AppSettings.ShowCursor, AppSettings.SetShowCursor, BuildCursor,
+        "Keeps the mouse pointer off your TV, so it shows only your screen. Works right away, even during a cast.",
+        "Shows your PC's mouse pointer on your TV while you cast. Works right away, even during a cast.");
 
-    // Two pills for a yes/no choice: the one in use is filled, with a ring and a tick.
-    void BuildPair(Panel pills, string no, string yes, bool on, Action<bool> set)
+    // Two pills for a yes/no choice: the one in use is filled, with a ring and a tick; a click saves a change and redraws the pair.
+    void BuildPair(Panel pills, string no, string yes, bool on, Action<bool> set, Action redraw, string noTip = null, string yesTip = null)
     {
+        void Pick(bool v) { if (v != on) set(v); redraw(); }
         var now = ThemeColors.Current;
+        var off = Swatch(no, on ? null : new SolidColorBrush(now.Main), on ? null : now.Soft, () => Pick(false));
+        var lit = Swatch(yes, on ? new SolidColorBrush(now.Main) : null, on ? now.Soft : null, () => Pick(true));
+        (off.ToolTip, lit.ToolTip) = (noTip, yesTip);
         pills.Children.Clear();
-        pills.Children.Add(Swatch(no, on ? null : new SolidColorBrush(now.Main), on ? null : now.Soft, () => set(false)));
-        pills.Children.Add(Swatch(yes, on ? new SolidColorBrush(now.Main) : null, on ? now.Soft : null, () => set(true)));
-    }
-
-    void SetLook(bool simple)
-    {
-        WindowLook.Pick(simple);
-        BuildLook();
-    }
-
-    void SetController(bool on)
-    {
-        if (on != AppSettings.StreamController) AppSettings.SetStreamController(on);
-        BuildController();
+        pills.Children.Add(off);
+        pills.Children.Add(lit);
     }
 
     // Each pill is painted in its own color, whatever theme is on now; the one on now has a ring and a tick.
@@ -85,7 +80,7 @@ public partial class SettingsWindow : Window
             var mine = ThemeColors.FromKey(saved);
             Own.Children.Add(Swatch("MY COLOR", new SolidColorBrush(mine.Main), now.Roll == saved ? mine.Soft : null, () => ThemeColors.Pick(saved)));
         }
-        else Own.Children.Add(Swatch("MY COLOR", null, null, null)); // nothing saved yet
+        else Own.Children.Add(Swatch("MY COLOR", null, null, null));
         Own.Children.Add(Swatch("SAVE", null, null, roll ? () => { ThemeColors.KeepRoll(); BuildSwatches(); } : null));
         Own.Children.Add(Swatch("CLOSE", null, null, Close, cancel: true));
     }
@@ -111,7 +106,6 @@ public partial class SettingsWindow : Window
         var pill = new Button { Style = (Style)FindResource(fill == null ? "OutlinePill" : "Pill"), Height = 30, Content = text, IsEnabled = click != null, IsCancel = cancel };
         if (fill != null) pill.Background = fill;
         if (click != null) pill.Click += (_, _) => click();
-        // The ring: the picked one sits inside a soft outline with a dark gap, like a selected tile.
         return new Border
         {
             Margin = new Thickness(2, 0, 2, 6), Padding = new Thickness(2), CornerRadius = new CornerRadius(19), BorderThickness = new Thickness(2),

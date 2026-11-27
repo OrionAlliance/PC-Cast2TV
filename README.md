@@ -2,7 +2,8 @@
 
 <p align="center">
   <b>Cast your Windows PC's screen and sound to your TV or Roku.</b><br>
-  <b>Open it, pick your TV, click Cast. That's the app.</b>
+  <b>Open it, pick your TV, click Cast. That's the app.</b><br>
+  <b>** APP NOT RECOMMENDED FOR GAMING DUE TO CASTING DELAY **</b>
 </p>
 
 <p align="center">
@@ -32,13 +33,13 @@ I wanted my PC screen on my TV, with sound, smooth, and without an HDMI cable ac
 - **Updates itself** when you open it, never during a cast.
 - **MONITOR SELECTION** for two or more monitors: pick the one to cast, or tick **SET AS DEFAULT**. With one monitor, you won't see it.
 - **Two looks:** the dial (above) or the simple look. The simple look's **DETAILS** page shows where a stutter comes from.
-- **Settings** (the ⚙ cog): 8 color themes, a stream controller for Chromecast TVs, **PATCH NOTES** and your debug log.
+- **Settings** (the ⚙ cog): 8 color themes, a stream controller for Chromecast TVs, **SHOW CURSOR** to see your mouse pointer on the TV, **REPORT A PROBLEM** and **PATCH NOTES**.
 
 <p align="center">
   <a href="Screenshots/simple-look.png"><img src="Screenshots/simple-look.png" width="50%" alt="The simple look: FIND: TV / ROKU first, each device as a card, and one big button" /></a>
   &nbsp;
   <a href="Screenshots/monitor-selection.png"><img src="Screenshots/monitor-selection.png" width="46%" alt="MONITOR SELECTION open: each monitor by name, with SET AS DEFAULT under it" /></a><br>
-  <a href="Screenshots/settings.png"><img src="Screenshots/settings.png" width="34%" alt="The Settings window: theme colors, window look, stream controller, the Roku remote's OK button, version, GitHub page, OPEN LOG FOLDER and PATCH NOTES" /></a><br>
+  <a href="Screenshots/settings.png"><img src="Screenshots/settings.png" width="34%" alt="The Settings window: theme colors, window look, SHOW CURSOR, stream controller, the Roku remote's OK button, REPORT A PROBLEM, DONATE, PATCH NOTES and the version" /></a><br>
   <i>The simple look · MONITOR SELECTION · Settings. Click any picture to see it full size.</i>
 </p>
 
@@ -102,11 +103,11 @@ Right-click it and click **HIDE FROM THE LIST**. Right-click **DETECT DEVICE(S)*
 
 ## Your data stays yours
 
-No telemetry, no analytics, no accounts. The app talks only to your TVs at home, and checks this page for a new version. That check sends nothing about you.
+No telemetry, no analytics, no accounts. The app talks to your TVs at home and checks this page for a new version. That check sends nothing about you. **REPORT A PROBLEM** sends what you type, your email, your Windows and app versions, and your `debug.log` and screenshot if you add them, to the developer's Discord channel, and only when you click SEND.
 
 ## Found a bug?
 
-Open an [Issue](../../issues) and add your `debug.log` (click the cog, then **OPEN LOG FOLDER**). It shows what the app did, with user names and folder paths taken out.
+Click the cog, then **REPORT A PROBLEM**, and add your `debug.log` with one click. Or open an [Issue](../../issues) and add it there (it's in the Settings folder next to the app). It shows what the app did, with user names and folder paths taken out.
 
 ---
 

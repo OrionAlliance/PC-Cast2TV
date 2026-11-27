@@ -35,7 +35,7 @@ public partial class MainWindow
         };
     }
 
-    // The simple look opens where it was last closed (if that's still on a screen), sized to its cards.
+    // The simple look opens where it was last closed, if that's still on a screen.
     void OpenSimple()
     {
         ShowSimple();

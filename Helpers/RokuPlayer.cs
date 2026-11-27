@@ -11,7 +11,7 @@ public static class RokuPlayer
 {
     const string DevSlot = "dev";
     const string OurName = "PC Cast2TV"; // our app's name on the Roku's app list, however it was installed
-    const string StoreId = "890239";     // our app's number in the Roku Channel Store
+    const string StoreId = "890239";
     static readonly HttpClient Http = new(new HttpClientHandler { AllowAutoRedirect = false }) // a device's answer can't send the app anywhere else
         { Timeout = TimeSpan.FromSeconds(4), MaxResponseContentBufferSize = 1_000_000 };
     static readonly ConcurrentDictionary<string, string> OurIds = new(); // our app's id on each Roku, from its last app list

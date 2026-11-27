@@ -85,7 +85,6 @@ public sealed partial class Caster
 
     public bool IsAnswering(Device d) => d != null && _answering.Contains(d.Id);
 
-    // The center button casts to the picked device (the bookmarked one is picked when the app opens).
     public CastStep Step => Phase switch
     {
         Phase.Offline => CastStep.Offline,
